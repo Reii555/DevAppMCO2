@@ -1,169 +1,170 @@
-<!DOCTYPE html>
-<html lang="en">
+<div class="reservation-page">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="page-title">My Reservations</h1>
+        <a href="/flights/search" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Book New Flight
+        </a>
+    </div>
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Animo Skies | My Reservation</title>
-
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
-    <!-- jQuery -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="reservation.css">
-
-</head>
-
-<body>
-
-    <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-plane-departure me-2"></i>Animo Skies
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainMenu">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="mainMenu">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="search.html">Search Flights</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="reservation.html">My Reservation</a></li>
-                    <li class="nav-item"><a class="nav-link" href="profile.html">User Profile</a></li>
-                </ul>
+    <!-- Filters -->
+    <div class="reservation-filters mb-4">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <input type="text" class="form-control" id="searchReservations" placeholder="Search by booking ref or flight...">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="statusFilter">
+                    <option value="all">All Status</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Confirmed">Confirmed</option>
+                    <option value="Cancelled">Cancelled</option>
+                    <option value="Completed">Completed</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="sortReservations">
+                    <option value="createdAt:desc">Newest First</option>
+                    <option value="createdAt:asc">Oldest First</option>
+                    <option value="flightId.departureDate:asc">Departure: Soonest</option>
+                    <option value="flightId.departureDate:desc">Departure: Latest</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary w-100" id="clearFilters">
+                    <i class="fas fa-times me-1"></i> Clear
+                </button>
             </div>
         </div>
-    </nav>
+    </div>
 
-    <!-- Main Content -->
-    <div class="container my-4">
-        <div class="row">
-            <div class="col-12">
-                <div class="reservation-card p-4">
-
-                    <!-- Page Title -->
-                    <div class="section-title">My Reservations</div>
-
-                    <!-- Search and Filter Controls -->
-                    <div class="res-controls">
-                        <div class="search-sort">
-                            <input type="text" class="form-control" id="searchInput" placeholder="Search by name/reference number">
-                            <select class="form-select" id="filterStatus">
-                                <option value="all">All Status</option>
-                                <option value="Confirmed">Confirmed</option>
-                                <option value="Pending">Pending</option>
-                                <option value="Cancelled">Cancelled</option>
-                            </select>
-                            <select class="form-select" id="sortBy">
-                                <option value="name">Sort by name</option>
-                                <option value="date">Sort by date</option>
-                            </select>
+    <!-- Reservations List -->
+    <div id="reservationsList">
+        {{#if reservations.length}}
+            {{#each reservations}}
+                <div class="reservation-item" data-id="{{this._id}}">
+                    <div class="reservation-header">
+                        <div class="reservation-ref">
+                            <span class="booking-ref">{{this.bookingRef}}</span>
+                            <span class="flight-info">
+                                {{this.flightId.flightId}} - {{this.flightId.route}}
+                            </span>
+                        </div>
+                        <div class="reservation-status">
+                            <span class="badge status-{{this.status}}">{{this.status}}</span>
+                            {{#if this.canCancel}}
+                                <button class="btn btn-danger btn-sm cancel-btn" data-id="{{this._id}}">
+                                    <i class="fas fa-times me-1"></i>Cancel
+                                </button>
+                            {{/if}}
                         </div>
                     </div>
 
-                    <!-- Reservations List -->
-                    <div id="reservationsList"></div>
-
-                    <!-- Pagination -->
-                    <div id="paginationControls" class="pagination-controls"></div>
-
-                    <!-- Go Back Button -->
-                    <div class="text-center mt-4">
-                        <button class="btn-back" id="goBackBtn"><i class="fas fa-arrow-left me-2"></i>Go Back</button>
+                    <div class="reservation-details">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label>Passenger</label>
+                                <p>{{this.passengerName}}</p>
+                            </div>
+                            <div class="col-md-3">
+                                <label>Seat</label>
+                                <p>{{this.seatNumber}}</p>
+                            </div>
+                            <div class="col-md-3">
+                                <label>Departure</label>
+                                <p>{{formatDate this.flightId.departureDate}} at {{this.flightId.departureTime}}</p>
+                            </div>
+                            <div class="col-md-2">
+                                <label>Price</label>
+                                <p class="price">₱{{this.totalPrice}}</p>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <button class="btn btn-outline-primary btn-sm view-details" data-id="{{this._id}}">
+                                    <i class="fas fa-eye me-1"></i>View Details
+                                </button>
+                                {{#if this.canCancel}}
+                                    <button class="btn btn-outline-danger btn-sm edit-seat-btn" data-id="{{this._id}}" data-seat="{{this.seatNumber}}" data-meal="{{this.mealPreference}}">
+                                        <i class="fas fa-edit me-1"></i>Edit Seat
+                                    </button>
+                                {{/if}}
+                            </div>
+                        </div>
                     </div>
                 </div>
+            {{/each}}
+
+            <!-- Pagination -->
+            {{#if pagination}}
+                <nav aria-label="Reservation pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item {{#unless pagination.hasPrev}}disabled{{/unless}}">
+                            <a class="page-link" href="#" data-page="{{pagination.currentPage}}" data-action="prev">Previous</a>
+                        </li>
+                        <li class="page-item active">
+                            <span class="page-link">{{pagination.currentPage}} of {{pagination.totalPages}}</span>
+                        </li>
+                        <li class="page-item {{#unless pagination.hasNext}}disabled{{/unless}}">
+                            <a class="page-link" href="#" data-page="{{pagination.currentPage}}" data-action="next">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            {{/if}}
+        {{else}}
+            <div class="text-center py-5">
+                <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No reservations found</h4>
+                <p class="text-muted">Start your journey by booking a flight!</p>
+                <a href="/flights/search" class="btn btn-primary mt-3">Search Flights</a>
+            </div>
+        {{/if}}
+    </div>
+</div>
+
+<!-- Edit Seat Modal -->
+<div class="modal fade" id="editSeatModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header modal-header-primary">
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Seat Selection</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editSeatForm">
+                    <input type="hidden" id="editReservationId">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Select Seat <span class="text-danger">*</span></label>
+                        <select class="form-select" id="editSeatNumber" required>
+                            <option value="">Select a seat</option>
+                        </select>
+                        <small class="text-muted">Available seats will be shown</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Meal Preference</label>
+                        <select class="form-select" id="editMealPreference">
+                            <option value="Standard">Standard</option>
+                            <option value="Vegetarian">Vegetarian</option>
+                            <option value="Vegan">Vegan</option>
+                            <option value="Halal">Halal</option>
+                            <option value="Kosher">Kosher</option>
+                            <option value="Gluten-Free">Gluten-Free</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Special Requests</label>
+                        <textarea class="form-control" id="editSpecialRequests" rows="2" placeholder="Any special requests?"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-primary" id="saveSeatEdit">
+                    <i class="fas fa-save me-1"></i> Save Changes
+                </button>
             </div>
         </div>
     </div>
-
-    <!-- View Details Modal -->
-    <div class="modal fade" id="detailsModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header modal-header-primary">
-                    <h5 class="modal-title"><i class="fas fa-ticket-alt me-2"></i>Booking Details</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="detailsContent">
-                    <!-- Dynamic content -->
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button class="btn btn-primary btn-primary-custom" id="editFromModal">
-                        <i class="fas fa-edit me-1"></i>Edit Reservation
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit Booking Modal -->
-    <div class="modal fade" id="editModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header modal-header-primary">
-                    <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Booking</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body" id="editContent">
-                    <!-- Dynamic form content -->
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button class="btn btn-primary btn-primary-custom" id="saveEditBtn">
-                        <i class="fas fa-save me-1"></i>Save Changes
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Cancel Confirmation Modal -->
-    <div class="modal fade" id="cancelModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header modal-header-danger">
-                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Cancel Reservation</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to cancel this booking?</p>
-                    <p><strong>Reference:</strong> <span id="modalBookingRef"></span></p>
-                    <p><strong>Passenger:</strong> <span id="modalBookingPassenger"></span></p>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-secondary" data-bs-dismiss="modal">No, keep</button>
-                    <button class="btn btn-danger" id="modalConfirmCancel">Yes, Cancel</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Toast Notification -->
-    <div id="toastMsg" class="toast-message">
-        <i class="fas fa-check-circle me-2"></i> <span id="toastText"></span>
-    </div>
-
-    <!-- Footer -->
-    <footer>
-        <p><i class="fas fa-plane me-2"></i>Animo Skies</p>
-        <small>© 2026 Animo Skies | All rights reserved</small>
-    </footer>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Custom JS -->
-    <script src="reservation.js"></script>
-
-</body>
-
-</html> 
-
+</div>
