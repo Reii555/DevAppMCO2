@@ -1,1 +1,124 @@
+<div class="row g-4">
+    <!-- Left Column -->
+    <div class="col-lg-5">
+        <div class="profile-card p-4">
+            <!-- Personal Information -->
+            <div class="mb-4">
+                <div class="section-title">Personal Information</div>
 
+                <!-- Avatar -->
+                <div class="d-flex align-items-center gap-4 mb-4 pb-2 border-bottom">
+                    <div class="avatar-wrapper" id="avatarPreview">
+                        {{#if user.profilePicture}}
+                            <img src="{{user.profilePicture}}" alt="Profile Picture">
+                        {{else}}
+                            <i class="fas fa-user avatar-placeholder"></i>
+                        {{/if}}
+                    </div>
+                    <div>
+                        <button class="btn-upload" id="uploadBtn">
+                            <i class="fas fa-camera me-1"></i> Upload photo
+                        </button>
+                        <input type="file" id="avatarUpload" accept="image/jpeg,image/png,image/jpg" style="display: none;">
+                        <div class="text-muted small mt-1">PNG, JPG up to 2MB</div>
+                    </div>
+                </div>
+
+                <!-- Profile Info Display -->
+                <div class="profile-info">
+                    <div class="info-row">
+                        <label>Full Name</label>
+                        <p>{{user.firstName}} {{user.lastName}}</p>
+                    </div>
+                    <div class="info-row">
+                        <label>Email</label>
+                        <p>{{user.email}}</p>
+                    </div>
+                    <div class="info-row">
+                        <label>Phone</label>
+                        <p>{{user.phone}}</p>
+                    </div>
+                    <div class="info-row">
+                        <label>Date of Birth</label>
+                        <p>{{formatDate user.dateOfBirth}}</p>
+                    </div>
+                    <div class="info-row">
+                        <label>Passport Number</label>
+                        <p>{{user.passportNumber}}</p>
+                    </div>
+                    <div class="info-row">
+                        <label>Nationality</label>
+                        <p>{{user.nationality}}</p>
+                    </div>
+                    <div class="info-row">
+                        <label>Gender</label>
+                        <p>{{user.gender}}</p>
+                    </div>
+                    <div class="info-row">
+                        <label>Member Since</label>
+                        <p>{{formatDate user.createdAt}}</p>
+                    </div>
+                </div>
+
+                <div class="mt-3 d-flex justify-content-end">
+                    <a href="/profile/edit" class="btn-save">
+                        <i class="fas fa-edit me-1"></i> Edit Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="col-lg-7">
+        <div class="profile-card p-4">
+            <!-- Recent Reservations -->
+            <div class="mb-4">
+                <div class="section-title">Recent Reservations</div>
+                {{#if reservations.length}}
+                    {{#each reservations}}
+                        <div class="history-item">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap">
+                                <div>
+                                    <strong>{{this.flightId.flightId}}</strong>
+                                    <span class="ms-2">{{this.flightId.route}}</span>
+                                </div>
+                                <span class="status-badge status-{{this.status}}">{{this.status}}</span>
+                            </div>
+                            <div class="small text-muted mt-1">
+                                <i class="fas fa-calendar-alt me-1"></i>
+                                {{formatDate this.flightId.departureDate}} at {{this.flightId.departureTime}}
+                                <span class="mx-2">|</span>
+                                Seat {{this.seatNumber}}
+                            </div>
+                        </div>
+                    {{/each}}
+                    <div class="text-center mt-3">
+                        <a href="/reservations" class="btn btn-outline-primary btn-sm">
+                            View All Reservations
+                        </a>
+                    </div>
+                {{else}}
+                    <p class="text-muted text-center">No reservations yet. <a href="/flights/search">Book a flight now!</a></p>
+                {{/if}}
+            </div>
+
+            <!-- Quick Actions -->
+            <div>
+                <div class="section-title">Quick Actions</div>
+                <div class="row g-3">
+                    <div class="col-6">
+                        <a href="/flights/search" class="btn btn-primary w-100">
+                            <i class="fas fa-search me-2"></i>Search Flights
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="/reservations" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-ticket-alt me-2"></i>My Reservations
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
