@@ -1,0 +1,170 @@
+<div class="reservation-page">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="page-title">My Reservations</h1>
+        <a href="/flights/search" class="btn btn-primary">
+            <i class="fas fa-plus me-2"></i>Book New Flight
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="reservation-filters mb-4">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <input type="text" class="form-control" id="searchReservations" placeholder="Search by booking ref or flight...">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="statusFilter">
+                    <option value="all">All Status</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Confirmed">Confirmed</option>
+                    <option value="Cancelled">Cancelled</option>
+                    <option value="Completed">Completed</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="sortReservations">
+                    <option value="createdAt:desc">Newest First</option>
+                    <option value="createdAt:asc">Oldest First</option>
+                    <option value="flightId.departureDate:asc">Departure: Soonest</option>
+                    <option value="flightId.departureDate:desc">Departure: Latest</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-outline-secondary w-100" id="clearFilters">
+                    <i class="fas fa-times me-1"></i> Clear
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reservations List -->
+    <div id="reservationsList">
+        {{#if reservations.length}}
+            {{#each reservations}}
+                <div class="reservation-item" data-id="{{this._id}}">
+                    <div class="reservation-header">
+                        <div class="reservation-ref">
+                            <span class="booking-ref">{{this.bookingRef}}</span>
+                            <span class="flight-info">
+                                {{this.flightId.flightId}} - {{this.flightId.route}}
+                            </span>
+                        </div>
+                        <div class="reservation-status">
+                            <span class="badge status-{{this.status}}">{{this.status}}</span>
+                            {{#if this.canCancel}}
+                                <button class="btn btn-danger btn-sm cancel-btn" data-id="{{this._id}}">
+                                    <i class="fas fa-times me-1"></i>Cancel
+                                </button>
+                            {{/if}}
+                        </div>
+                    </div>
+
+                    <div class="reservation-details">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label>Passenger</label>
+                                <p>{{this.passengerName}}</p>
+                            </div>
+                            <div class="col-md-3">
+                                <label>Seat</label>
+                                <p>{{this.seatNumber}}</p>
+                            </div>
+                            <div class="col-md-3">
+                                <label>Departure</label>
+                                <p>{{formatDate this.flightId.departureDate}} at {{this.flightId.departureTime}}</p>
+                            </div>
+                            <div class="col-md-2">
+                                <label>Price</label>
+                                <p class="price">₱{{this.totalPrice}}</p>
+                            </div>
+                        </div>
+                        <div class="row mt-2">
+                            <div class="col-12">
+                                <button class="btn btn-outline-primary btn-sm view-details" data-id="{{this._id}}">
+                                    <i class="fas fa-eye me-1"></i>View Details
+                                </button>
+                                {{#if this.canCancel}}
+                                    <button class="btn btn-outline-danger btn-sm edit-seat-btn" data-id="{{this._id}}" data-seat="{{this.seatNumber}}" data-meal="{{this.mealPreference}}">
+                                        <i class="fas fa-edit me-1"></i>Edit Seat
+                                    </button>
+                                {{/if}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {{/each}}
+
+            <!-- Pagination -->
+            {{#if pagination}}
+                <nav aria-label="Reservation pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item {{#unless pagination.hasPrev}}disabled{{/unless}}">
+                            <a class="page-link" href="#" data-page="{{pagination.currentPage}}" data-action="prev">Previous</a>
+                        </li>
+                        <li class="page-item active">
+                            <span class="page-link">{{pagination.currentPage}} of {{pagination.totalPages}}</span>
+                        </li>
+                        <li class="page-item {{#unless pagination.hasNext}}disabled{{/unless}}">
+                            <a class="page-link" href="#" data-page="{{pagination.currentPage}}" data-action="next">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+            {{/if}}
+        {{else}}
+            <div class="text-center py-5">
+                <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No reservations found</h4>
+                <p class="text-muted">Start your journey by booking a flight!</p>
+                <a href="/flights/search" class="btn btn-primary mt-3">Search Flights</a>
+            </div>
+        {{/if}}
+    </div>
+</div>
+
+<!-- Edit Seat Modal -->
+<div class="modal fade" id="editSeatModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header modal-header-primary">
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Seat Selection</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editSeatForm">
+                    <input type="hidden" id="editReservationId">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Select Seat <span class="text-danger">*</span></label>
+                        <select class="form-select" id="editSeatNumber" required>
+                            <option value="">Select a seat</option>
+                        </select>
+                        <small class="text-muted">Available seats will be shown</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Meal Preference</label>
+                        <select class="form-select" id="editMealPreference">
+                            <option value="Standard">Standard</option>
+                            <option value="Vegetarian">Vegetarian</option>
+                            <option value="Vegan">Vegan</option>
+                            <option value="Halal">Halal</option>
+                            <option value="Kosher">Kosher</option>
+                            <option value="Gluten-Free">Gluten-Free</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Special Requests</label>
+                        <textarea class="form-control" id="editSpecialRequests" rows="2" placeholder="Any special requests?"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button class="btn btn-primary" id="saveSeatEdit">
+                    <i class="fas fa-save me-1"></i> Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
