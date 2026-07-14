@@ -158,6 +158,16 @@ app.post('/login', async (req, res) => {
     }
 });
 
+// SEARCH ROUTES
+app.get('/search', (req, res) => {
+    res.render('search', { title: 'Search Flights' });
+});
+
+// BOOKING ROUTES
+app.get('/booking', (req, res) => {
+    res.render('booking', { title: 'Book Flight' });
+});
+
 // DASHBOARD ROUTE
 app.get('/dashboard', (req, res) => {
     if (!req.session.user) {
