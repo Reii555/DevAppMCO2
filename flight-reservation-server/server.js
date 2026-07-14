@@ -196,6 +196,22 @@ app.get('/admin', (req, res) => {
     });
 });
 
+// ADMIN-USERS ROUTE
+app.get('/admin-users', async (req, res) => {
+    res.render('admin-users', {
+        title: 'Users',
+        layout: 'admin-main'
+    });
+});
+
+// ADMIN-RESERVATIONS ROUTE
+app.get('/admin-reservations', async (req, res) => {
+    res.render('admin-reservations', {
+        title: 'Reservations',
+        layout: 'admin-main'
+    });
+});
+
 // CUSTOMER ROUTE
 app.get('/customer', (req, res) => {
     if (!req.session.user) {
