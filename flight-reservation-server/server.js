@@ -200,7 +200,7 @@ app.get('/admin', (req, res) => {
 app.get('/admin-users', async (req, res) => {
     res.render('admin-users', {
         title: 'Users',
-        layout: 'admin-main'
+        layout: 'main-admin'
     });
 });
 
@@ -208,7 +208,7 @@ app.get('/admin-users', async (req, res) => {
 app.get('/admin-reservations', async (req, res) => {
     res.render('admin-reservations', {
         title: 'Reservations',
-        layout: 'admin-main'
+        layout: 'main-admin'
     });
 });
 
