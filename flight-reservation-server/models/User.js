@@ -38,7 +38,7 @@ const userSchema = new mongoose.Schema({
       validator: function(v) {
         const phoneRegex = /^\+?[0-9\s\-\(\)]{7,20}$/;
 
-        if (!phoneTegex.test(v))
+        if (!phoneRegex.test(v))
           return false;
 
         // count only the digits
@@ -49,7 +49,7 @@ const userSchema = new mongoose.Schema({
     }
   },
   
-  dateofBirth: {
+  dateOfBirth: {
     type: Date
   },
   

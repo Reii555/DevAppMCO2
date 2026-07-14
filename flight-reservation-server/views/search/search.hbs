@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Search Flights</title>
+
+        <!-- Bootstrap CSS -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        
+        <!-- Bootstrap Font & Icons -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+        
+        <!-- jQuery -->
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        
+        <link rel="stylesheet" href="search_book.css">
+
+    </head>
+    
+    <body>
+
+        <!-- Navigation -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+
+            <div class="container">
+
+                <a class="navbar-brand" href="#">
+                    <i class="fas fa-plane-departure me-2"></i>
+                    Animo Skies
+                </a>
+
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainMenu">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="mainMenu">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li> 
+                        <li class="nav-item"><a class="nav-link active" href="search.html">Search Flights</a></li>
+                        <li class="nav-item"><a class="nav-link" href="reservation.html">My Reservation</a></li>
+                        <li class="nav-item"><a class="nav-link" href="profile.html">User Profile</a></li>
+                    </ul>
+                </div>
+
+            </div>
+            
+        </nav>
+
+        <!-- Main Content -->
+        <div class="container my-4">
+
+            <div class="row g-4">
+
+                <!-- Search Function -->
+                <div class="card shadow border-0 p-5" id="searchCard">
+                    <h3 class="mb-4">Search Flights</h3>
+
+                    <form method="POST">
+
+                        <!-- Airports -->
+                        <div class="row g-3 mb-3">
+
+                            <!-- Origin -->
+                            <div class="col-md-6">
+                                <label class="form-label">Origin Airport</label>
+                                <select class="form-select" id="origin">
+                                    <option>Manila (MNL)</option>
+                                    <option>Cebu (CEB)</option>
+                                </select>
+                            </div>
+
+                            <!-- Destination -->
+                            <div class="col-md-6">
+                                <label class="form-label">Destination Airport</label>
+                                <select class="form-select" id="destination">
+                                    <option>Cebu (CEB)</option>
+                                    <option>Manila (MNL)</option>
+                                </select>
+                            </div>
+
+                        </div>
+
+                        <!-- Dates -->
+                        <div class="row g-3 mb-3">
+
+                            <div class="col-md-6">
+                                <label class="form-label">Departure Date</label>
+                                <input type="date" class="form-control">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Return Date</label>
+                                <input type="date" class="form-control">
+                            </div>
+
+                        </div>
+
+                        <!-- Trip Type -->
+                        <div class="mb-3">
+                            <label class="form-label d-block">Trip Type</label>
+
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="trip">
+                                <label class="form-check-label">One-way</label>
+                            </div>
+
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="trip">
+                                <label class="form-check-label">Round-trip</label>
+                            </div>
+                        </div>
+
+                        <!-- Passenger & Class -->
+                        <div class="row g-3 mb-3">
+
+                            <!-- Passenger -->
+                            <div class="col-md-6">
+                                <label class="form-label">Passenger</label>
+                                <select class="form-select">
+                                    <option>None</option>
+                                    <option>Adults</option>
+                                    <option>Children</option>
+                                    <option>Infants</option>
+                                </select>
+                            </div>
+
+                            <!-- Cabin Class -->
+                            <div class="col-md-6">
+                                <label class="form-label">Cabin Class</label>
+                                <select class="form-select">
+                                    <option>None</option>
+                                    <option>Economy</option>
+                                    <option>Premium Economy</option>
+                                    <option>Business</option>
+                                    <option>First Class</option>
+                                </select>
+                            </div>
+                            
+                        </div>
+                        
+                        <!-- Advanced Search -->
+                        <div class="mt-3">
+                            <a class="btn btn-link" data-bs-toggle="collapse" href="#advancedSearch">
+                                Advanced Search
+                            </a>
+                        </div>
+
+                        <div class="collapse mt-3" id="advancedSearch">
+
+                            <hr>
+                            <h5>Advanced Search</h5>
+
+                            <div class="row g-3">
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Prefered Airlrine</label>
+                                    <select class="form-select">
+                                        <option>Any Airline</option>
+                                        <option>Philippine Airlines</option>
+                                        <option>Cebu Pacific</option>
+                                        <option>AirAsia</option>
+                                    </select>
+
+                                    <br>
+                                    <input class="form-check-input" type="checkbox" name="direct_flights" value="direct_flights">
+                                    <label class="form-check-label ms-2">Direct Flights Only</label>
+
+                                    <div class="form-check form-switch mt-3 mb-3">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="flexDates">
+                                        <label class="form-check-label">Flexible Dates</label>
+                                    </div>
+                                    
+                                    <label class="form-label">
+                                        Price Range - 
+                                        <span class="text-primary">Php<span id="sliderValue">50,000</span></span>
+                                    </label>
+
+                                    <input type="range" class="form-range" min="1000" max="100000">
+                                    <div class="d-flex justify-content-between small mt-2">
+                                        <span>Php1,000</span>
+                                        <span>Php100,000</span>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                        <button type="button" id="searchBtn" class="btn btn-success w-100 mt-4">
+                            Search Flights
+                        </button>
+
+                    </form>
+
+                </div>
+
+                <div id="resultsSection">
+
+                    <div class="row g-4">
+
+                        <!-- Filter Panel (LEFT COLUMN) -->
+                        <div class="col-lg-3">
+                            <div class="card shadow border-0 p-4 sticky-top">
+
+                                <h5 class="mb-3">Filters</h5>
+
+                                <!-- Airlines Filter -->
+                                <label class="form-label">Airlines</label>
+
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox">
+                                    <label class="form-check-label">AirAsia</label>
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox">
+                                    <label class="form-check-label">Cebu Pacific</label>
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox">
+                                    <label class="form-check-label">Philippine Airlines</label>
+                                </div>
+                                <br>
+                                
+                                <!-- Price Ranges Filter -->
+                                <label class="form-label">Price Range</label>
+                                <div class="mb-2">
+                                    <label class="form-label small">Minimum Price</label>
+                                    <input type="number" class="form-control" placeholder="₱1,000">
+                                </div>
+
+                                <div>
+                                    <label class="form-label small">Maximum Price</label>
+                                    <input type="number" class="form-control" placeholder="₱100,000">
+                                </div>
+                                <br>
+
+                                <!-- Stops Filter -->
+                                <label class="form-label">Stops</label>
+
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox">
+                                    <label class="form-check-label">Direct</label>
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox">
+                                    <label class="form-check-label">1 Stop</label>
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox">
+                                    <label class="form-check-label">2 Stops</label>
+                                </div>
+                                <br>
+
+                                <!-- Departure Schedules Filter -->
+                                <label class="form-label">Departure Schedules</label>
+
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox">
+                                    <label class="form-check-label">Morning</label>
+                                    <label class="form-check-label small text-secondary">(6:00AM - 12:00PM)</label>
+                                    
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox">
+                                    <label class="form-check-label">Afternoon</label>
+                                    <label class="form-check-label small text-secondary">(12:00PM - 6:00PM)</label>
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox">
+                                    <label class="form-check-label">Night</label>
+                                    <label class="form-check-label small text-secondary">(6:00PM - 12:00AM)</label>
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox">
+                                    <label class="form-check-label">Early Morning</label>
+                                    <label class="form-check-label small text-secondary">(12:00PM - 6:00AM)</label>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- Results Panel (RIGHT COLUMN) -->
+                        <div class="col-lg-9">
+
+                            <label class="form-label small">Showing # Flights</label>
+
+                            <select class="form-select mb-3" id="sortSelect">
+                                <option>Price ↑</option>
+                                <option>Price ↓</option>
+                                <option>Departure Time ↑</option>
+                                <option>Departure Time ↓</option>
+                                <option>Durations ↑</option>
+                                <option>Durations ↓</option>
+                            </select>
+
+                            <div id="flightResults"></div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Bootsrap JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+        <!-- Custom JS -->
+        <script src="search.js"></script>
+
+    </body>
+
+</html>

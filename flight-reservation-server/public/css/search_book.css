@@ -1,0 +1,88 @@
+* {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+    min-height: 100vh;
+}
+
+/* Cards */
+#searchCard {
+    background: white;
+    border-radius: 20px;
+}
+
+#resultsSection {
+    display:none;
+}
+
+.meal-card {
+    cursor: pointer;
+    transition: 0.2s;
+    border-width: 2px;
+}
+
+.meal-card:hover {
+    transform: translateY(-4px);
+}
+
+.meal-card.selected {
+    border-color: #217b51;
+    border-width: 3px;
+}
+
+.meal_price{
+    font-weight: bold;
+    color: #217b51;
+}
+
+.input-group{
+    max-width: 120px;
+}
+
+/* Logo */
+.airline_logo {
+    width: 100%;
+    max-width: 80px;
+    height: auto;
+}
+
+/* Form */
+.form-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #475569;
+    margin-bottom: 4px;
+}
+
+.form-control {
+    border-radius: 14px;
+    border: 1.5px solid #e2e8f0;
+    font-size: 0.9rem;
+    padding: 0.6rem 1rem;
+}
+
+.form-control:focus {
+    border-color: #5686c9;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+}
+
+/* Footer */
+footer {
+    background: #1e293b;
+    color: #94a3b8;
+    padding: 24px;
+    text-align: center;
+    margin-top: 40px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .profile-card {
+        margin-bottom: 20px;
+    }
+}

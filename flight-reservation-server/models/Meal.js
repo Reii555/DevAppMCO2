@@ -19,8 +19,8 @@ const mealSchema = new mongoose.Schema({
         required: [true, 'Additional price is required'],
         min: [0, 'Additional price cannot be negative'],
         default: 0
-    },
-
+    }
+}, {    
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true }

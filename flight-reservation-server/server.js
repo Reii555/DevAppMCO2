@@ -3,7 +3,12 @@ const session = require('express-session');
 const exphbs = require('express-handlebars');
 const path = require('path');
 const connectDB = require('./config/database');
-const Users = require('./models/Users');
+const User = require('./models/User');
+const Reservation = require('./models/Reservation');
+const Flight = require('./models/Flight');
+const Seat = require('./models/Seat');
+const Meal = require('./models/Meal');
+const ResService = require('./models/ResService');
 
 // Load environment variables
 require('dotenv').config();
@@ -14,6 +19,37 @@ const PORT = process.env.PORT || 3000;
 
 // DATABASE CONNECTION
 connectDB();
+
+// Sample data for admin user (?) - replace values nalang
+(async () => {
+    try {
+        const user = await User.create({
+            firstName: "Test",
+            lastName: "User",
+            email: "test@test.com",
+            password: "password123",
+            phone: "+639123456789",
+            dateOfBirth: new Date("2005-07-11"),
+            passportNumber: "A12345678",
+            nationality: "Filipino",
+            gender: "Female",
+            role: "customer",
+            status: "active",
+            lastLogin: new Date("2026-07-12"),
+            profilePicture: "placeholder",
+            emergencyContact: {
+                name: "ParentTest",
+                relationship: "Father",
+                phone: "+639987654321",
+                email: "parent@test.com"
+            }
+        });
+
+        console.log("Created:", user);
+    } catch (err) {
+        console.log(err);
+    }
+})();
 
 // MIDDLEWARE
 // Parse form data (for POST requests from forms)
@@ -32,7 +68,7 @@ app.use(session({
     saveUninitialized: false
 }));
 
-// Make user data available to all templates
+// Make user data available to all
 app.use((req, res, next) => {
     res.locals.user = req.session.user || null;
     next();
@@ -69,13 +105,13 @@ app.get('/signup', (req, res) => {
 app.post('/signup', async (req, res) => {
     try {
         // Check if email already exists
-        const existingUser = await Users.findOne({ email: req.body.email });
+        const existingUser = await User.findOne({ email: req.body.email });
         if (existingUser) {
             return res.send('Email already registered. Please login using a new email.');
         }
 
         // Create new user
-        const user = new Users({
+        const user = new ({
             firstName: req.body.firstName,
             lastName: req.body.lastName,
             email: req.body.email,
@@ -104,7 +140,7 @@ app.get('/login', (req, res) => {
 // Process Login Form
 app.post('/login', async (req, res) => {
     try {
-        const user = await Users.findOne({
+        const user = await User.findOne({
             email: req.body.email,
             password: req.body.password
         });
