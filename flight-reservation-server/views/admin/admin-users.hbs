@@ -122,8 +122,19 @@
                         <th>Role</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <!--Populate table rows with user data via jquery-->
+                <tbody id="usersTableBody">
+                    {{#each users}}
+                    <tr data-id="{{this.id}}" data-status="{{this.status}}">
+                        <td>{{this.id}}</td>
+                        <td>{{this.name}}</td>
+                        <td>{{this.email}}</td>
+                        <td>{{this.phone}}</td>
+                        <td>{{formatDate this.created_at}}</td>
+                        <td>{{formatDate this.last_login}}</td>
+                        <td><span class="badge {{#if (eq this.status 'active')}}bg-success{{else}}bg-danger{{/if}}">{{this.status}}</span></td>
+                        <td>{{this.role}}</td>
+                    </tr>
+                    {{/each}}
                 </tbody>
             </table>
         </div>

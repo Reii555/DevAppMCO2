@@ -129,7 +129,16 @@
                     </tr>
                 </thead>
                 <tbody id="reservationsTableBody">
-                    <!--Populate table rows with reservation data via jquery-->
+                        {{#each reservations}}
+                        <tr data-id="{{this.id}}" data-status="{{this.status}}">
+                            <td>{{this.book_ref}}</td>
+                            <td>{{this.pass_name}}</td>
+                            <td>{{this.flight_route}}</td>
+                            <td>{{this.seat_no}}</td>
+                            <td><span class="badge {{#if (eq this.status 'Confirmed')}}bg-success{{else if (eq this.status 'Cancelled')}}bg-danger{{else}}bg-warning{{/if}}">{{this.status}}</span></td>
+                            <td>${{this.total_price}}</td>
+                        </tr>
+                        {{/each}}
                 </tbody>
             </table>
         </div>
