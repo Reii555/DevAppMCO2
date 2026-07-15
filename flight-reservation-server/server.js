@@ -170,6 +170,11 @@ app.get('/booking', (req, res) => {
     res.render('booking', { title: 'Book Flight' });
 });
 
+// MY RESERVATIONS ROUTES
+app.get('/my-reservations', (req, res) => {
+    res.render('my-reservations', { title: 'My Reservations' });
+});
+
 // DASHBOARD ROUTE
 app.get('/dashboard', (req, res) => {
     if (!req.session.user) {
