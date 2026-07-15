@@ -6,6 +6,10 @@ const Flight = require("../models/Flight");
 router.get("/", async(req, res) => {
     try {
         const flights = await Flight.find();
+        const airlines = [
+            ...new Set(flights.map(flight => flight.airline))
+        ];
+
         res.render("admin-flights", {
             title: "Flights",
             layout: "main-admin",

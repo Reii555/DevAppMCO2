@@ -46,9 +46,9 @@
                     <div class="col-md-2">
                         <select class="filter-dropdown" id="airlineFilter">
                             <option value="ALL">All Airlines</option>
-                            <option value="Philippine Airlines">Philippine Airlines</option>
-                            <option value="Cebu Pacific">Cebu Pacific</option>
-                            <option value="AirAsia">AirAsia</option>
+                            {{#each airlines}}
+                            <option value="{{this}}">{{this}}</option>
+                            {{/each}}
                         </select>
                     </div>
 
@@ -62,7 +62,7 @@
                     </div>
 
                     <div class="col-md-2">
-                        <select class="sort-dropdown" id="sortFlights">
+                        <select class="sort-dropdown" id="sortFlight">
                             <option value="flightId">Sort by Flight ID</option>
                             <option value="airline">Sort by Airline</option>
                             <option value="status">Sort by Status</option>
@@ -71,8 +71,7 @@
 
                     <!--CRUD Buttons-->
                     <div class="crud-toolbar mb-3">
-                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#flightModal"
-                            id="addBtn">
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#flightModal" id="addBtn">
                             Add Flight
                         </button>
 
@@ -104,38 +103,20 @@
                                     <th>Arrival Date</th>
                                     <th>Arrival Time</th>
                                     <th>Seats</th>
+                                    <th>Ticket Price</th>
                                     <th>Status</th>
                                 </tr>
                             </thead>
 
                            <tbody id="flightsTableBody">
 
-                                {{#each flights}}
-
-                                    <tr class="flight-row" data-id="{{_id}}">
-
-                                        <td>{{flightNumber}}</td>
-                                        <td>{{airline}}</td>
-                                        <td>{{origin}} - {{destination}}</td>
-                                        <td>{{departureDateTime}}</td>
-                                        <td>{{arrivalDateTime}}</td>
-                                        <td>{{availableSeats}}</td>
-                                        <td>₱{{ticketPrice}}</td>
-                                        <td>{{status}}</td>
-
-                                    </tr>
-
-                                {{else}}
-
                                     <tr>
 
-                                        <td colspan="7" class="text-center">
+                                        <td colspan="9" class="text-center">
                                             No flights found.
                                         </td>
 
                                     </tr>
-
-                                {{/each}}
 
                             </tbody>
                         </table>
@@ -208,9 +189,9 @@
 
                                         <div class="col-md-6">
                                             <div class="mb-3">
-                                                <label class="form-label" for="ArrivalDate">Arrival Date</label>
+                                                <label class="form-label" for="arrivalDate">Arrival Date</label>
                                                 <input type="date" class="form-control" id="arrivalDate" required>
-                                                <label class="form-label" for="ArrivalTime">Arrival Time</label>
+                                                <label class="form-label" for="arrivalTime">Arrival Time</label>
                                                 <input type="time" class="form-control" id="arrivalTime" required>
                                                 <div class="text-danger small" id="arrivalError"></div>
                                             </div>
@@ -224,13 +205,18 @@
                                     </div>
 
                                     <div class="mb-3">
+                                        <label class="form-label" for="ticketPrice">Available Seats</label>
+                                        <input type="number" class="form-control" id="ticketPrice" min="0" step="0.01" required>
+                                        <div class="text-danger small" id="ticketPriceError"></div>
+                                    </div>
+
+                                    <div class="mb-3">
                                         <label class="form-label" for="status">Status</label>
                                         <select class="form-select" id="status" required>
                                             <option value="">Select Status</option>
                                             <option value="Active">Active</option>
                                             <option value="Delayed">Delayed</option>
                                             <option value="Cancelled">Cancelled</option>
-                                            <div class="text-danger small" id="statusError"></div>
                                         </select>
                                         <div class="text-danger small" id="statusError"></div>
                                     </div>
