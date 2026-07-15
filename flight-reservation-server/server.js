@@ -14,9 +14,6 @@ const Meal = require('./models/Meal');
 const ResService = require('./models/ResService');
 const ExtraService = require('./models/ExtraService');
 
-//routes
-const flightRoutes = require('./routes/flights');
-
 // Load environment variables
 require('dotenv').config();
 
@@ -62,6 +59,7 @@ app.set('views', path.join(__dirname, 'views'));
 // ROUTES
 const searchRoutes = require('./routes/searchRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
+const flightRoutes = require('./routes/flights');
 
 app.use('/search', searchRoutes);
 app.use('/booking', bookingRoutes);
@@ -209,6 +207,9 @@ app.get('/customer', (req, res) => {
         user: req.session.user
     });
 });
+
+// FLIGHT ROUTE
+app.use('/admin/flights', flightRoutes);
 
 // LOGOUT ROUTE
 app.get('/logout', (req, res) => {
