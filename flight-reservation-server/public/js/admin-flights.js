@@ -1,215 +1,4 @@
 
-let flights = [
-    {
-        flightId: "PR101",
-        airline: "Philippine Airlines",
-        route: "MNL - JFK",
-        departureDate: "2026-05-27",
-        departureTime: "08:00",
-        arrivalDate: "2026-05-28",
-        arrivalTime: "16:00",
-        seats: 35,
-        status: "Active"
-    },
-    {
-        flightId: "5J205",
-        airline: "Cebu Pacific",
-        route: "MNL - TKO",
-        departureDate: "2026-05-27",
-        departureTime: "09:00",
-        arrivalDate: "2026-05-27",
-        arrivalTime: "17:00",
-        seats: 35,
-        status: "Delayed"
-    },
-    {
-        flightId: "AK555",
-        airline: "AirAsia",
-        route: "MNL - HKG",
-        departureDate: "2026-05-28",
-        departureTime: "10:00",
-        arrivalDate: "2026-05-29",
-        arrivalTime: "08:00",
-        seats: 35,
-        status: "Active"
-    },
-    {
-        flightId: "AK777",
-        airline: "AirAsia",
-        route: "MNL - TPE",
-        departureDate: "2026-07-30",
-        departureTime: "10:00",
-        arrivalDate: "2026-07-30",
-        arrivalTime: "13:00",
-        seats: 35,
-        status: "Delayed"
-    },
-    {
-        flightId: "PR103",
-        airline: "Philippine Airlines",
-        route: "MNL - JFK",
-        departureDate: "2026-04-30",
-        departureTime: "10:00",
-        arrivalDate: "2026-05-1",
-        arrivalTime: "23:00",
-        seats: 40,
-        status: "Cancelled"
-    },
-    {
-        flightId: "5J217",
-        airline: "Cebu Pacific",
-        route: "MNL - SIN",
-        departureDate: "2026-03-30",
-        departureTime: "09:00",
-        arrivalDate: "2026-03-30",
-        arrivalTime: "14:00",
-        seats: 35,
-        status: "Active"
-    },
-    {
-        flightId: "5J204",
-        airline: "Cebu Pacific",
-        route: "MNL - CEB",
-        departureDate: "2026-05-27",
-        departureTime: "09:00",
-        arrivalDate: "2026-05-27",
-        arrivalTime: "10:45",
-        seats: 35,
-        status: "Cancelled"
-    },
-    {
-        flightId: "5J201",
-        airline: "Cebu Pacific",
-        route: "MNL - ISA",
-        departureDate: "2026-04-15",
-        departureTime: "09:00",
-        arrivalDate: "2026-04-15",
-        arrivalTime: "12:00",
-        seats: 25,
-        status: "Delayed"
-    },
-    {
-        flightId: "AK789",
-        airline: "AirAsia",
-        route: "MNL - HAN",
-        departureDate: "2026-08-19",
-        departureTime: "10:00",
-        arrivalDate: "2026-08-19",
-        arrivalTime: "12:45",
-        seats: 45,
-        status: "Active"
-    },
-    {
-        flightId: "PR111",
-        airline: "Philippine Airlines",
-        route: "MNL - LAX",
-        departureDate: "2026-09-11",
-        departureTime: "10:00",
-        arrivalDate: "2026-09-12",
-        arrivalTime: "8:00",
-        seats: 40,
-        status: "Active"
-    }
-];
-
-let currentPage = 1;
-let rowsPerPage = 5;
-let selectedFlightIndex = -1;
-let filteredFlights = [...flights];
-let editMode = false;
-
-function updateStatistics(){
-    $("#totalFlights").text(flights.length);
-    $("#activeFlights").text(flights.filter(flight => flight.status === "Active").length);
-    $("#delayedFlights").text(flights.filter(flight => flight.status === "Delayed").length);
-    $("#cancelledFlights").text(flights.filter(flight => flight.status === "Cancelled").length);
-}
-
-function renderFlights(data) {
-
-    let startIndex = (currentPage - 1) * rowsPerPage;
-    let endIndex = startIndex + rowsPerPage;
-
-    let paginatedData =
-        data.slice(startIndex, endIndex);
-
-    let html = "";
-
-    paginatedData.forEach((flight, index) => {
-
-        let actualIndex = startIndex + index;
-
-        let rowClass = "";
-
-        if (actualIndex === selectedFlightIndex) {
-            rowClass = "selected-row";
-        }
-
-        html += `
-            <tr
-                class="flight-row ${rowClass}"
-                data-index="${actualIndex}">
-                <td>${flight.flightId}</td>
-                <td>${flight.airline}</td>
-                <td>${flight.route}</td>
-                <td>${flight.departureDate}</td>
-                <td>${flight.departureTime}</td>
-                <td>${flight.arrivalDate}</td>
-                <td>${flight.arrivalTime}</td>
-                <td>${flight.seats}</td>
-                <td>${flight.status}</td>
-            </tr>
-        `;
-    });
-
-    $("#flightsTableBody").html(html);
-
-    updatePagination(data.length);
-}
-
-function applyFilters(){
-    let searchValue = $("#searchFlight").val().toLowerCase();
-    let airlineFilter = $("#airlineFilter").val();
-    let statusFilter = $("#statusFilter").val();
-    let sortOption = $("#sortFlights").val();
-    currentPage = 1;
-
-    filteredFlights = flights.filter(flight => {
-
-        let matchesSearch = flight.flightId.toLowerCase().includes(searchValue) || flight.airline.toLowerCase().includes(searchValue);
-
-        let matchesAirline = airlineFilter === "ALL" || flight.airline === airlineFilter;
-
-        let matchesStatus = statusFilter === "ALL" || flight.status === statusFilter;
-
-        return matchesSearch && matchesAirline && matchesStatus;
-    });
-
-    filteredFlights.sort((a, b) => {
-        if(sortOption === "flightId"){
-            return a.flightId.localeCompare(b.flightId);
-        }
-
-        if(sortOption === "airline"){
-            return a.airline.localeCompare(b.airline);
-        }
-
-        if(sortOption === "status"){
-            return a.status.localeCompare(b.status);
-        }
-
-        return 0;
-    });
-
-    selectedFlightIndex = -1;
-    $("#editBtn").prop("disabled", true);
-    $("#deleteBtn").prop("disabled", true);
-
-    $("#selectedFlightLabel").text("No flight selected");
-
-    renderFlights(filteredFlights);
-
-}
 
 //pagination
 function updatePagination(totalRows){
@@ -246,15 +35,19 @@ function validateFlightForm() {
 
     let flightId = $("#flightId").val().trim();
     let airline = $("#airline").val().trim();
-    let route = $("#route").val().trim();
+    let origin = $("#origin").val().trim();
+    let destination = $("#destination").val().trim();
+
     let departureDate = $("#departureDate").val();
     let departureTime = $("#departureTime").val();
+
     let arrivalDate = $("#arrivalDate").val();
     let arrivalTime = $("#arrivalTime").val();
-    let seats = $("#seats").val();
+
+    let availableSeats = $("#availableSeats").val();
     let status = $("#status").val();
 
-    //empty inputs
+    // required fields
     if (flightId === ""){
         $("#flightIdError").text("Flight ID is required.");
         $("#flightId").addClass("is-invalid");
@@ -265,9 +58,10 @@ function validateFlightForm() {
         $("#airline").addClass("is-invalid");
         valid = false;
     }
-    if (route === ""){
-        $("#routeError").text("Flight route is required.");
-        $("#route").addClass("is-invalid");
+    if (origin === "" || destination === ""){
+        $("#routeError").text("Origin and destination are required.");
+        $("#origin").addClass("is-invalid");
+        $("#destination").addClass("is-invalid");
         valid = false;
     }
     if (departureDate === "" || departureTime === "") {
@@ -282,9 +76,14 @@ function validateFlightForm() {
         $("#arrivalTime").addClass("is-invalid");
         valid = false;
     }
-    if (seats === "" || seats === 0){
-        $("#seatsError").text("Seats should be at least more than 0.");
-        $("#seats").addClass("is-invalid");
+    if (availableSeats === "" || availableSeats === 0){
+        $("#availableSeatsError").text("Available seats should be at least more than 0.");
+        $("#availableSeats").addClass("is-invalid");
+        valid = false;
+    }
+    if(ticketPrice === "" || Number(ticketPrice) <= 0){
+        $("#ticketPriceError").text("Ticket price should be more than 0.");
+        $("#ticketPrice").addClass("is-invalid");
         valid = false;
     }
     if (status === "") {

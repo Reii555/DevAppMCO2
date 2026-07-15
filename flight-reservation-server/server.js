@@ -59,7 +59,8 @@ app.set('views', path.join(__dirname, 'views'));
 // ROUTES
 const searchRoutes = require('./routes/searchRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
-const flightRoutes = require('./routes/flights');
+const adminFlightRoutes = require('./routes/admin-flights-routes');
+const adminDashboardRoutes = require('./routes/admin-dashboard-routes');
 
 app.use('/search', searchRoutes);
 app.use('/booking', bookingRoutes);
@@ -176,6 +177,11 @@ app.get('/admin', (req, res) => {
     });
 });
 
+// ADMIN DASHBOARD ROUTE
+app.use('/admin-dashboard', adminDashboardRoutes);
+// ADMIN FLIGHT ROUTE
+app.use('/admin-flights', adminFlightRoutes);
+
 // ADMIN-USERS ROUTE
 app.get('/admin-users', async (req, res) => {
     res.render('admin-users', {
@@ -207,9 +213,6 @@ app.get('/customer', (req, res) => {
         user: req.session.user
     });
 });
-
-// FLIGHT ROUTE
-app.use('/admin-flights', flightRoutes);
 
 // LOGOUT ROUTE
 app.get('/logout', (req, res) => {
