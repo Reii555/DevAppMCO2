@@ -4,11 +4,13 @@ const exphbs = require('express-handlebars');
 const path = require('path');
 const connectDB = require('./config/database');
 const User = require('./models/User');
+const Passenger = require('./models/Passenger');
 const Reservation = require('./models/Reservation');
 const Flight = require('./models/Flight');
 const Seat = require('./models/Seat');
 const Meal = require('./models/Meal');
 const ResService = require('./models/ResService');
+const ExtraService = require('./models/ExtraService');
 
 // Load environment variables
 require('dotenv').config();
