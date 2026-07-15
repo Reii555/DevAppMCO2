@@ -1,106 +1,196 @@
 $(document).ready(function() {
-    
-    //sidebar toggle
-    $('#sidebarButtones').click(function(e) {
-        e.stopPropagation();
+
+    // le variables
+    let filteredReservations = [];
+    let totalReservations = 0;
+    let currentFilter = 'all';
+    let currentSort = 'book_ref';
+
+    // Function to load users from server via AJAX
+    function loadUsers() {
+        // Show loading state
+        const tbody = $('#usersTableBody');
+        tbody.html(`
+            <tr>
+                <td colspan="8" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Loading users...</p>
+                </td>
+            </tr>
+        `);
+
+        // Make AJAX request
+        $.ajax({
+            url: '/api/admin/users',
+            method: 'GET',
+            data: {
+                page: currentPage,
+                limit: rowsPerPage,
+                filter: currentFilter,
+                sort: currentSort,
+                search: currentSearch
+            },
+            success: function(response) {
+                // Store the data
+                filteredUsers = response.users || [];
+                totalUsers = response.total || 0;
+                
+                // Populate the table
+                populateUserTable();
+                
+                console.log(`Loaded ${filteredUsers.length} users (Total: ${totalUsers})`);
+            },
+            error: function(xhr) {
+                console.error('Error loading users:', xhr);
+                tbody.html(`
+                    <tr>
+                        <td colspan="8" class="text-center text-danger py-4">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            Failed to load users. Please try again.
+                            <br>
+                            <button class="btn btn-outline-primary btn-sm mt-2" onclick="location.reload()">
+                                <i class="bi bi-arrow-clockwise"></i> Retry
+                            </button>
+                        </td>
+                    </tr>
+                `);
+            }
+        });
+    }
+
+    function populateUserTable() {
+        const tbody = $('#usersTableBody');
         
-        // Toggles the 'hidden' class on sidebar
-        $('#sidebar').toggleClass('hidden');
+        if (filteredUsers.length === 0) {
+            tbody.html(`
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-4">
+                        <i class="bi bi-inbox me-2"></i>
+                        No users found matching your criteria.
+                    </td>
+                </tr>
+            `);
+            updatePaginationInfo();
+            return;
+        }
+
+        let rows = '';
+        filteredUsers.forEach(user => {
+            // Status badge
+            const statusBadge = user.status === 'active' 
+                ? '<span class="badge bg-success">Active</span>'
+                : '<span class="badge bg-danger">Deleted</span>';
+            
+            // Role badge
+            const roleBadge = user.role === 'admin'
+                ? '<span class="badge bg-primary">Admin</span>'
+                : '<span class="badge bg-secondary">Customer</span>';
+
+            // Format dates
+            const createdDate = user.created_at ? new Date(user.created_at).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            }) : 'N/A';
+            
+            const lastLoginDate = user.last_login ? new Date(user.last_login).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }) : 'Never';
+
+            rows += `
+                <tr data-id="${user.id}">
+                    <td><strong>${user.id}</strong></td>
+                    <td>${user.name || 'N/A'}</td>
+                    <td>${user.email || 'N/A'}</td>
+                    <td>${user.phone || 'N/A'}</td>
+                    <td>${createdDate}</td>
+                    <td>${lastLoginDate}</td>
+                    <td>${statusBadge}</td>
+                    <td>${roleBadge}</td>
+                </tr>
+            `;
+        });
+
+        tbody.html(rows);
+        updatePaginationInfo();
+    }
+
+   function updatePaginationInfo() {
+        const total = totalUsers;
+        const totalPages = Math.ceil(total / rowsPerPage) || 1;
+        const start = total > 0 ? ((currentPage - 1) * rowsPerPage) + 1 : 0;
+        const end = Math.min(currentPage * rowsPerPage, total);
+
+        if (total === 0) {
+            $('#paginationInfo').text('Showing 0 users');
+        } else {
+            $('#paginationInfo').text(`Showing ${start} to ${end} of ${total} users`);
+        }
         
-        // Toggles the 'sidebar-open' class on main content
-        $('#adminReservationsMain').toggleClass('sidebar-open');
+        $('#currentPage').text(currentPage);
+        $('#previousPage').prop('disabled', currentPage <= 1);
+        $('#nextPage').prop('disabled', currentPage >= totalPages);
+    }
+
+    // Filter/Search/Sort functions
+    function applyFilters() {
+        currentSearch = $('#searchUsers').val().trim();
+        currentFilter = $('#filterUsers').val();
+        currentSort = $('#sortUsers').val();
+        currentPage = 1; // Reset to first page
         
+        loadUsers();
+    }
+
+    // Event Handlers
+
+    // Search with debounce
+    let searchTimeout;
+    $('#searchUsers').on('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            applyFilters();
+        }, 300);
     });
 
-    const reservations = [
-        {
-            booking_ref: "ABCDE12345",
-            pass_name: "Sof Donor",
-            flight_route: "MNL to NYC",
-            seat_no: "12A",
-            status: "Confirmed",
-            total_price: 5000.00,
-        },
-        {
-            booking_ref: "FGHIJ67890",
-            pass_name: "Raienz",
-            flight_route: "MNL to AKL",
-            seat_no: "12B",
-            status: "Confirmed",
-            total_price: 5000.00,
-        },
-        {
-            booking_ref: "KLMNO54321",
-            pass_name: "Wally Bayola",
-            flight_route: "FLL to MNL",
-            seat_no: "10B",
-            status: "Confirmed",
-            total_price: 5000.67,
-        },
-        {
-            booking_ref: "PQRST09876",
-            pass_name: "Kim Dokja",
-            flight_route: "SK to MNL",
-            seat_no: "19A",
-            status: "Confirmed",
-            total_price: 1202.00,
-        },
-        {
-            booking_ref: "UVWXY13579",
-            pass_name: "Yoo Joonghyuk",
-            flight_route: "SK to MNL",
-            seat_no: "11A",
-            status: "Confirmed",
-            total_price: 3008.00,
-        },
-        {
-            booking_ref: "ZABCD24680",
-            pass_name: "Hiromi Higuruma",
-            flight_route: "JP to MNL",
-            seat_no: "06B",
-            status: "Cancelled",
-            total_price: 10000.00,
-        },
-        {
-            booking_ref: "COOOL67676",
-            pass_name: "Reina Lagos",
-            flight_route: "JP to MNL",
-            seat_no: "06C",
-            status: "Cancelled",
-            total_price: 10000.00,
-        },
-        {
-            booking_ref: "ELFMA56789",
-            pass_name: "Renji Olsen",
-            flight_route: "FLL to MNL",
-            seat_no: "20C",
-            status: "Confirmed",
-            total_price: 8000.00,
-        },
-        {
-            booking_ref: "ZZXCV09876",
-            pass_name: "Meet Skiey",
-            flight_route: "JP to NYC",
-            seat_no: "11C",
-            status: "Cancelled",
-            total_price: 8000.00,
-        },
-        {
-            booking_ref: "YUHJK54321",
-            pass_name: "Diluc Ragnvindir",
-            flight_route: "SK to AKL",
-            seat_no: "18A",
-            status: "Confirmed",
-            total_price: 80000.00,
-        },
-    ];
+    // Filter dropdown
+    $('#filterUsers').on('change', function() {
+        applyFilters();
+    });
 
-    let currentPage = 1;
-    const rowsPerPage = 5;
-    let filteredReservations = [...reservations];
-    let editMode = false;
+    // Sort dropdown
+    $('#sortUsers').on('change', function() {
+        applyFilters();
+    });
 
-    function populateReservationTable() {
+    // Previous page
+    $('#previousPage').click(function() {
+        if (currentPage > 1) {
+            currentPage--;
+            loadUsers();
+        }
+    });
+
+    // Next page
+    $('#nextPage').click(function() {
+        const totalPages = Math.ceil(totalUsers / rowsPerPage);
+        if (currentPage < totalPages) {
+            currentPage++;
+            loadUsers();
+        }
+    });
+
+    // Initial load
+    loadUsers();
+});
+
+    /*function populateReservationTable() {
         const start = (currentPage - 1) * rowsPerPage;
         const end = start + rowsPerPage;
         const pageData = filteredReservations.slice(start, end);
@@ -303,5 +393,4 @@ $(document).ready(function() {
 
     filterReservations();
 
-    console.log(`Loaded ${filteredReservations.length} reservations`);
-});
+    console.log(`Loaded ${filteredReservations.length} reservations`);*/

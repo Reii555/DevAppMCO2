@@ -1,105 +1,130 @@
 $(document).ready(function() {
-    
-    //sidebar toggle
-    $('#sidebarButtones').click(function(e) {
-        e.stopPropagation();
-        
-        // Toggles the 'hidden' class on sidebar
-        $('#sidebar').toggleClass('hidden');
-        
-        // Toggles the 'sidebar-open' class on main content
-        $('#adminUsersMain').toggleClass('sidebar-open');
-        
-    });
 
-    const users = [
-        {
-            id: 1,
-            name: 'Admin',
-            email: 'admin67@mail.ggg',
-            phone: '09171751689',
-            created_at: '2019-12-31 11:59:50',
-            last_login: '2026-06-01 09:05:00',
-            role: 'admin',
-            status: 'active'
-        },
-        {
-            id: 2,
-            name: 'Sof Donor',
-            email: 'sofdonor@mail.ggg',
-            phone: '0912376789',
-            created_at: '2024-03-23 23:30:00',
-            last_login: '2024-06-01 11:15:00',
-            role: 'customer',
-            status: 'active'
-        },
-        {
-            id: 3,
-            name: 'Raienz',
-            email: 'raienz@mail.ggg',
-            phone: '0912376000',
-            created_at: '2020-12-21 13:36:00',
-            last_login: '2024-06-01 21:05:00',
-            role: 'customer',
-            status: 'deleted'
-        },
-        {
-            id: 4,
-            name: 'Wally Bayola',
-            email: 'wally_bayola@mail.ggg',
-            phone: '0917176789',
-            created_at: '2024-01-15 10:30:00',
-            last_login: '2024-06-01 14:45:00',
-            role: 'customer',
-            status: 'active'
-        },
-        {
-            id: 5,
-            name: 'Kim Dokja',
-            email: 'kdjORV@mail.ggg',
-            phone: '0917176009',
-            created_at: '2025-02-12 00:30:00',
-            last_login: '2024-08-01 14:45:00',
-            role: 'customer',
-            status: 'deleted'
-        },
-        {
-            id: 6,
-            name: 'Yoo Joonghyuk',
-            email: 'yjhORVa@mail.ggg',
-            phone: '0917156789',
-            created_at: '2023-05-15 10:30:00',
-            last_login: '2024-01-01 14:56:00',
-            role: 'customer',
-            status: 'active'
-        },
-        {
-            id: 7,
-            name: 'Hiromi Higuruma',
-            email: 'hiroSoPogi@mail.ggg',
-            phone: '0917167676',
-            created_at: '2025-05-03 10:30:00',
-            last_login: '2026-05-02 04:16:00',
-            role: 'customer',
-            status: 'active'
-        },
-        {
-            id: 8,
-            name: 'Reina Lagos',
-            email: 'ReiforHiro@mail.ggg',
-            phone: '09171741466',
-            created_at: '2025-05-02 10:30:00',
-            last_login: '2026-05-03 04:13:00',
-            role: 'customer',
-            status: 'active'
-        },
-    ];
-
+    // variablez
     let currentPage = 1;
-    const rowsPerPage = 5;
-    let filteredUsers = [...users];
+    const rowsperPage = 5;
+    let filteredUsers = [];
+    let totalUsers = 0;
+    let currentFilter = 'all';
+    let currentSort = 'id';
+    let currentSearch = '';
+
+    // Function to load users from server via AJAX
+    function loadUsers() {
+        // Show loading state
+        const tbody = $('#usersTableBody');
+        tbody.html(`
+            <tr>
+                <td colspan="8" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 text-muted">Loading users...</p>
+                </td>
+            </tr>
+        `);
+
+        // Make AJAX request
+        $.ajax({
+            url: '/api/admin/users',
+            method: 'GET',
+            data: {
+                page: currentPage,
+                limit: rowsPerPage,
+                filter: currentFilter,
+                sort: currentSort,
+                search: currentSearch
+            },
+            success: function(response) {
+                // Store le  data
+                filteredUsers = response.users || [];
+                totalUsers = response.total || 0;
+                
+                // Populate the table
+                populateUserTable();
+                
+                console.log(`Loaded ${filteredUsers.length} users (Total: ${totalUsers})`);
+            },
+            error: function(xhr) {
+                console.error('Error loading users:', xhr);
+                tbody.html(`
+                    <tr>
+                        <td colspan="8" class="text-center text-danger py-4">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                            Failed to load users. Please try again.
+                            <br>
+                            <button class="btn btn-outline-primary btn-sm mt-2" onclick="location.reload()">
+                                <i class="bi bi-arrow-clockwise"></i> Retry
+                            </button>
+                        </td>
+                    </tr>
+                `);
+            }
+        });
+    }
 
     function populateUserTable() {
+        const tbody = $('#usersTableBody');
+        
+        if (filteredUsers.length === 0) {
+            tbody.html(`
+                <tr>
+                    <td colspan="8" class="text-center text-muted py-4">
+                        <i class="bi bi-inbox me-2"></i>
+                        No users found matching your criteria.
+                    </td>
+                </tr>
+            `);
+            updatePaginationInfo();
+            return;
+        }
+
+        let rows = '';
+        filteredUsers.forEach(user => {
+            // Status badge
+            const statusBadge = user.status === 'active' 
+                ? '<span class="badge bg-success">Active</span>'
+                : '<span class="badge bg-danger">Deleted</span>';
+            
+            // Role badge
+            const roleBadge = user.role === 'admin'
+                ? '<span class="badge bg-primary">Admin</span>'
+                : '<span class="badge bg-secondary">Customer</span>';
+
+            // Format dates
+            const createdDate = user.created_at ? new Date(user.created_at).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            }) : 'N/A';
+            
+            const lastLoginDate = user.last_login ? new Date(user.last_login).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }) : 'Never';
+
+            rows += `
+                <tr data-id="${user.id}">
+                    <td><strong>${user.id}</strong></td>
+                    <td>${user.name || 'N/A'}</td>
+                    <td>${user.email || 'N/A'}</td>
+                    <td>${user.phone || 'N/A'}</td>
+                    <td>${createdDate}</td>
+                    <td>${lastLoginDate}</td>
+                    <td>${statusBadge}</td>
+                    <td>${roleBadge}</td>
+                </tr>
+            `;
+        });
+
+        tbody.html(rows);
+        updatePaginationInfo();
+    }
+
+    /*function populateUserTable() {
         // Calculate which rows to show based on pagination
         const start = (currentPage - 1) * rowsPerPage;
         const end = start + rowsPerPage;
@@ -149,9 +174,79 @@ $(document).ready(function() {
         
         // Update pagination info
         paginationTable();
+    }*/
+
+    function updatePaginationInfo() {
+        const total = totalUsers;
+        const totalPages = Math.ceil(total / rowsPerPage) || 1;
+        const start = total > 0 ? ((currentPage - 1) * rowsPerPage) + 1 : 0;
+        const end = Math.min(currentPage * rowsPerPage, total);
+
+        // Update pagination info
+        if (total === 0) {
+            $('#paginationInfo').text('Showing 0 users');
+        } else {
+            $('#paginationInfo').text(`Showing ${start} to ${end} of ${total} users`);
+        }
+        
+        $('#currentPage').text(currentPage);
+        $('#previousPage').prop('disabled', currentPage <= 1);
+        $('#nextPage').prop('disabled', currentPage >= totalPages);
     }
 
-    function filterUsers() {
+    // Filter/Search/Sort functions
+    function applyFilters() {
+        currentSearch = $('#searchUsers').val().trim();
+        currentFilter = $('#filterUsers').val();
+        currentSort = $('#sortUsers').val();
+        currentPage = 1; // Reset to first page
+        
+        loadUsers();
+    }
+
+    // Event Handlers
+
+    // Search with debounce
+    let searchTimeout;
+    $('#searchUsers').on('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            applyFilters();
+        }, 300);
+    });
+
+    // Filter dropdown
+    $('#filterUsers').on('change', function() {
+        applyFilters();
+    });
+
+    // Sort dropdown
+    $('#sortUsers').on('change', function() {
+        applyFilters();
+    });
+
+    // Previous page
+    $('#previousPage').click(function() {
+        if (currentPage > 1) {
+            currentPage--;
+            loadUsers();
+        }
+    });
+
+    // Next page
+    $('#nextPage').click(function() {
+        const totalPages = Math.ceil(totalUsers / rowsPerPage);
+        if (currentPage < totalPages) {
+            currentPage++;
+            loadUsers();
+        }
+    });
+
+    // Initial load
+    loadUsers();
+});
+
+    /*function filterUsers() {
         const search = $('#searchUsers').val().toLowerCase();
         const filter = $('#filterUsers').val();
         const sort = $('#sortUsers').val();
@@ -245,4 +340,4 @@ $(document).ready(function() {
     filterUsers();
 
     console.log(`Loaded ${users.length} users`);
-});
+});*/
