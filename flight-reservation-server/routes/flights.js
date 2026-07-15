@@ -7,6 +7,8 @@ router.get("/", async(req, res) => {
     try {
         const flights = await Flight.find();
         res.render("admin-flights", {
+            title: "Flights",
+            layout: "main-admin",
             flights: flights
         });
     } catch(error){
