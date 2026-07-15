@@ -14,6 +14,9 @@ const Meal = require('./models/Meal');
 const ResService = require('./models/ResService');
 const ExtraService = require('./models/ExtraService');
 
+//routes
+const flightRoutes = require('./routes/flights');
+
 // Load environment variables
 require('dotenv').config();
 
