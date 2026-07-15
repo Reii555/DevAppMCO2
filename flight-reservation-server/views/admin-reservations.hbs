@@ -51,17 +51,10 @@
                         <th>Total Price</th>
                     </tr>
                 </thead>
-                <tbody id="reservationsTableBody">
-                        {{#each reservations}}
-                        <tr data-id="{{this.id}}" data-status="{{this.status}}">
-                            <td>{{this.book_ref}}</td>
-                            <td>{{this.pass_name}}</td>
-                            <td>{{this.flight_route}}</td>
-                            <td>{{this.seat_no}}</td>
-                            <td><span class="badge {{#if (eq this.status 'Confirmed')}}bg-success{{else if (eq this.status 'Cancelled')}}bg-danger{{else}}bg-warning{{/if}}">{{this.status}}</span></td>
-                            <td>${{this.total_price}}</td>
-                        </tr>
-                        {{/each}}
+                <tbody id="usersTableBody">
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-4"></td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -89,4 +82,4 @@
     </div>
 
 <!-- Custom JS -->
-        <script src="/js/admin-reservations.js"></script>
+        <script src="admin-reservations.js"></script>
