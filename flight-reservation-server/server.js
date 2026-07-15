@@ -3,8 +3,6 @@ const session = require('express-session');
 const exphbs = require('express-handlebars');
 const path = require('path');
 const connectDB = require('./config/database');
-
-// MODELS
 const User = require('./models/User');
 const Reservation = require('./models/Reservation');
 const Flight = require('./models/Flight');
@@ -22,8 +20,6 @@ connectDB();
 // MIDDLEWARE
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-
-// Serve static files from public folder
 app.use(express.static(path.join(__dirname, 'public')));
 
 // EXPRESS SESSION
@@ -89,25 +85,13 @@ app.engine('hbs', hbs.engine);
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
 
-<<<<<<< HEAD
 console.log('📁 Views directory:', path.join(__dirname, 'views'));
-console.log('📁 Public directory:', path.join(__dirname, 'public'));
 
 // ============================================================
 // ========== ALL ROUTES ==========
 // ============================================================
 
 // ---------- HOME PAGE ----------
-=======
-// ROUTES
-const searchRoutes = require('./routes/searchRoutes');
-const bookingRoutes = require('./routes/bookingRoutes');
-
-app.use('/search', searchRoutes);
-app.use('/booking', bookingRoutes);
-
-// Home Page
->>>>>>> 15cff4b209ae2a318acae0d39be77547521e1f12
 app.get('/', (req, res) => {
     res.render('index', { 
         title: 'Home',
@@ -142,27 +126,10 @@ app.post('/login', async (req, res) => {
     }
 });
 
-<<<<<<< HEAD
 // ---------- SIGNUP ROUTES ----------
 app.get('/signup', (req, res) => {
     if (req.session.user) {
         return res.redirect('/');
-=======
-// BOOKING ROUTES
-app.get('/booking', (req, res) => {
-    res.render('booking', { title: 'Book Flight' });
-});
-
-// MY RESERVATIONS ROUTES
-app.get('/my-reservations', (req, res) => {
-    res.render('my-reservations', { title: 'My Reservations' });
-});
-
-// DASHBOARD ROUTE
-app.get('/dashboard', (req, res) => {
-    if (!req.session.user) {
-        return res.redirect('/login');
->>>>>>> 15cff4b209ae2a318acae0d39be77547521e1f12
     }
     res.render('signup', { title: 'Sign Up' });
 });
@@ -198,7 +165,7 @@ app.post('/signup', async (req, res) => {
 app.get('/profile', (req, res) => {
     console.log('✅ Profile route hit!');
     
-    // Auto-login for testing
+    // Auto-login for testing (creates a fake user)
     if (!req.session.user) {
         req.session.user = {
             _id: 'test123',
@@ -300,15 +267,15 @@ app.get('/booking', (req, res) => {
     });
 });
 
-// ---------- ADMIN ROUTES ----------
-app.get('/admin-reservations', (req, res) => {
+// ---------- ADMIN ROUTES (if you have these files) ----------
+app.get('/admin-reservation', (req, res) => {
     if (!req.session.user) {
         return res.redirect('/login');
     }
     if (req.session.user.role !== 'admin') {
         return res.send('Access Denied. Admin only.');
     }
-    res.render('admin-reservations', { 
+    res.render('admin-reservation', { 
         title: 'Admin - Reservations',
         user: req.session.user,
         isAuthenticated: true
@@ -376,8 +343,10 @@ app.get('*', (req, res) => {
                     <li><a href="/reservations">/reservations</a> - My Reservations</li>
                     <li><a href="/search">/search</a> - Search Flights</li>
                     <li><a href="/booking">/booking</a> - Booking</li>
-                    <li><a href="/admin-reservations">/admin-reservations</a> - Admin Reservations</li>
-                    <li><a href="/admin-users">/admin-users</a> - Admin Users</li>
+                    ${req.session?.user?.role === 'admin' ? `
+                        <li><a href="/admin-reservation">/admin-reservation</a> - Admin Reservations</li>
+                        <li><a href="/admin-users">/admin-users</a> - Admin Users</li>
+                    ` : ''}
                     <li><a href="/logout">/logout</a> - Logout</li>
                 </ul>
             </div>
@@ -391,14 +360,11 @@ app.get('*', (req, res) => {
 // ============================================================
 
 app.listen(PORT, () => {
-<<<<<<< HEAD
     console.log('========================================');
     console.log(`✅ Server running on http://localhost:${PORT}`);
     console.log('========================================');
-    console.log('📁 Project Structure:');
-    console.log(`   Views:   ${path.join(__dirname, 'views')}`);
-    console.log(`   Public:  ${path.join(__dirname, 'public')}`);
-    console.log('📄 Available Routes:');
+    console.log('📁 Views directory:', path.join(__dirname, 'views'));
+    console.log('📄 Available routes:');
     console.log('   - /                (Home)');
     console.log('   - /login           (Login)');
     console.log('   - /signup          (Signup)');
@@ -407,85 +373,6 @@ app.listen(PORT, () => {
     console.log('   - /reservations    (My Reservations)');
     console.log('   - /search          (Search Flights)');
     console.log('   - /booking         (Booking)');
-    console.log('   - /admin-reservations (Admin Reservations)');
-    console.log('   - /admin-users     (Admin Users)');
     console.log('   - /logout          (Logout)');
     console.log('========================================');
 });
-=======
-    console.log(`Server running on http://localhost:${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-});
-
-// SAMPLE DATA 
-
-(async () => {
-    try {
-
-        // Sample data for admin user (?) - replace values nalang
-        const user = await User.create({
-            firstName: "Test",
-            lastName: "User",
-            email: "test@test.com",
-            password: "password123",
-            phone: "+639123456789",
-            dateOfBirth: new Date("2005-07-11"),
-            passportNumber: "A12345678",
-            nationality: "Filipino",
-            gender: "Female",
-            role: "customer",
-            status: "active",
-            lastLogin: new Date("2026-07-12"),
-            profilePicture: "placeholder",
-            emergencyContact: {
-                name: "ParentTest",
-                relationship: "Father",
-                phone: "+639987654321",
-                email: "parent@test.com"
-            }
-        });
-
-        console.log("Sample User Created");
-
-        // Sample data for flight collection
-        const flight = await Flight.create({
-            flight_number: "PR1001",
-            airline: "Philippine Airlines",
-            origin: "Manila (MNL)",
-            destination: "Cebu (CEB)",
-            departureTime: new Date("2026-07-14T08:00:00"),
-            arrivalTime: new Date("2026-07-14T09:30:00"),
-            basePrice: 4000,
-            cabinClass: "Economy",
-            availableSeats: 40,
-            status: "Upcoming"
-        });
-
-        console.log("Sample Flight Created");
-
-        // Sample data for seats collection
-        const seats = [];
-
-        for (let row = 1; row <= 10; row++) {
-            const letters = ["A", "B", "C", "D"];
-
-            for (const letter of letters) {
-                seats.push({
-                    flight_id: flight._id,
-                    seatNumber: `${row}${letter}`,
-                    status: "Unoccupied"
-                });
-            }
-        }
-
-        seats[1].status = "Occupied";   // occupied = 1B (for testing purposes)
-
-        await Seat.insertMany(seats);
-
-        console.log("Sample Seats created.");
-
-    } catch (err) {
-        console.log(err);
-    }
-})();
->>>>>>> 15cff4b209ae2a318acae0d39be77547521e1f12
