@@ -160,6 +160,7 @@ app.get('/dashboard', (req, res) => {
     });
 });
 
+/*
 // ADMIN ROUTE
 app.get('/admin', (req, res) => {
     if (!req.session.user) {
@@ -190,7 +191,7 @@ app.get('/admin-reservations', async (req, res) => {
         title: 'Reservations',
         layout: 'main-admin'
     });
-});
+});*/
 
 // CUSTOMER ROUTE
 app.get('/customer', (req, res) => {
