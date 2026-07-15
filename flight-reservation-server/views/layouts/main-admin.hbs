@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AnimoSkies Admin - Users</title>
+    <title>AnimoSkies Admin - {{title}}</title>
 
     <!--Bootstrap-->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"/>
@@ -25,7 +25,8 @@
 
             <div class="admin-user-dropdown">
                 <button class="btn admin-user-btn dropdown-toggle" data-bs-toggle="dropdown">
-                    <i class="bi bi-person-circle"></i> Admin
+                    <i class="bi bi-person-circle"></i>
+                        {{user.firstName}} {{user.lastName}}
                 </button>
                 <ul class="dropdown-menu">
                     <li><a class="dropdown-item" href="#">Profile</a></li>
@@ -36,7 +37,7 @@
         </div>
 
         <div class="top-bar-right">
-            <h3>Admin Panel - Users</h3>
+            <h3>Admin Panel - {{title}}</h3>
             <i class="fas fa-plane-departure me-2"></i>
         </div>
     </div>
@@ -49,7 +50,8 @@
         <!--Dashboard Section-->
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a class="nav-link-Dashboard" href="admin-dashboard.html">Dashboard</a>
+                <a class="nav-link {{#if (eq activePage 'dashboard')}}active{{/if}}" 
+                href="/admin-dashboard">Dashboard</a>
             </li>
         </ul>
 
@@ -57,15 +59,18 @@
         <div class="nav-section-title">Manage</div>
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a class="nav-link-Flights" href="admin-flights.html">Flights</a>
+                <a class="nav-link {{#if (eq activePage 'flights')}}active{{/if}}"
+                href="/admin-flights">Flights</a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link-Users" href="#">Users</a>
+                <a class="nav-link {{#if (eq activePage 'users')}}active{{/if}}" 
+                href="/admin-users">Users</a> //kaso liek.. ima check pa if this js acts like a refresh or somehow crashed the whole thang
             </li>
 
             <li class="nav-item">
-                <a class="nav-link-Reservations" href="admin-reservations.html">Reservations</a>
+                <a class="nav-link {{#if (eq activePage 'payments')}}active{{/if}}" 
+                href="/admin-payments">Reservations</a>
             </li>
         </ul>
     </nav>
