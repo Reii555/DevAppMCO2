@@ -66,7 +66,7 @@ exports.showFlights = async (req, res) => {
     try {
 
         // search filter
-        const { origin, destination, departureDate, returnDate, tripType, cabinClass, airline, directFlights} = req.body;
+        const { origin, destination, departureDate, returnDate, tripType, cabinClass, airline, directFlights, sort} = req.body;
 
         const query = {};
 
@@ -134,17 +134,16 @@ exports.showFlights = async (req, res) => {
 
         formatFlights(flights);
 
-        res.render('search', {
-            title: 'Search Flights',
-            flights,
-            flightsCount: flights.length
+         res.render("partials/flightCard", {
+            layout: false,
+            flights
         });
  
     } catch (err) {
         console.log(err);
 
-        res.render('search', {
-            title: 'Search Flights',
+        res.render("partials/flightCard", {
+            layout: false,
             flights: []
         });
     }

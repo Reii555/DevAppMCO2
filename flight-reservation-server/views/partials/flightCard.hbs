@@ -1,0 +1,91 @@
+{{#each flights}}
+
+<div class="card shadow border-0 p-3 mb-3">
+    <div class="row align-items-center mx-2">
+
+        <div class="col-md-12 mb-3 mt-3">
+            <strong>{{flight_number}}</strong> - {{airline}}
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Origin: {{origin}}</label>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Destination: {{destination}}</label>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Departure: {{departureDate}} {{departureTimeFormatted}}</label>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Arrival: {{arrivalDate}} {{arrivalTimeFormatted}}</label>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Trip Type: {{tripType}}</label>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Return Date: {{returnDateFormatted}} {{returnTimeFormatted}}</label>
+        </div>
+
+
+        <div class="col-md-6">
+            <label class="form-label">Duration: {{duration}}</label>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Layovers: {{layoversCount}} </label>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Cabin Class: {{cabinClass}} </label>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Seats Available: {{availableSeats}}</label>
+        </div>
+
+        <div class="col-md-12">
+            <label class="form-label fs-6 fw-bold">₱{{basePrice}}</label>
+        </div>
+
+    </div>
+
+    <div class="row align-items-center mx-2">
+
+        <div class="collapse mt-3" id="details-${index}">
+            <hr>
+            <div class="col-md-12 mb-3 mt-3">
+                <strong>Flight Details</strong>
+            </div>
+
+            <label class="form-label">Baggage:</label>
+            <ul class="form-label">
+                <li>{{checkedIn}} kg Checked-in</li>
+                <li>{{carryOn}} kg Carry-On</li>
+            </ul>
+
+            <label class="form-label">Layover Information:</label>
+            <ul class="form-label">
+                <li>{{layoverDetails}}</li>
+            </ul>
+        </div>
+
+        <div class="col-md-4">
+            <a href="booking.hbs" class="btn btn-success w-100 mt-3">Book Flight</a> <!-- ???? -->
+
+        </div>
+
+        <div class="col-md-4">
+            <button class="btn btn-outline-success w-100 mt-3" data-bs-toggle="collapse"
+                data-bs-target="#details-${index}">
+                View Details
+            </button>
+        </div>
+    </div>
+</div>
+
+{{/each}}

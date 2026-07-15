@@ -1,22 +1,22 @@
-$(document).ready(function(){
+$("#searchBtn").click(function (e) {
 
-    $("#searchBtn").click(function () {
 
-      let origin = $("#origin").val();
-      let destination = $("#destination").val();
+    e.preventDefault();
 
-      let results = flights.filter(flight =>
-          flight.origin === origin &&
-          flight.destination === destination
-      );
+    $.ajax({
+        url: "/search",
+        type: "POST",
+        data: $("form").serialize(),
 
-      $("#resultsSection").show();
-      renderFlights(results);
-  });
+        success: function(html) {
 
-    $("#sortSelect").on("change", function () {
-      let sorted = sortFlights(flights, $(this).val());
-      renderFlights(sorted);
+            $("#flightResults").html(html);
+
+            $("#numFlights").text(
+                "Showing " + $("#flightResults .card").length + " Flights"
+            );
+        }
+
     });
 
 });
