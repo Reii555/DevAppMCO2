@@ -53,8 +53,7 @@
         <!--Dashboard Section-->
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a class="nav-link {{#if (eq activePage 'dashboard')}}active{{/if}}" 
-                href="/admin-dashboard">Dashboard</a>
+                <a class="nav-link-Dashboard" href="admin-dashboard.html">Dashboard</a>
             </li>
         </ul>
 
@@ -62,18 +61,15 @@
         <div class="nav-section-title">Manage</div>
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a class="nav-link {{#if (eq activePage 'flights')}}active{{/if}}"
-                href="/admin-flights">Flights</a>
+                <a class="nav-link-Flights" href="admin-flights.html">Flights</a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link {{#if (eq activePage 'users')}}active{{/if}}" 
-                href="/admin-users">Users</a> //kaso liek.. ima check pa if this js acts like a refresh or somehow crashed the whole thang
+                <a class="nav-link-Users" href="#">Users</a> //kaso liek.. ima check pa if this js acts like a refresh or somehow crashed the whole thang
             </li>
 
             <li class="nav-item">
-                <a class="nav-link {{#if (eq activePage 'payments')}}active{{/if}}" 
-                href="/admin-reservations">Reservations</a>
+                <a class="nav-link-Reservations" href="admin-reservations.html">>Reservations</a>
             </li>
         </ul>
     </nav>
