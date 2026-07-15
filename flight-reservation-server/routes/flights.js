@@ -1,1 +1,18 @@
+const express = require("express");
+const router = express.Router();
 
+const Flight = require("../models/Flight");
+
+router.get("/", async(req, res) => {
+    try {
+        const flights = await Flight.find();
+        res.render("admin-flights", {
+            flights: flights
+        });
+    } catch(error){
+        console.error(error);
+        res.send("Error loading flights");
+    }
+});
+
+module.exports = router;
