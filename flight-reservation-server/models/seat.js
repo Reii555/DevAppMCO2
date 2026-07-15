@@ -26,14 +26,7 @@ const seatSchema = new mongoose.Schema({
         enum: ['Occupied', 'Unoccupied'],
         default: 'Unoccupied',
         required: true
-    },
-
-    cabinClass: {
-        type: String,
-        enum: ['Economy', 'Premium Economy', 'Business', 'First Class'],
-        required: true
     }
-
 }, {
     timestamps: true
 });

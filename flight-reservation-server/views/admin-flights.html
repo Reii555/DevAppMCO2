@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+
+    <!--Bootstrap-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!--Font-->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <!--Bootstrap Icons-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!--CSS-->
+    <link rel="stylesheet" href="admin-flights.css">
+</head>
+
+<body>
+    <!--Top Bar-->
+    <div class="top-bar">
+        <div class="top-bar-left">
+            <button class="toggle-sidebar-btn" id="sidebarButton">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <div class="admin-user-dropdown">
+                <button class="btn admin-user-btn dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="bi bi-person-circle"></i> Admin
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#">Profile</a></li>
+                    <li><a class="dropdown-item" href="#">Settings</a></li>
+                    <li><a class="dropdown-item" href="#">Logout</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="top-bar-right">
+            <h3>Admin Panel - Flights</h3>
+            <i class="fas fa-plane-departure me-2"></i>
+        </div>
+    </div>
+
+    <!--Sidebar-->
+    <div class="sidebar" id="sidebar">
+        <nav class="sidebar-nav">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link-Dashboard active" href="admin-dashboard.html">Dashboard</a>
+                </li>
+            </ul>
+
+            <div class="nav-section-title">Manage</div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link-Flights" href="admin-flights.html">Flights</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link-Users" href="admin-users.html">Users</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link-Reservations" href="admin-reservations.html">Reservations</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+
+    <!--Main Content-->
+    <div class="Admin-panel-main" id="adminMain">
+        <h2 class="page-heading">Flight Management</h2>
+
+        <!--Stats Board-->
+        <div class="row g-3 mb-4">
+
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <h5>Total Flights</h5>
+                    <h2 id="totalFlights">0</h2>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <h5>Active</h5>
+                    <h2 id="activeFlights">0</h2>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <h5>Delayed</h5>
+                    <h2 id="delayedFlights">0</h2>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <h5>Cancelled</h5>
+                    <h2 id="cancelledFlights">0</h2>
+                </div>
+            </div>
+
+            <!--Controls-->
+            <div class="flight-controls">
+
+                <div class="row g-3">
+
+                    <div class="col-md-4">
+                        <input type="text" class="form-control" id="searchFlight"
+                            placeholder="Search Flight ID or Airline">
+                    </div>
+
+                    <div class="col-md-2">
+                        <select class="filter-dropdown" id="airlineFilter">
+                            <option value="ALL">All Airlines</option>
+                            <option value="Philippine Airlines">Philippine Airlines</option>
+                            <option value="Cebu Pacific">Cebu Pacific</option>
+                            <option value="AirAsia">AirAsia</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <select class="filter-dropdown" id="statusFilter">
+                            <option value="ALL">All Status</option>
+                            <option value="Active">Active</option>
+                            <option value="Delayed">Delayed</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-2">
+                        <select class="sort-dropdown" id="sortFlights">
+                            <option value="flightId">Sort by Flight ID</option>
+                            <option value="airline">Sort by Airline</option>
+                            <option value="status">Sort by Status</option>
+                        </select>
+                    </div>
+
+                    <!--CRUD Buttons-->
+                    <div class="crud-toolbar mb-3">
+                        <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#flightModal"
+                            id="addBtn">
+                            Add Flight
+                        </button>
+
+                        <button class="btn btn-warning" id="editBtn" disabled>
+                            <i class="bi bi-pencil-fill"></i>
+                            Edit
+                        </button>
+
+                        <button class="btn btn-danger" id="deleteBtn" disabled>
+                            <i class="bi bi-trash-fill"></i>
+                            Delete
+                        </button>
+
+                        <span class="ms-3 text-muted" id="selectedFlightLabel">
+                            No flight selected
+                        </span>
+                    </div>
+
+                    <!--Table-->
+                    <div class="table-container">
+                        <table class="table table-hover table-bordered align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Flight ID</th>
+                                    <th>Airline</th>
+                                    <th>Route</th>
+                                    <th>Departure Date</th>
+                                    <th>Departure Time</th>
+                                    <th>Arrival Date</th>
+                                    <th>Arrival Time</th>
+                                    <th>Seats</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="flightsTableBody">
+                                <!--will be done via jQuery-->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+
+                        <span id="paginationInfo">Showing 1 of 5 to 10 flights </span>
+
+                        <nav>
+                            <ul class="pagination mb-0">
+                                <li class="page-item">
+                                    <button class="page-link" id="previousPage">Previous</button>
+                                </li>
+
+                                <li class="page-item">
+                                    <span class="page-link" id="currentPage">1</span>
+                                </li>
+
+                                <li class="page-item">
+                                    <button class="page-link" id="nextPage">Next</button>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+
+                    <!--ADD/EDIT Flight Modals-->
+
+                    <div class="modal fade" id="flightModal" tabindex="-1">
+
+                        <div class="modal-dialog">
+
+                            <div class="modal-content">
+                                <div class="modal-header">
+
+                                    <h5 class="modal-title" id="modalTitle">Add Flight</h5>
+
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="mb-3">
+                                        <label class="form-label" for="flightId">Flight ID</label>
+                                        <input type="text" class="form-control" id="flightId" required>
+                                        <div class="text-danger small" id="flightIdError"></div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label" for="airline">Airline</label>
+                                        <input type="text" class="form-control" id="airline" required>
+                                        <div class="text-danger small" id="airlineError"></div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label" for="route">Route</label>
+                                        <input type="text" class="form-control" id="route" placeholder="MNL - LAX"
+                                            required>
+                                        <div class="text-danger small" id="routeError"></div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="departureDate">Departure Date</label>
+                                                <input type="date" class="form-control" id="departureDate" required>
+                                                <label class="form-label" for="departureTime">Departure Time</label>
+                                                <input type="time" class="form-control" id="departureTime" required>
+                                                <div class="text-danger small" id="departureError"></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label class="form-label" for="ArrivalDate">Arrival Date</label>
+                                                <input type="date" class="form-control" id="arrivalDate" required>
+                                                <label class="form-label" for="ArrivalTime">Arrival Time</label>
+                                                <input type="time" class="form-control" id="arrivalTime" required>
+                                                <div class="text-danger small" id="arrivalError"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label" for="seats">Available Seats</label>
+                                        <input type="number" class="form-control" id="seats" required>
+                                        <div class="text-danger small" id="seatsError"></div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label" for="status">Status</label>
+                                        <select class="form-select" id="status" required>
+                                            <option value="">Select Status</option>
+                                            <option value="Active">Active</option>
+                                            <option value="Delayed">Delayed</option>
+                                            <option value="Cancelled">Cancelled</option>
+                                            <div class="text-danger small" id="statusError"></div>
+                                        </select>
+                                        <div class="text-danger small" id="statusError"></div>
+                                    </div>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-primary" id="saveFlight">Save Flight</button>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <!--DELETE Modal-->
+
+                    <div class="modal fade" id="deleteModal" tabindex="-1">
+
+                        <div class="modal-dialog modal-sm">
+
+                            <div class="modal-content">
+
+                                <div class="modal-header">
+
+                                    <h5 class="modal-title">Delete Flight?</h5>
+
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                </div>
+
+                                <div class="modal-body">
+                                    Are you sure you want to delete the selected flight?
+                                    <p style="color:tomato"><strong>This action cannot be undone.</strong></p>
+                                </div>
+
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary"
+                                        data-bs-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-danger" id="confirmDelete">Delete</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    </div>
+
+    <!--JS links-->
+    <!--Bootstrap JS-->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
+    <!--JQuery-->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!--Custom JS-->
+    <script src="admin-flights.js"></script>
+</body>
+
+</html>

@@ -42,7 +42,13 @@ const flightSchema = new mongoose.Schema({
         min: 0
     },
 
-        availableSeats: {
+    cabinClass: {
+        type: String,
+        enum: ['Economy', 'Premium Economy', 'Business', 'First Class'],
+        required: true
+    },
+
+    availableSeats: {
         type: Number,
         required: true,
         default: 40,
