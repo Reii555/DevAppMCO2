@@ -1,13 +1,9 @@
 const express = require('express');
 const router = express.Router();
 
-// page route
-router.get('/', (req, res) => {
-    res.render('search', {
-        title: 'Search Flights'
-    });
-});
+const searchController = require('../controllers/searchController');
 
-// will add other functionality
+router.get('/', searchController.showSearchPage);
+router.post('/', searchController.showFlights);
 
 module.exports = router;

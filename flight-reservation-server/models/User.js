@@ -87,7 +87,7 @@ const userSchema = new mongoose.Schema({
   },
 
   profilePicture: {
-    type: String, // question mark
+    type: String,
     default: null
   },
 

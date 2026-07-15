@@ -26,13 +26,52 @@ const flightSchema = new mongoose.Schema({
         trim: true
     },
 
+    departureTime: {
+        type: Date,
+        required: true
+    },
+
     arrivalTime: {
         type: Date,
         required: true
     },
 
-    departureTime: {
+    duration: {
+        type: String,
+        required: true
+    },
+
+    tripType: {
+        type: String,
+        enum: ['One-way', 'Round-trip'],
+        required: true
+    },
+
+    // for round-trip flights
+    returnDate: {
         type: Date,
+        default: null
+    },
+
+    layoversCount: {
+        type: Number,
+        default: 0
+    },
+
+    layoverDetails: {
+        type: String,
+        default: "N/A"
+    },
+
+    // checked-in baggage weight for that flight
+    checkedIn: {
+        type: Number,
+        required: true
+    },
+
+    // carry-on baggage weight for that flight
+    carryOn: {
+        type: Number,
         required: true
     },
 
@@ -61,6 +100,11 @@ const flightSchema = new mongoose.Schema({
         enum: ['Completed', 'Cancelled', 'Upcoming', 'Ongoing'],
         default: "Upcoming",
         required: true
+    },
+
+    airlineLogo: {
+        type: String,
+        default: null
     }
     
 }, {
