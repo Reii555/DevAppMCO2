@@ -17,7 +17,7 @@ function updateStatistics() {
 
         success: function (flights) {
             $("#totalFlights").text(flights.length);
-            $("#activeFlights").text(flights.filter(flight => flight.status === "Active").length);
+            $("#ongoingFlights").text(flights.filter(flight => flight.status === "Ongoing").length);
             $("#delayedFlights").text(flights.filter(flight => flight.status === "Delayed").length);
             $("#cancelledFlights").text(flights.filter(flight => flight.status === "Cancelled").length);
         },
@@ -28,13 +28,33 @@ function updateStatistics() {
     });
 }
 
+//initialize
+function initializeFlight(flight) {
+
+    $("#flight_number").val(flight.flight_number);
+    $("#airline").val(flight.airline);
+    $("#cabinClass").val(flight.cabinClass);
+
+    $("#origin").val(flight.origin);
+    $("#destination").val(flight.destination);
+
+    $("#departureDate").val(flight.departureDate);
+    $("#departureTime").val(flight.departureTime);
+
+    $("#arrivalDate").val(flight.arrivalDate);
+    $("#arrivalTime").val(flight.arrivalTime);
+
+    $("#availableSeats").val(flight.availableSeats);
+    $("#basePrice").val(flight.basePrice);
+
+    $("#status").val(flight.status);
+}
 
 //render
 function renderFlights(data) {
 
     let startIndex = (currentPage - 1) * rowsPerPage;
     let endIndex = startIndex + rowsPerPage;
-
     let paginatedData = data.slice(startIndex, endIndex);
 
     let html = "";
@@ -42,7 +62,6 @@ function renderFlights(data) {
     paginatedData.forEach(function (flight, index) {
 
         let actualIndex = startIndex + index;
-
         let rowClass = "";
 
         if (actualIndex === selectedFlightIndex) {
@@ -57,22 +76,14 @@ function renderFlights(data) {
 
                 <td>${flight.flight_number}</td>
                 <td>${flight.airline}</td>
+                <td>${flight.cabinClass}</td>
                 <td>${flight.origin}</td>
-                <td>${flight.destination}</td>
-
-                <td>
-                    ${formatDate(flight.departureDate)}
-                    <br>
-                    ${flight.departureTime}
-                </td>
-
-                <td>
-                    ${formatDate(flight.arrivalDate)}
-                    <br>
-                    ${flight.arrivalTime}
-                </td>
-
+                <td>${flight.departureDate}</td>
+                <td>${flight.departureTime}</td>
+                <td>${flight.arrivalDate}</td>
+                <td>${flight.arrivalTime}</td>
                 <td>${flight.availableSeats}</td>
+                <td>₱${flight.basePrice}</td>
                 <td>${flight.status}</td>
 
             </tr>
@@ -83,24 +94,6 @@ function renderFlights(data) {
 
     updatePagination(data.length);
 }
-
-
-//formating date
-function formatDate(date) {
-
-    if (!date) {
-        return "";
-    }
-
-    let formattedDate = new Date(date);
-
-    return formattedDate.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric"
-    });
-}
-
 
 // AJAX for search and filter
 function applyFilters() {
@@ -128,18 +121,15 @@ function applyFilters() {
             // sorting
             filteredFlights.sort(function (a, b) {
 
-                if (sortOption === "flightId") {
+                if (sortOption === "flight_number") {
                     return a.flight_number.localeCompare(b.flight_number);
                 }
-
                 if (sortOption === "airline") {
                     return a.airline.localeCompare(b.airline);
                 }
-
                 if (sortOption === "status") {
                     return a.status.localeCompare(b.status);
                 }
-
                 return 0;
             });
 
@@ -200,8 +190,9 @@ function validateFlightForm() {
     $(".form-select").removeClass("is-invalid");
 
 
-    let flightNumber = $("#flightNumber").val().trim();
+    let flight_number = $("#flight_number").val().trim();
     let airline = $("#airline").val().trim();
+    let cabinClass = $("#cabinClass").val();
     let origin = $("#origin").val().trim();
     let destination = $("#destination").val().trim();
     let departureDate = $("#departureDate").val();
@@ -209,37 +200,38 @@ function validateFlightForm() {
     let arrivalDate = $("#arrivalDate").val();
     let arrivalTime = $("#arrivalTime").val();
     let availableSeats = $("#availableSeats").val();
-    let ticketPrice = $("#ticketPrice").val();
+    let basePrice = $("#basePrice").val();
     let status = $("#status").val();
 
 
     //empty inputs
-    if (flightNumber === "") {
+    if (flight_number === "") {
 
         $("#flightNumberError").text("Flight number is required.");
-        $("#flightNumber").addClass("is-invalid");
-
+        $("#flight_number").addClass("is-invalid");
         valid = false;
     }
     if (airline === "") {
 
         $("#airlineError").text("Airline is required.");
         $("#airline").addClass("is-invalid");
-
+        valid = false;
+    }
+    if (cabinClass === "") {
+        $("#cabinClassError").text("Cabin Class is required.");
+        $("#cabinClass").addClass("is-invalid");
         valid = false;
     }
     if (origin === "") {
 
         $("#originError").text("Origin is required.");
         $("#origin").addClass("is-invalid");
-
         valid = false;
     }
     if (destination === "") {
 
         $("#destinationError").text("Destination is required.");
         $("#destination").addClass("is-invalid");
-
         valid = false;
     }
     if (departureDate === "" || departureTime === "") {
@@ -262,10 +254,10 @@ function validateFlightForm() {
         $("#availableSeats").addClass("is-invalid");
         valid = false;
     }
-    if (ticketPrice === "" || Number(ticketPrice) <= 0) {
+    if (basePrice === "" || Number(basePrice) <= 0) {
 
-        $("#ticketPriceError").text("Ticket price must be greater than 0.");
-        $("#ticketPrice").addClass("is-invalid");
+        $("#basePriceError").text("Base price must be greater than 0.");
+        $("#basePrice").addClass("is-invalid");
         valid = false;
     }
     if (status === "") {
@@ -289,13 +281,6 @@ function validateFlightForm() {
             valid = false;
         }
     }
-    //ticket price validations
-    //price cannot be negative
-    if (Number(ticketPrice) < 0){
-        $("#ticketPriceError").text("Ticket price cannot be negative.");
-        $("#ticketPrice").addClass("is-invalid");
-        valid = false;
-    }
     return valid;
 }
 
@@ -303,7 +288,7 @@ function validateFlightForm() {
 //clear form
 function clearFlightForm() {
 
-    $("#flightNumber").val("");
+    $("#flight_number").val("");
     $("#airline").val("");
     $("#origin").val("");
     $("#destination").val("");
@@ -312,7 +297,7 @@ function clearFlightForm() {
     $("#arrivalDate").val("");
     $("#arrivalTime").val("");
     $("#availableSeats").val("");
-    $("#ticketPrice").val("");
+    $("#basePrice").val("");
     $("#status").val("");
     $(".text-danger").text("");
 
@@ -368,28 +353,22 @@ $(document).ready(function () {
     //edit flight
     $("#editBtn").click(function () {
 
-        if (selectedFlightIndex < 0) { return; }
+        if (selectedFlightIndex < 0) {
+            return;
+        }
 
         editMode = true;
 
         let flight = filteredFlights[selectedFlightIndex];
 
         $("#modalTitle").text("Edit Flight");
-        $("#flightNumber").val(flight.flight_number);
-        $("#airline").val(flight.airline);
-        $("#origin").val(flight.origin);
-        $("#destination").val(flight.destination);
-        $("#departureDate").val(flight.departureDate);
-        $("#departureTime").val(flight.departureTime);
-        $("#arrivalDate").val(flight.arrivalDate);
-        $("#arrivalTime").val(flight.arrivalTime);
-        $("#availableSeats").val(flight.availableSeats);
-        $("#ticketPrice").val(flight.ticketPrice);
-        $("#status").val(flight.status);
+
+        initializeFlight(flight);
 
         let modal = new bootstrap.Modal(
             document.getElementById("flightModal")
         );
+
         modal.show();
     });
 
@@ -400,10 +379,11 @@ $(document).ready(function () {
         if (!validateFlightForm()) { return; }
 
 
-        let flightData = {
+        const flightData = {
 
-            flight_number: $("#flightNumber").val().trim(),
+            flight_number: $("#flight_number").val().trim(),
             airline: $("#airline").val().trim(),
+            cabinClass: $("#cabinClass").val(),
             origin: $("#origin").val().trim(),
             destination: $("#destination").val().trim(),
             departureDate: $("#departureDate").val(),
@@ -411,43 +391,58 @@ $(document).ready(function () {
             arrivalDate: $("#arrivalDate").val(),
             arrivalTime: $("#arrivalTime").val(),
             availableSeats: Number($("#availableSeats").val()),
-            ticketPrice: Number($("#ticketPrice").val()),
+            basePrice: Number($("#basePrice").val()),
             status: $("#status").val()
         };
+
+        console.log("Saving flight:", flightData);
 
         let url = "/admin-flights";
         let method = "POST";
 
         if (editMode) {
+            $.ajax({
+                url: `/admin-flights/${selectedFlightId}`,
+                type: "PUT",
+                contentType: "application/json",
+                data: JSON.stringify(flightData),
 
-            url ="/admin-flights/" + selectedFlightId;
-            method = "PUT";
+                success: function(response){
+                    console.log("Flight updated:", response);
+                    $("#flightModal").modal("hide");
+                    alert("Flight updated successfully.");
+                    location.reload();
+                },
+
+                error: function(xhr){
+                    console.error("Update error:", xhr.responseText);
+                    alert("Error updating flight.");
+                }
+            });
+        } else {
+            $.ajax({
+                url: "/admin-flights",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(flightData),
+
+                success: function(response){
+                    console.log("Flight added:", response);
+                    $("#flightModal").modal("hide");
+                    alert("Flight added successfully.");
+                    location.reload();
+                },
+
+                error: function(xhr){
+                    console.error("Create error:", xhr.responseText);
+                    alert("Error adding flight.");
+                }
+            });
         }
-
-
-        $.ajax({
-
-            url: url,
-            method: method,
-            contentType: "application/json",
-            data: JSON.stringify(flightData),
-
-            success: function () {
-                applyFilters();
-                updateStatistics();
-                bootstrap.Modal.getInstance(document.getElementById("flightModal")).hide();
-                clearFlightForm();
-            },
-
-            error: function (error) {
-                console.error("Error saving flight:", error);
-                alert("Error saving flight.");
-            }
-        });
     });
 
 
-    // DELETE FLIGHT
+    //delete
     $("#deleteBtn").click(function () {
 
         if (selectedFlightId === null) { return; }
@@ -458,7 +453,7 @@ $(document).ready(function () {
     });
 
 
-    // CONFIRM DELETE
+    //confirm delete
     $("#confirmDelete").click(function () {
         $.ajax({
 
@@ -486,21 +481,17 @@ $(document).ready(function () {
     });
 
 
-    // PREVIOUS PAGE
+    //prev page
     $("#previousPage").click(function () {
 
         if (currentPage > 1) {
-
             currentPage--;
-
-            renderFlights(
-                filteredFlights
-            );
+            renderFlights(filteredFlights);
         }
     });
 
 
-    // NEXT PAGE
+    //next page
     $("#nextPage").click(function () {
 
         let totalPages = Math.ceil(filteredFlights.length /rowsPerPage);

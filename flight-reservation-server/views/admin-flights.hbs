@@ -14,8 +14,8 @@
 
             <div class="col-md-3">
                 <div class="stat-card">
-                    <h5>Active</h5>
-                    <h2 id="activeFlights">0</h2>
+                    <h5>Ongoing</h5>
+                    <h2 id="ongoingFlights">0</h2>
                 </div>
             </div>
 
@@ -55,15 +55,17 @@
                     <div class="col-md-2">
                         <select class="filter-dropdown" id="statusFilter">
                             <option value="ALL">All Status</option>
-                            <option value="Active">Active</option>
+                            <option value="Completed">Completed</option>
                             <option value="Delayed">Delayed</option>
                             <option value="Cancelled">Cancelled</option>
+                            <option value="Upcoming">Upcoming</option>
+                            <option value="Ongoing">Ongoing</option>
                         </select>
                     </div>
 
                     <div class="col-md-2">
                         <select class="sort-dropdown" id="sortFlight">
-                            <option value="flightId">Sort by Flight ID</option>
+                            <option value="flight_number">Sort by Flight ID</option>
                             <option value="airline">Sort by Airline</option>
                             <option value="status">Sort by Status</option>
                         </select>
@@ -97,27 +99,19 @@
                                 <tr>
                                     <th>Flight ID</th>
                                     <th>Airline</th>
+                                    <th>Cabin Class</th>
                                     <th>Route</th>
                                     <th>Departure Date</th>
                                     <th>Departure Time</th>
                                     <th>Arrival Date</th>
                                     <th>Arrival Time</th>
                                     <th>Seats</th>
-                                    <th>Ticket Price</th>
+                                    <th>Base Price</th>
                                     <th>Status</th>
                                 </tr>
                             </thead>
 
-                           <tbody id="flightsTableBody">
-
-                                    <tr>
-
-                                        <td colspan="9" class="text-center">
-                                            No flights found.
-                                        </td>
-
-                                    </tr>
-
+                            <tbody id="flightsTableBody">
                             </tbody>
                         </table>
                     </div>
@@ -158,9 +152,9 @@
                                 </div>
                                 <div class="modal-body">
                                     <div class="mb-3">
-                                        <label class="form-label" for="flightId">Flight ID</label>
-                                        <input type="text" class="form-control" id="flightId" required>
-                                        <div class="text-danger small" id="flightIdError"></div>
+                                        <label class="form-label" for="flight_number">Flight ID</label>
+                                        <input type="text" class="form-control" id="flight_number" required>
+                                        <div class="text-danger small" id="flightNumberError"></div>
                                     </div>
 
                                     <div class="mb-3">
@@ -170,10 +164,28 @@
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="form-label" for="route">Route</label>
-                                        <input type="text" class="form-control" id="route" placeholder="MNL - LAX"
-                                            required>
-                                        <div class="text-danger small" id="routeError"></div>
+                                        <label class="form-label" for="cabinClass">Cabin Class</label>
+                                        <select class="form-select" id="cabinClass" required>
+                                            <option value="">Select Cabin Class</option>
+                                            <option value="Economy">Economy</option>
+                                            <option value="Premium Economy">Premium Economy</option>
+                                            <option value="Business">Business</option>
+                                            <option value="First Class">First Class</option>
+                                        </select>
+
+                                        <div class="text-danger small" id="cabinClassError"></div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label" for="origin">Origin</label>
+                                        <input type="text" class="form-control" id="origin" placeholder="MNL" required>
+                                        <div class="text-danger small" id="originError"></div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label" for="destination">Destination</label>
+                                        <input type="text" class="form-control" id="destination" placeholder="LAX" required>
+                                        <div class="text-danger small" id="destinationError"></div>
                                     </div>
 
                                     <div class="row">
@@ -199,24 +211,26 @@
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="form-label" for="seats">Available Seats</label>
-                                        <input type="number" class="form-control" id="seats" required>
-                                        <div class="text-danger small" id="seatsError"></div>
+                                        <label class="form-label" for="availableSeats">Available Seats</label>
+                                        <input type="number" class="form-control" id="availableSeats" required>
+                                        <div class="text-danger small" id="availableSeatsError"></div>
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="form-label" for="ticketPrice">Available Seats</label>
-                                        <input type="number" class="form-control" id="ticketPrice" min="0" step="0.01" required>
-                                        <div class="text-danger small" id="ticketPriceError"></div>
+                                        <label class="form-label" for="basePrice">Base Price</label>
+                                        <input type="number" class="form-control" id="basePrice" min="0" step="0.01" placeholder="123.00" required>
+                                        <div class="text-danger small" id="basePriceError"></div>
                                     </div>
 
                                     <div class="mb-3">
                                         <label class="form-label" for="status">Status</label>
                                         <select class="form-select" id="status" required>
                                             <option value="">Select Status</option>
-                                            <option value="Active">Active</option>
+                                            <option value="Completed">Completed</option>
                                             <option value="Delayed">Delayed</option>
                                             <option value="Cancelled">Cancelled</option>
+                                            <option value="Upcoming">Upcoming</option>
+                                            <option value="Ongoing">Ongoing</option>
                                         </select>
                                         <div class="text-danger small" id="statusError"></div>
                                     </div>
@@ -237,13 +251,10 @@
                     <div class="modal fade" id="deleteModal" tabindex="-1">
 
                         <div class="modal-dialog modal-sm">
-
                             <div class="modal-content">
-
+                                
                                 <div class="modal-header">
-
                                     <h5 class="modal-title">Delete Flight?</h5>
-
                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                 </div>
 
@@ -269,7 +280,7 @@
     </div>
 
     <!--Custom JS-->
-    <script src="admin-flights.js"></script>
+    <script src="/js/admin-flights.js"></script>
 </body>
 
 </html>

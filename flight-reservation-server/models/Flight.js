@@ -28,7 +28,7 @@ const flightSchema = new mongoose.Schema({
 
     departureTime: {
         type: Date,
-        required: true
+        required: true,
     },
 
     arrivalTime: {
@@ -97,7 +97,7 @@ const flightSchema = new mongoose.Schema({
 
     status: {
         type: String,
-        enum: ['Completed', 'Cancelled', 'Upcoming', 'Ongoing'],
+        enum: ['Completed', 'Delayed', 'Cancelled', 'Upcoming', 'Ongoing'],
         default: "Upcoming",
         required: true
     },

@@ -286,6 +286,7 @@ app.listen(PORT, () => {
         const flight = await Flight.create({
             flight_number: "AS1001",
             airline: "Philippine Airlines",
+            cabinClass: "Economy",
             origin: "Manila (MNL)",
             destination: "Cebu (CEB)",
             departureTime: new Date("2026-07-14T08:00:00"),
