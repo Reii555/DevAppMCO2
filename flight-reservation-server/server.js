@@ -209,7 +209,12 @@ app.get('/customer', (req, res) => {
 });
 
 // FLIGHT ROUTE
-app.use('/admin/flights', flightRoutes);
+app.use('/admin-flights', async(req, res) => {
+    res.render('admin-flights', {
+        title: 'Flights',
+        layout: 'main-admin'
+    })
+});
 
 // LOGOUT ROUTE
 app.get('/logout', (req, res) => {
