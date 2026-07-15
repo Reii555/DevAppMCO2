@@ -1,29 +1,32 @@
 $(document).ready(function() {
 
-    // le variables
+    // Variables for reservations
+    let currentPage = 1;
+    const rowsPerPage = 5;
     let filteredReservations = [];
     let totalReservations = 0;
     let currentFilter = 'all';
     let currentSort = 'book_ref';
+    let currentSearch = '';
 
-    // Function to load users from server via AJAX
-    function loadUsers() {
+    // Function to load reservations from server via AJAX
+    function loadReservations() {
         // Show loading state
-        const tbody = $('#usersTableBody');
+        const tbody = $('#reservationsTableBody');
         tbody.html(`
             <tr>
-                <td colspan="8" class="text-center py-4">
+                <td colspan="6" class="text-center py-4">
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
-                    <p class="mt-2 text-muted">Loading users...</p>
+                    <p class="mt-2 text-muted">Loading reservations...</p>
                 </td>
             </tr>
         `);
 
         // Make AJAX request
         $.ajax({
-            url: '/api/admin/users',
+            url: '/api/admin/reservations',
             method: 'GET',
             data: {
                 page: currentPage,
@@ -34,21 +37,21 @@ $(document).ready(function() {
             },
             success: function(response) {
                 // Store the data
-                filteredUsers = response.users || [];
-                totalUsers = response.total || 0;
+                filteredReservations = response.reservations || [];
+                totalReservations = response.total || 0;
                 
                 // Populate the table
-                populateUserTable();
+                populateReservationTable();
                 
-                console.log(`Loaded ${filteredUsers.length} users (Total: ${totalUsers})`);
+                console.log(`Loaded ${filteredReservations.length} reservations (Total: ${totalReservations})`);
             },
             error: function(xhr) {
-                console.error('Error loading users:', xhr);
+                console.error('Error loading reservations:', xhr);
                 tbody.html(`
                     <tr>
-                        <td colspan="8" class="text-center text-danger py-4">
+                        <td colspan="6" class="text-center text-danger py-4">
                             <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                            Failed to load users. Please try again.
+                            Failed to load reservations. Please try again.
                             <br>
                             <button class="btn btn-outline-primary btn-sm mt-2" onclick="location.reload()">
                                 <i class="bi bi-arrow-clockwise"></i> Retry
@@ -60,15 +63,15 @@ $(document).ready(function() {
         });
     }
 
-    function populateUserTable() {
-        const tbody = $('#usersTableBody');
+    function populateReservationTable() {
+        const tbody = $('#reservationsTableBody');
         
-        if (filteredUsers.length === 0) {
+        if (filteredReservations.length === 0) {
             tbody.html(`
                 <tr>
-                    <td colspan="8" class="text-center text-muted py-4">
+                    <td colspan="6" class="text-center text-muted py-4">
                         <i class="bi bi-inbox me-2"></i>
-                        No users found matching your criteria.
+                        No reservations found matching your criteria.
                     </td>
                 </tr>
             `);
@@ -77,42 +80,25 @@ $(document).ready(function() {
         }
 
         let rows = '';
-        filteredUsers.forEach(user => {
+        filteredReservations.forEach(reservation => {
             // Status badge
-            const statusBadge = user.status === 'active' 
-                ? '<span class="badge bg-success">Active</span>'
-                : '<span class="badge bg-danger">Deleted</span>';
-            
-            // Role badge
-            const roleBadge = user.role === 'admin'
-                ? '<span class="badge bg-primary">Admin</span>'
-                : '<span class="badge bg-secondary">Customer</span>';
-
-            // Format dates
-            const createdDate = user.created_at ? new Date(user.created_at).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric'
-            }) : 'N/A';
-            
-            const lastLoginDate = user.last_login ? new Date(user.last_login).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            }) : 'Never';
+            let statusBadge = '';
+            if (reservation.status === 'Confirmed') {
+                statusBadge = '<span class="badge bg-success">Confirmed</span>';
+            } else if (reservation.status === 'Cancelled') {
+                statusBadge = '<span class="badge bg-danger">Cancelled</span>';
+            } else {
+                statusBadge = '<span class="badge bg-warning text-dark">Pending</span>';
+            }
 
             rows += `
-                <tr data-id="${user.id}">
-                    <td><strong>${user.id}</strong></td>
-                    <td>${user.name || 'N/A'}</td>
-                    <td>${user.email || 'N/A'}</td>
-                    <td>${user.phone || 'N/A'}</td>
-                    <td>${createdDate}</td>
-                    <td>${lastLoginDate}</td>
+                <tr data-id="${reservation.id}" data-status="${reservation.status}">
+                    <td><strong>${reservation.book_ref || 'N/A'}</strong></td>
+                    <td>${reservation.pass_name || 'N/A'}</td>
+                    <td>${reservation.flight_route || 'N/A'}</td>
+                    <td>${reservation.seat_no || 'N/A'}</td>
                     <td>${statusBadge}</td>
-                    <td>${roleBadge}</td>
+                    <td>₱${reservation.total_price || '0.00'}</td>
                 </tr>
             `;
         });
@@ -121,16 +107,17 @@ $(document).ready(function() {
         updatePaginationInfo();
     }
 
-   function updatePaginationInfo() {
-        const total = totalUsers;
+    function updatePaginationInfo() {
+        const total = totalReservations;
         const totalPages = Math.ceil(total / rowsPerPage) || 1;
         const start = total > 0 ? ((currentPage - 1) * rowsPerPage) + 1 : 0;
         const end = Math.min(currentPage * rowsPerPage, total);
 
+        // Update pagination info
         if (total === 0) {
-            $('#paginationInfo').text('Showing 0 users');
+            $('#paginationInfo').text('Showing 0 reservations');
         } else {
-            $('#paginationInfo').text(`Showing ${start} to ${end} of ${total} users`);
+            $('#paginationInfo').text(`Showing ${start} to ${end} of ${total} reservations`);
         }
         
         $('#currentPage').text(currentPage);
@@ -140,19 +127,19 @@ $(document).ready(function() {
 
     // Filter/Search/Sort functions
     function applyFilters() {
-        currentSearch = $('#searchUsers').val().trim();
-        currentFilter = $('#filterUsers').val();
-        currentSort = $('#sortUsers').val();
+        currentSearch = $('#searchReservations').val().trim();
+        currentFilter = $('#filterReservations').val();
+        currentSort = $('#sortReservations').val();
         currentPage = 1; // Reset to first page
         
-        loadUsers();
+        loadReservations();
     }
 
     // Event Handlers
 
     // Search with debounce
     let searchTimeout;
-    $('#searchUsers').on('input', function() {
+    $('#searchReservations').on('input', function() {
         clearTimeout(searchTimeout);
         searchTimeout = setTimeout(() => {
             applyFilters();
@@ -160,12 +147,12 @@ $(document).ready(function() {
     });
 
     // Filter dropdown
-    $('#filterUsers').on('change', function() {
+    $('#filterReservations').on('change', function() {
         applyFilters();
     });
 
     // Sort dropdown
-    $('#sortUsers').on('change', function() {
+    $('#sortReservations').on('change', function() {
         applyFilters();
     });
 
@@ -173,224 +160,24 @@ $(document).ready(function() {
     $('#previousPage').click(function() {
         if (currentPage > 1) {
             currentPage--;
-            loadUsers();
+            loadReservations();
         }
     });
 
     // Next page
     $('#nextPage').click(function() {
-        const totalPages = Math.ceil(totalUsers / rowsPerPage);
+        const totalPages = Math.ceil(totalReservations / rowsPerPage);
         if (currentPage < totalPages) {
             currentPage++;
-            loadUsers();
+            loadReservations();
         }
+    });
+
+    // Edit button (placeholder for now)
+    $('#editReservationBtn').click(function() {
+        alert('Edit functionality coming soon!');
     });
 
     // Initial load
-    loadUsers();
+    loadReservations();
 });
-
-    /*function populateReservationTable() {
-        const start = (currentPage - 1) * rowsPerPage;
-        const end = start + rowsPerPage;
-        const pageData = filteredReservations.slice(start, end);
-
-        let rows = '';
-        pageData.forEach(reservation => {
-            // Status badge or dropdown based on editMode
-            let statusHtml = '';
-            if (editMode) {
-                // Show dropdown when in edit mode
-                statusHtml = `
-                    <select class="form-select form-select-sm status-dropdown" 
-                            data-booking="${reservation.booking_ref}" 
-                            style="min-width: 120px; display: inline-block; width: auto;">
-                        <option value="Confirmed" ${reservation.status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
-                        <option value="Cancelled" ${reservation.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-                    </select>
-                `;
-            } else {
-                // Show badge when not in edit mode
-                let badgeClass = '';
-                if (reservation.status === 'Confirmed') {
-                    badgeClass = 'bg-success';
-                } else if (reservation.status === 'Cancelled') {
-                    badgeClass = 'bg-danger';
-                }
-
-                statusHtml = `
-                    <span class="badge ${badgeClass}" style="padding: 6px 14px;">
-                        ${reservation.status}
-                    </span>
-                `;
-            }
-
-            // Price formatting
-            const formattedPrice = '₱' + reservation.total_price.toFixed(2);
-
-            rows += `
-                <tr class="reservation-row" data-booking="${reservation.booking_ref}">
-                    <td><strong>${reservation.booking_ref}</strong></td>
-                    <td>${reservation.pass_name}</td>
-                    <td>${reservation.flight_route}</td>
-                    <td>${reservation.seat_no}</td>
-                    <td class="status-cell">${statusHtml}</td>
-                    <td>${formattedPrice}</td>
-                </tr>
-            `;
-        });
-
-        if (rows === '') {
-            rows = `
-                <tr>
-                    <td colspan="6" class="text-center text-muted py-4">
-                        No reservations found matching your criteria.
-                    </td>
-                </tr>
-            `;
-        }
-
-        $('#reservationsTableBody').html(rows);
-        paginationTable();
-        buttonState();
-    }
-
-    function buttonState() {
-        if (editMode) {
-            $('#editReservationBtn')
-                .removeClass('btn-primary')
-                .addClass('btn-success')
-                .html('<i class="bi bi-check2"></i> Save');
-        } else {
-            $('#editReservationBtn')
-                .removeClass('btn-success')
-                .addClass('btn-primary')
-                .html('<i class="bi bi-pencil-fill"></i> Edit');
-        }
-    }
-
-    function filterReservations() {
-        const search = $('#searchReservations').val().toLowerCase();
-        const filter = $('#filterReservations').val();
-        const sort = $('#sortReservations').val();
-
-        // Filter reservations
-        filteredReservations = reservations.filter(reservation => {
-            // Search: check if search term matches
-            const matchSearch = reservation.pass_name.toLowerCase().includes(search) || 
-                                reservation.booking_ref.toLowerCase().includes(search) ||
-                                reservation.flight_route.toLowerCase().includes(search) ||
-                                reservation.seat_no.toLowerCase().includes(search);
-            
-            // Filter: check if status matches
-            const matchFilter = filter === 'all' || reservation.status === filter;
-            
-            return matchSearch && matchFilter;
-        });
-
-        // Sort reservations
-        filteredReservations.sort((a, b) => {
-            if (sort === 'book_ref') return a.booking_ref.localeCompare(b.booking_ref);
-            if (sort === 'pass_name') return a.pass_name.localeCompare(b.pass_name);
-            if (sort === 'flight_route') return a.flight_route.localeCompare(b.flight_route);
-            if (sort === 'seat_no') return a.seat_no.localeCompare(b.seat_no);
-            if (sort === 'status') return a.status.localeCompare(b.status);
-            if (sort === 'total_price') return a.total_price - b.total_price;
-            if (sort === 'last_login') return a.last_login.localeCompare(b.last_login);
-            if (sort === 'status') return a.status.localeCompare(b.status);
-            return 0;
-        });
-
-        // Reset to page 1 when filtering
-        currentPage = 1;
-        
-        // Re-render the table
-        populateReservationTable();
-    }
-
-    function paginationTable() {
-        const total = filteredReservations.length;
-        const totalPages = Math.ceil(total / rowsPerPage) || 1;
-        const start = (currentPage - 1) * rowsPerPage + 1;
-        const end = Math.min(currentPage * rowsPerPage, total);
-
-        // Update pagination info text
-        if (total === 0) {
-            $('#paginationInfo').text('Showing 0 reservations');
-        } else {
-            $('#paginationInfo').text(`Showing ${start} to ${end} of ${total} reservations`);
-        }
-        
-        // Update current page display
-        $('#currentPage').text(currentPage);
-
-        // Enable/disable Previous and Next buttons
-        $('#previousPage').prop('disabled', currentPage <= 1);
-        $('#nextPage').prop('disabled', currentPage >= totalPages);
-    }
-
-    // event handlers
-
-    $('#editReservationBtn').click(function() {
-        // Toggle edit mode
-        editMode = !editMode;
-        
-        // If turning off edit mode, save all pending changes
-        if (!editMode) {
-            // Save all changes automatically
-            saveAllChanges();
-        }
-        
-        // Re-render the table
-        populateReservationTable();
-    });
-
-    // Save all changes when exiting edit mode
-    function saveAllChanges() {
-        // Get all dropdowns
-        $('.status-dropdown').each(function() {
-            const bookingRef = $(this).data('booking');
-            const newStatus = $(this).val();
-            
-            const reservation = reservations.find(r => r.booking_ref === bookingRef);
-            if (reservation && reservation.status !== newStatus) {
-                reservation.status = newStatus;
-            }
-        });
-    }
-
-    // Search input - trigger filter on keyup
-    $('#searchReservations').on('keyup', function() {
-        filterReservations();
-    });
-
-    // Filter dropdown - trigger on change
-    $('#filterReservations').on('change', function() {
-        filterReservations();
-    });
-
-    // Sort dropdown - trigger on change
-    $('#sortReservations').on('change', function() {
-        filterReservations();
-    });
-
-    // Previous page button
-    $('#previousPage').click(function() {
-        if (currentPage > 1) {
-            currentPage--;
-            populateReservationTable();
-        }
-    });
-
-    // Next page button
-    $('#nextPage').click(function() {
-        const totalPages = Math.ceil(filteredReservations.length / rowsPerPage);
-        if (currentPage < totalPages) {
-            currentPage++;
-            populateReservationTable();
-        }
-    });
-
-    filterReservations();
-
-    console.log(`Loaded ${filteredReservations.length} reservations`);*/
