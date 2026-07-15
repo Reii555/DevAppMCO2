@@ -2,13 +2,20 @@ const mongoose = require("mongoose");
 
 const passengerSchema = new mongoose.Schema.Schema({
 
-    user_id: {
+    passenger_id: { //primary key
+        type: String,
+        required: true,
+        unique: true,
+        trim: true
+    },
+    
+    user_id: { //foreign key
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true
     },
 
-    reservation_id: {
+    reservation_id: { //foreign key
         type: mongoose.Schema.Types.ObjectId,
         ref: "Reservation"
     },
@@ -16,18 +23,21 @@ const passengerSchema = new mongoose.Schema.Schema({
     first_name: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        maxlength: [45, 'First name cannot exceed 45 characters']
     },
 
     last_name: {
         type: String,
         required: true,
-        trim: true
+        trim: true,
+        maxlength: [45, 'Last name cannot exceed 45 characters']
     },
 
     middle_name: {
         type: String,
-        default: ""
+        default: "",
+        maxlength: [45, 'Middle name cannot exceed 45 characters']
     },
 
     contact_num: {
@@ -43,6 +53,17 @@ const passengerSchema = new mongoose.Schema.Schema({
 
     nationality: {
         type: String,
+        enum: [
+            "Filipino",
+            "American",
+            "Japanese",
+            "Chinese",
+            "Korean",
+            "British",
+            "Australian",
+            "Canadian",
+            "Other"
+        ],
         required: true
     },
 
