@@ -59,7 +59,7 @@ app.set('views', path.join(__dirname, 'views'));
 // ROUTES
 const searchRoutes = require('./routes/searchRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
-const flightRoutes = require('./routes/flights');
+const flightRoutes = require('./routes/admin-flights');
 
 app.use('/search', searchRoutes);
 app.use('/booking', bookingRoutes);
