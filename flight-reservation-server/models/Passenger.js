@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const passengerSchema = new mongoose.Schema.Schema({
+const passengerSchema = new mongoose.Schema({
 
     passenger_id: { //primary key
         type: String,
