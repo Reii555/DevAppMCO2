@@ -28,6 +28,24 @@ function updateStatistics() {
     });
 }
 
+// format arrival and departure times
+function formatDateTime(dateTime) {
+
+    if (!dateTime) {
+        return "";
+    }
+
+    let date = new Date(dateTime);
+
+    let year = date.getFullYear();
+    let month = String(date.getMonth() + 1).padStart(2, "0");
+    let day = String(date.getDate()).padStart(2, "0");
+    let hours = String(date.getHours()).padStart(2, "0");
+    let minutes = String(date.getMinutes()).padStart(2, "0");
+
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
 //initialize
 function initializeFlight(flight) {
 
@@ -38,14 +56,10 @@ function initializeFlight(flight) {
     $("#origin").val(flight.origin);
     $("#destination").val(flight.destination);
 
-    $("#departureDate").val(flight.departureDate);
-    $("#departureTime").val(flight.departureTime);
-
-    $("#arrivalDate").val(flight.arrivalDate);
-    $("#arrivalTime").val(flight.arrivalTime);
+    $("#departureTime").val(formatDateTime(flight.departureTime));
+    $("#arrivalTime").val(formatDateTime(flight.arrivalTime));
 
     $("#duration").val(flight.duration);
-
     $("#tripType").val(flight.tripType);
 
     $("#availableSeats").val(flight.availableSeats);
@@ -87,10 +101,8 @@ function renderFlights(data) {
                 <td>${flight.airline}</td>
                 <td>${flight.cabinClass}</td>
                 <td>${flight.origin} - ${flight.destination}</td>
-                <td>${flight.departureDate}</td>
-                <td>${flight.departureTime}</td>
-                <td>${flight.arrivalDate}</td>
-                <td>${flight.arrivalTime}</td>
+                <td>${formatDateTime(flight.departureTime)}</td>
+                <td>${formatDateTime(flight.arrivalTime)}</td>
                 <td>${flight.duration}</td>
                 <td>${flight.tripType}</td>
                 <td>${flight.availableSeats}</td>
@@ -199,7 +211,7 @@ function updatePagination(totalRows) {
 
 
 //validations
-function validateFlightForm() {
+async function validateFlightForm() {
 
     let valid = true;
 
@@ -207,15 +219,12 @@ function validateFlightForm() {
     $(".form-control").removeClass("is-invalid");
     $(".form-select").removeClass("is-invalid");
 
-
     let flight_number = $("#flight_number").val().trim();
     let airline = $("#airline").val().trim();
     let cabinClass = $("#cabinClass").val();
     let origin = $("#origin").val().trim();
     let destination = $("#destination").val().trim();
-    let departureDate = $("#departureDate").val();
     let departureTime = $("#departureTime").val();
-    let arrivalDate = $("#arrivalDate").val();
     let arrivalTime = $("#arrivalTime").val();
     let duration = $("#duration").val();
     let tripType = $("#tripType").val();
@@ -227,10 +236,8 @@ function validateFlightForm() {
     let layoverDetails = $("#layoverDetails").val();
     let status = $("#status").val();
 
-
     //empty inputs
     if (flight_number === "") {
-
         $("#flightNumberError").text("Flight number is required.");
         $("#flight_number").addClass("is-invalid");
         valid = false;
@@ -258,17 +265,13 @@ function validateFlightForm() {
         $("#destination").addClass("is-invalid");
         valid = false;
     }
-    if (departureDate === "" || departureTime === "") {
-
-        $("#departureError").text("Departure date and time are required.");
-        $("#departureDate").addClass("is-invalid");
+    if (departureTime === ""){
+        $("#departureTimeError").text("Departure date and time are required.");
         $("#departureTime").addClass("is-invalid");
         valid = false;
     }
-    if (arrivalDate === "" || arrivalTime === "") {
-
-        $("#arrivalError").text("Arrival date and time are required.");
-        $("#arrivalDate").addClass("is-invalid");
+    if (arrivalTime === "") {
+        $("#arrivalTimeError").text("Arrival date and time are required.");
         $("#arrivalTime").addClass("is-invalid");
         valid = false;
     }
@@ -279,7 +282,7 @@ function validateFlightForm() {
     }
     if (tripType === ""){
         $("#tripTypeError").text("Trip type is required.");
-        $("#duration").addClass("is-invalid");
+        $("#tripType").addClass("is-invalid");
         valid = false;
     }
     if (availableSeats === "" || Number(availableSeats) <= 0) {
@@ -310,7 +313,7 @@ function validateFlightForm() {
         valid = false;
     }
     if (layoverDetails === "") {
-        $("#layoverDetailsError").text("Layover Count is required.");
+        $("#layoverDetailsError").text("Layover Details is required.");
         $("#layoverDetails").addClass("is-invalid");
         valid = false;
     }
@@ -320,18 +323,51 @@ function validateFlightForm() {
         valid = false;
     }
 
+    //other validations
+    //checks for duplicate flight ID
+    if(flight_number != ""){
+        try{
+            let response = await $.ajax({
+                url: "/admin-flights/check-flight-number",
+                method: "GET",
+                data: {
+                    flight_number: flight_number,
+                    flight_id: selectedFlightId,
+                    editMode: editMode
+                }
+            });
+
+            if(response.exists){
+                $("#flightNumberError").text("Flight number already exists.");
+                $("#flight_number").addClass("is-invalid");
+                valid = false;
+            }
+        } catch (error){
+            console.error("Flight number validation error:", error);
+            $("#flightNumberError").text("Unable to validate flight ID.");
+            $("#flight_number").addClass("is-invalid");
+            valid = false;
+        }
+    }
+
     //date validations
     //arrival date should NOT be before departure date
-    //if both departureDate and arrivalDate occurs within the day,
-    //arrivalTime should NOT be have the same time or before departureTime
-    if (departureDate !== "" && arrivalDate !== "" && departureTime !== "" && arrivalTime !== "") {
-        if (departureDate > arrivalDate) {
-            $("#arrivalError").text("Arrival date should be after or same as departure date.");
-            $("#arrivalDate").addClass("is-invalid");
-            valid = false;
-        } else if (departureDate === arrivalDate && departureTime >= arrivalTime) {
-            $("#arrivalError").text("Arrival time should be after departure time.");
+    //if both departure date and arrival date occurs within the day,
+    //arrival time should NOT be have the same time or before departure time
+    if (departureTime !== "" && arrivalTime !== "") {
+        if (arrivalTime <= departureTime) {
+            $("#arrivalTimeError").text("Arrival date and time must be after departure date and time.");
             $("#arrivalTime").addClass("is-invalid");
+            valid = false;
+        }
+    }
+
+    //layoversCount
+    //can be 0, but input should not be negative
+    if (layoversCount !== ""){
+        if(layoversCount < 0){
+            $("#layoversCountError").text("Layover count should not be negative.");
+            $("#layoversCount").addClass("is-invalid");
             valid = false;
         }
     }
@@ -346,9 +382,7 @@ function clearFlightForm() {
     $("#airline").val("");
     $("#origin").val("");
     $("#destination").val("");
-    $("#departureDate").val("");
     $("#departureTime").val("");
-    $("#arrivalDate").val("");
     $("#arrivalTime").val("");
     $("#duration").val("");
     $("#tripType").val("");
@@ -433,16 +467,10 @@ $(document).ready(function () {
     });
 
 
-    // SAVE FLIGHT
-    $("#saveFlight").click(function () {
+    //save flight
+    $("#saveFlight").click(async function () {
 
-        if (!validateFlightForm()) { return; }
-
-        const departureDate = $("#departureDate").val();
-        const departureTime = $("#departureTime").val();
-
-        const arrivalDate = $("#arrivalDate").val();
-        const arrivalTime = $("#arrivalTime").val();
+        if (!await validateFlightForm()) { return; }
 
         const flightData = {
 
@@ -453,11 +481,8 @@ $(document).ready(function () {
             origin: $("#origin").val(),
             destination: $("#destination").val(),
 
-            departureDate: departureDate,
-            departureTime: departureTime,
-
-            arrivalDate: arrivalDate,
-            arrivalTime: arrivalTime,
+            departureTime: new Date($("#departureTime").val()),
+            arrivalTime: new Date($("#arrivalTime").val()),
 
             duration: $("#duration").val(),
             tripType: $("#tripType").val(),
@@ -526,6 +551,8 @@ $(document).ready(function () {
 
         if (selectedFlightId === null) { return; }
 
+        console.log("Selected flight ID to delete:", selectedFlightId); //debug
+
 
         let modal = new bootstrap.Modal(document.getElementById("deleteModal"));
         modal.show();
@@ -534,12 +561,18 @@ $(document).ready(function () {
 
     //confirm delete
     $("#confirmDelete").click(function () {
+
+        if(!selectedFlightId) { return; }
+        console.log("Deleting flight with MongoDB ID:", selectedFlightId);
         $.ajax({
 
             url: "/admin-flights/" + selectedFlightId,
             method: "DELETE",
 
             success: function () {
+                console.log("Delete response: ", response);
+                bootstrap.Modal.getInstance(document.getElementById("deleteModal")).hide();
+
                 applyFilters();
                 updateStatistics();
                 selectedFlightIndex = -1;
