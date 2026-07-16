@@ -1,21 +1,3 @@
-// DATA
-// sample flight fee
-const baseFlightPrice = 12000;
-
-// sample ticket fees
-const baseSeatPrice = 4000;
-const premiumFee = 1500;
-
-// sample extra services fees
-const checkedBaggage = 950;
-const carryBaggage = 500;
-const priority = 1500;
-const insurance = 2500;
-const loungeAccess = 2000;
-
-// sample occupied seats
-const occupiedSeats = ['3B', '3E', '7A', '7F', '10C', '10D', '15B', '15E'];
-
 let passengerCount = 1;
 
 // FUNCTIONS

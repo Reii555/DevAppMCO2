@@ -30,19 +30,19 @@
                 <div class="row align-items-center">
 
                     <div class="col-md-3">
-                        <strong>MNL → CEB</strong>
+                        {{flight.origin}} → {{flight.destination}}
                     </div>
 
                     <div class="col-md-3">
-                        Flight: PR123
+                        Flight: {{flight.flight_number}}
                     </div>
 
                     <div class="col-md-3">
-                        Departure: 08:00 AM
+                        Departure: {{flight.departureTime}}
                     </div>
 
                     <div class="col-md-3">
-                        Economy
+                        Class: {{flight.cabinClass}}
                     </div>
 
                 </div>
@@ -50,7 +50,7 @@
             </div>
 
             <!-- Steps -->
-            <div class="card shadow-sm border-0 p-3 mb-4">
+            <div class="card shadow-sm border-0 p-3 mb-4 text-center">
                 Passenger Details → Meal & Extras → Review & Confirm
             </div>
 
