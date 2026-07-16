@@ -1,5 +1,6 @@
 const Reservation = require('../models/Reservation');
 const Flight = require('../models/Flight');
+const Passenger = require('../models/Passenger');
 
 // ============================================================
 // PAGE ROUTES
@@ -17,6 +18,7 @@ exports.showMyReservations = async (req, res) => {
 
         const reservations = await Reservation.find({ userId: req.session.user._id })
             .populate('flightId')
+            .populate('passengerId')
             .sort({ createdAt: -1 })
             .skip(skip)
             .limit(limit);
@@ -34,20 +36,25 @@ exports.showMyReservations = async (req, res) => {
             };
             var mealPrice = mealPrices[reservation.mealPreference] || 0;
             
+            // Get passenger name 
+            var passengerName = 'Unknown Passenger';
+            if (reservation.passengerId) {
+                passengerName = reservation.passengerId.full_name || 'Unknown Passenger';
+            }
+            
             return {
                 _id: reservation._id.toString(),
                 booking_ref: reservation.booking_ref,
-                passengerName: reservation.passengerDetails.fullName,
+                passengerName: passengerName,
                 flight_id: reservation.flightId,
                 seatNumber: reservation.seatNumber,
                 status: reservation.status,
                 total_price: reservation.total_price,
-                trip_type: reservation.trip_type,
+                trip_type: reservation.trip_type || 'One-way',
                 meal_id: { 
                     meal_name: reservation.mealPreference || 'Standard',
                     meal_price: mealPrice
                 },
-                passengerDetails: reservation.passengerDetails,
                 booking_date: reservation.booking_date
             };
         });
@@ -57,7 +64,7 @@ exports.showMyReservations = async (req, res) => {
             reservations: formattedReservations,
             pagination: {
                 currentPage: page,
-                totalPages: Math.ceil(total / limit),
+                totalPages: Math.ceil(total / limit) || 1,
                 totalItems: total,
                 hasNext: page < Math.ceil(total / limit),
                 hasPrev: page > 1
@@ -84,7 +91,7 @@ exports.showMyReservations = async (req, res) => {
 };
 
 // ============================================================
-// GET reservation deets using AJAX
+// GET reservation details using AJAX
 // ============================================================
 
 exports.getReservationDetails = async (req, res) => {
@@ -107,7 +114,8 @@ exports.getReservationDetails = async (req, res) => {
 
         const reservation = await Reservation.findById(reservationId)
             .populate('flightId')
-            .populate('userId');
+            .populate('userId')
+            .populate('passengerId');
 
         if (!reservation) {
             return res.status(404).json({
@@ -133,13 +141,29 @@ exports.getReservationDetails = async (req, res) => {
         };
         var mealPrice = mealPrices[reservation.mealPreference] || 0;
 
+        var passengerName = 'Unknown Passenger';
+        var passengerDetails = {};
+        if (reservation.passengerId) {
+            passengerName = reservation.passengerId.full_name || 'Unknown Passenger';
+            passengerDetails = {
+                fullName: reservation.passengerId.full_name || '',
+                contactNumber: reservation.passengerId.contact_num || '',
+                passportNumber: reservation.passengerId.passport_num || '',
+                nationality: reservation.passengerId.nationality || '',
+                dateOfBirth: reservation.passengerId.birth_date || '',
+                gender: reservation.passengerId.gender || '',
+                type: reservation.passengerId.type || 'Adult',
+                emergencyContact: reservation.passengerId.emergency_contact || ''
+            };
+        }
+
         res.json({
             success: true,
             data: {
                 _id: reservation._id,
                 reservation_id: reservation.reservation_id,
                 booking_ref: reservation.booking_ref,
-                passengerName: reservation.passengerDetails.fullName,
+                passengerName: passengerName,
                 flight: {
                     _id: reservation.flightId._id,
                     flight_number: reservation.flightId.flight_number,
@@ -154,10 +178,11 @@ exports.getReservationDetails = async (req, res) => {
                 mealPrice: mealPrice,
                 status: reservation.status,
                 total_price: reservation.total_price,
-                passengerDetails: reservation.passengerDetails,
+                passengerDetails: passengerDetails,
+                passengerId: reservation.passengerId,
                 specialRequests: reservation.specialRequests || '',
                 booking_date: reservation.booking_date,
-                trip_type: reservation.trip_type
+                trip_type: reservation.trip_type || 'One-way'
             }
         });
     } catch (error) {
@@ -289,8 +314,6 @@ exports.getReservationCount = async (req, res) => {
 
 exports.updateReservationSeat = async (req, res) => {
     try {
-        console.log('Updating reservation seat:', req.params.id);
-        
         if (!req.session.user) {
             return res.status(401).json({
                 success: false,
@@ -301,7 +324,6 @@ exports.updateReservationSeat = async (req, res) => {
         const reservationId = req.params.id;
         const { seatNumber, mealPreference, specialRequests, extraServices, extraServicesPrice } = req.body;
 
-        // Validate ID
         if (!reservationId || reservationId === 'undefined' || reservationId === 'null') {
             return res.status(400).json({
                 success: false,
@@ -317,7 +339,6 @@ exports.updateReservationSeat = async (req, res) => {
             });
         }
 
-        // Check authorization
         if (reservation.userId.toString() !== req.session.user._id.toString()) {
             return res.status(403).json({
                 success: false,
@@ -325,7 +346,6 @@ exports.updateReservationSeat = async (req, res) => {
             });
         }
 
-        // Check if reservation can be updated
         if (reservation.status !== 'Pending' && reservation.status !== 'Confirmed') {
             return res.status(400).json({
                 success: false,
@@ -333,7 +353,6 @@ exports.updateReservationSeat = async (req, res) => {
             });
         }
 
-        // Validate seat number
         if (!seatNumber) {
             return res.status(400).json({
                 success: false,
@@ -341,7 +360,6 @@ exports.updateReservationSeat = async (req, res) => {
             });
         }
 
-        // Validate seat format
         const seatRegex = /^[0-9]{1,3}[A-Z]$/;
         if (!seatRegex.test(seatNumber)) {
             return res.status(400).json({
@@ -350,7 +368,6 @@ exports.updateReservationSeat = async (req, res) => {
             });
         }
 
-        // If seat is being changed, validate availability
         if (seatNumber !== reservation.seatNumber) {
             const existingReservation = await Reservation.findOne({
                 flightId: reservation.flightId,
@@ -367,7 +384,6 @@ exports.updateReservationSeat = async (req, res) => {
             }
         }
 
-        // Calculate new total price
         var mealPrices = {
             'Standard': 0,
             'Vegetarian': 150,
@@ -382,14 +398,7 @@ exports.updateReservationSeat = async (req, res) => {
         var priceDifference = (newMealPrice - oldMealPrice) + (extraServicesPrice || 0);
         var newTotalPrice = reservation.total_price + priceDifference;
 
-        console.log('Old meal:', reservation.mealPreference, 'Old price:', oldMealPrice);
-        console.log('New meal:', mealPreference, 'New price:', newMealPrice);
-        console.log('Extra services price:', extraServicesPrice);
-        console.log('Price difference:', priceDifference, 'New total:', newTotalPrice);
-
-        // Build extra services object
         var extraServicesObj = {
-            premiumSeat: false,
             checkedBaggage: 0,
             carryOn: 0,
             priorityBoarding: false,
@@ -400,10 +409,7 @@ exports.updateReservationSeat = async (req, res) => {
         if (extraServices && extraServices.length > 0) {
             extraServices.forEach(function(service) {
                 var name = service.name;
-                var price = service.price;
-                if (name === 'Premium Seat') {
-                    extraServicesObj.premiumSeat = true;
-                } else if (name === 'Checked-in Baggage') {
+                if (name === 'Checked-in Baggage') {
                     extraServicesObj.checkedBaggage = 1;
                 } else if (name === 'Carry-on Baggage') {
                     extraServicesObj.carryOn = 1;
@@ -417,7 +423,6 @@ exports.updateReservationSeat = async (req, res) => {
             });
         }
 
-        // Update reservation in database
         const updateData = {
             seatNumber: seatNumber.toUpperCase(),
             mealPreference: mealPreference || 'Standard',
@@ -435,9 +440,7 @@ exports.updateReservationSeat = async (req, res) => {
             reservationId,
             updateData,
             { new: true }
-        ).populate('flightId');
-
-        console.log('Reservation updated successfully in database');
+        ).populate('flightId').populate('passengerId');
 
         res.json({
             success: true,
