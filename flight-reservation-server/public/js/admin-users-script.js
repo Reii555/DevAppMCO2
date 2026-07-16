@@ -26,7 +26,7 @@ $(document).ready(function() {
 
         // Make AJAX request
         $.ajax({
-            url: '/admin/users/api',
+            url: '/admin-users/api',
             method: 'GET',
             data: {
                 page: currentPage,
