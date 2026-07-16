@@ -131,6 +131,8 @@ app.use('/search', searchRoutes);
 app.use('/booking', bookingRoutes);
 app.use('/profile', profileRoutes);
 app.use('/reservations', reservationRoutes);
+app.use('/admin-dashboard', adminDashboardRoutes);
+app.use('/admin-flights', adminFlightRoutes);
 app.use('/admin/users', adminUsersRoutes);
 app.use('/admin/reservations', adminReservationsRoutes);
 
@@ -250,9 +252,6 @@ app.get('/admin', (req, res) => {
 
     res.redirect('/admin-dashboard'); 
 });
-
-app.use('/admin-dashboard', adminDashboardRoutes);
-app.use('/admin-flights', adminFlightRoutes);
 
 app.get('/admin-users', async (req, res) => {
     if (!req.session.user || req.session.user.role !== 'admin') {
