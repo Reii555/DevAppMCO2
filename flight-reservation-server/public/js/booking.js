@@ -1,5 +1,6 @@
 let passengerCount = 1;
 let baseFlightPrice = 0;
+let passengerId = "";
 
 // FUNCTIONS
 // Passenger Validation
@@ -242,6 +243,7 @@ function updateTotalPrice() {
     $('#totalPrice').text("₱" + total);
 }
 
+
 // EVENTS
 $(document).ready(function(){
     $.ajax({
@@ -329,7 +331,7 @@ $(document).ready(function(){
         let nationality = $("#nationality").val();
         let birthDate = $("#birthDate").val();
         let gender = $("#gender").val();
-        let emergencyContact = $("#name_emergency").val().trim();
+        let emergencyContact = $("#name_emergency").val().trim() + " | " + $("#rel_emergency").val() + " | " + $("#contact_emergency").val().trim();
 
         if(!validatePassenger()){
             alert("Invalid Passenger Information");
@@ -352,7 +354,9 @@ $(document).ready(function(){
                 emergency_contact: emergencyContact
             },
 
-            success: function(){
+            success: function(passenger){
+
+                passengerId = passenger._id;
                 alert("Passenger saved!");
 
             },
@@ -537,6 +541,53 @@ $(document).ready(function(){
     $(".extra_serv").click(function (){
         updateExtraServices();
         updateTotalPrice(); 
+    });
+
+    $("#bookFlight").click(function(){
+        const flightId = window.location.pathname.split("/").pop();
+
+        let seatNumber = $(".seat.selected").first().text().trim();
+        let mealPreference = $(".meal-card.selected h5").text() || "Standard";
+        let mealPrice = getMealPrice();
+        let checkedBaggage = Number($("#checkedBag").val());
+        let carryOn = Number($("#carryBag").val());
+        let priorityBoarding = $("#priorityBoard").is(":checked");
+        let travelInsurance = $("#travelIns").is(":checked");
+        let loungeAccess = $("#loungeAccess").is(":checked");
+        let extraServicesPrice = updateExtraServices();
+        let totalPrice = Number($("#totalPrice").text().replace("₱", ""));
+        
+
+        $.ajax({
+
+            url: "/booking/reserve",
+            method: "POST",
+
+            data: {
+
+                userId: "6884b6f3b0f0d6b1d6c8e123",
+                passengerId: passengerId,
+                flightId: flightId,
+                seatNumber: seatNumber,
+                mealPreference: mealPreference,
+                mealPrice: mealPrice,
+                extraServices: {
+                    checkedBaggage: checkedBaggage,
+                    carryOn: carryOn,
+                    priorityBoarding: priorityBoarding,
+                    travelInsurance: travelInsurance,
+                    loungeAccess: loungeAccess
+                },
+
+                extraServicesPrice: extraServicesPrice,
+                total_price: totalPrice,
+                specialRequests: "N/A"
+
+            },
+            success:function(){
+                alert("Reservation Successful!");
+            }
+        });
     });
 
 });
