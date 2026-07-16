@@ -4,7 +4,6 @@ const User = require('../models/User');
 
 // SHOW LOGIN PAGE
 router.get('/login', (req, res) => {
-    // If already logged in, redirect based on role
     if (req.session.user) {
         if (req.session.user.role === 'admin') {
             return res.redirect('/admin');
@@ -20,13 +19,15 @@ router.get('/login', (req, res) => {
     });
 });
 
-// PROCESS LOGIN - BOTH CUSTOMERS AND ADMINS
+// PROCESS LOGIN
 router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        const user = await User.findOne({ email, password });
+        // Use daw findByEmailWithPassword to include password field from User model btw
+        const user = await User.findByEmailWithPassword(email);
 
+        // Check if user exists
         if (!user) {
             return res.render('login', {
                 title: 'Login',
@@ -37,10 +38,27 @@ router.post('/login', async (req, res) => {
             });
         }
 
+        // Check password
+        if (user.password !== password) {
+            return res.render('login', {
+                title: 'Login',
+                layout: false,
+                error: 'Invalid email or password.',
+                success: null,
+                formData: req.body
+            });
+        }
+
+        // Update last_login
+        user.last_login = new Date();
+        await user.save();
+
+        // Save user to session
         req.session.user = user;
         console.log('User logged in:', user.email);
         console.log('   Role:', user.role);
 
+        // Redirect based on role
         if (user.role === 'admin') {
             return res.redirect('/admin');
         } else {
