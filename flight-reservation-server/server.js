@@ -159,108 +159,16 @@ app.use('/search', searchRoutes);
 app.use('/booking', bookingRoutes);
 app.use('/profile', profileRoutes);
 app.use('/reservations', reservationRoutes);
+app.use('/', loginRoutes);
+app.use('/', registerRoutes);
+app.use('/admin/users', adminUsersRoutes);    
+app.use('/admin/reservations', adminReservationsRoutes);
 
 // Home Page
 app.get('/', (req, res) => {
     res.render('index', { 
         title: 'Home',
         loggedIn: req.session.user ? true : false
-    });
-});
-
-// REGISTER ROUTES
-app.get('/register', (req, res) => {
-    if (req.session.user) {
-        return res.redirect('/');
-    }
-    res.render('register', { title: 'Sign Up' });
-});
-
-app.post('/register', async (req, res) => {
-    try {
-        const existingUser = await User.findOne({ email: req.body.email });
-        if (existingUser) {
-            return res.send('Email already registered. Please login using a new email.');
-        }
-
-        const user = new User({
-            email: req.body.email,
-            phone: req.body.phone,
-            password: req.body.password,
-            role: 'customer',
-            status: 'active'
-        });
-
-        await user.save();
-        console.log('User created:', user.email);
-        res.redirect('/login');
-    } catch (error) {
-        console.error('Register error:', error);
-        res.send('Error creating account. Please try again.');
-    }
-});
-
-// LOGIN ROUTES
-app.get('/login', (req, res) => {
-    if (req.session.user) {
-        if (req.session.user.role === 'admin') {
-            return res.redirect('/admin');
-        }
-        return res.redirect('/');
-    }
-    res.render('login', { 
-        title: 'Login',
-        layout: false,
-        error: null 
-    });
-});
-
-app.post('/login', async (req, res) => {
-    try {
-        const user = await User.findOne({
-            email: req.body.email,
-            password: req.body.password
-        });
-
-        if (!user) {
-            return res.render('login', {
-                title: 'Login',
-                error: 'Invalid email or password.'
-            });
-        }
-
-        user.last_login = new Date();
-        await user.save();
-
-        req.session.user = user;
-        console.log(' User logged in:', user.email);
-        console.log('   Role:', user.role);
-
-        // Redirect based on role
-        if (user.role === 'admin') {
-            return res.redirect('/admin-dashboard');
-        } else {
-            return res.redirect('/');  
-        }
-
-    } catch (error) {
-        console.error('Login error:', error);
-        res.render('login', {
-            title: 'Login',
-            error: 'Error logging in. Please try again.'
-        });
-    }
-});
-
-// DASHBOARD ROUTE
-app.get('/dashboard', (req, res) => {
-    if (!req.session.user) {
-        return res.redirect('/login');
-    }
-
-    res.render('dashboard', {
-        title: 'Dashboard',
-        user: req.session.user
     });
 });
 
@@ -275,54 +183,6 @@ app.get('/admin', (req, res) => {
     }
 
     res.redirect('/admin-dashboard'); 
-});
-
-app.use('/admin-dashboard', adminDashboardRoutes);
-app.use('/admin-flights', adminFlightRoutes);
-
-app.get('/admin-users', async (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'admin') {
-        return res.redirect('/login');
-    }
-    res.render('admin-users', {
-        title: 'Users',
-        layout: 'main-admin'
-    });
-});
-
-app.get('/admin-reservations', async (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'admin') {
-        return res.redirect('/login');
-    }
-    res.render('admin-reservations', {
-        title: 'Reservations',
-        layout: 'main-admin'
-    });
-});
-
-app.get('/customer', (req, res) => {
-    if (!req.session.user) {
-        return res.redirect('/login');
-    }
-
-    if (req.session.user.role !== 'customer') {
-        return res.send('Access Denied. Customers only.');
-    }
-
-    res.render('customer', {
-        title: 'Customer Dashboard',
-        user: req.session.user
-    });
-});
-
-// LOGOUT ROUTE
-app.get('/logout', (req, res) => {
-    req.session.destroy((err) => {
-        if (err) {
-            console.error('Logout error:', err);
-        }
-        res.redirect('/');
-    });
 });
 
 // START SERVER
