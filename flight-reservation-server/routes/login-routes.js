@@ -9,7 +9,7 @@ router.get('/login', (req, res) => {
         if (req.session.user.role === 'admin') {
             return res.redirect('/admin');
         }
-        return res.redirect('/admin-dashboard');
+        return res.redirect('/');
     }
     
     res.render('login', {
