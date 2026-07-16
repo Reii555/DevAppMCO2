@@ -330,6 +330,25 @@ app.listen(PORT, () => {
             console.log('✅ User already exists:', testUser.email);
         }
 
+        let adminUser = await User.findOne({ email: 'admin@animoskies.com' });
+
+        if (!adminUser) {
+            adminUser = new User({
+                email: 'test@admin.com',
+                phone: '+639123456789',
+                password: 'admin123',
+                role: 'admin',
+                status: 'active',
+                created_at: new Date()
+            });
+            await adminUser.save();
+            console.log('✅ Admin user created:', adminUser.email);
+            console.log('   Email: test@admin.com');
+            console.log('   Password: admin123');
+        } else {
+            console.log('✅ Admin user already exists:', adminUser.email);
+        }
+
         //  Create or get Passenger
         let passenger = await Passenger.findOne({ user_id: testUser._id });
         
