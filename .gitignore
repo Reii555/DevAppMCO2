@@ -1,1 +1,5 @@
-flight-reservation-server/public/profile.js
+flight-reservation-server/server.js
+flight-reservation-server/server.js
+flight-reservation-server/models/User.js
+.gitignore
+flight-reservation-server/views/my-reservations.hbs

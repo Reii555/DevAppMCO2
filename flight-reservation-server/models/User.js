@@ -140,9 +140,9 @@ userSchema.virtual('fullName').get(function() {
     return `${this.firstName} ${this.lastName}`;
 });
 
-// Method to compare password
+// Method to compare password (simple comparison without bcrypt)
 userSchema.methods.comparePassword = async function(candidatePassword) {
-    return await bcrypt.compare(candidatePassword, this.password);
+    return this.password === candidatePassword;
 };
 
 // Static method to find by email with password
