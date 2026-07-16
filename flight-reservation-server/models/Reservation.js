@@ -108,8 +108,8 @@ const reservationSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Trip type is required'],
     enum: {
-      values: ['oneway', 'roundtrip'],
-      message: 'Trip type must be either "oneway" or "roundtrip"'
+      values: ['One-way', 'Roundtrip'],
+      message: 'Trip type must be either "One-way" or "Roundtrip"'
     },
     default: 'oneway'
   },

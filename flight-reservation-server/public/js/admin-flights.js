@@ -332,8 +332,7 @@ async function validateFlightForm() {
                 method: "GET",
                 data: {
                     flight_number: flight_number,
-                    flight_id: selectedFlightId,
-                    editMode: editMode
+                    flight_id: editMode ? selectedFlightId : null
                 }
             });
 
@@ -370,6 +369,14 @@ async function validateFlightForm() {
             $("#layoversCount").addClass("is-invalid");
             valid = false;
         }
+    }
+
+    //route validation
+    //origin should not be the same as the destination
+    if(origin !== "" && destination !== "" && origin === destination){
+        $("#destinationError").text("Destination should not be the same as the Origin.");
+        $("#destination").addClass("is-invalid");
+        valid = false;
     }
     return valid;
 }
@@ -419,30 +426,46 @@ $(document).ready(function () {
     $("#sortFlight").on("change",applyFilters);
 
     //select flight
-    $(document).on("click",".flight-row", function () {
+    $(document).on("click", ".flight-row", function () {
 
-            $(".flight-row").removeClass( "selected-row");
-            $(this).addClass("selected-row");
+        $(".flight-row").removeClass("selected-row");
+        $(this).addClass("selected-row");
 
-            selectedFlightIndex = parseInt($(this).attr("data-index"));
-            selectedFlightId = $(this).attr("data-id");
+        selectedFlightId = $(this).attr("data-id");
 
-            $("#editBtn").prop("disabled",false);
-            $("#deleteBtn").prop("disabled", false);
+        let selectedFlight = filteredFlights.find(
+            flight => flight._id === selectedFlightId
+        );
 
-            $("#selectedFlightLabel").text("Selected: " + filteredFlights[selectedFlightIndex].flight_number);
+        if (!selectedFlight) {
+            return;
         }
-    );
 
+        selectedFlightIndex = filteredFlights.indexOf(
+            selectedFlight
+        );
 
-    //Add flight
+        $("#editBtn").prop("disabled", false);
+        $("#deleteBtn").prop("disabled", false);
+
+        $("#selectedFlightLabel").text(
+            "Selected: " +
+            selectedFlight.flight_number
+        );
+
+        console.log("Selected flight ID to delete:", selectedFlightId); //debug
+    });
+
+    //add flight
     $("#addBtn").click(function () {
 
         editMode = false;
+        selectedFlightId = null;
+
         $("#modalTitle").text("Add Flight");
+
         clearFlightForm();
     });
-
 
     //edit flight
     $("#editBtn").click(function () {
@@ -569,9 +592,8 @@ $(document).ready(function () {
             url: "/admin-flights/" + selectedFlightId,
             method: "DELETE",
 
-            success: function () {
+            success: function (response) {
                 console.log("Delete response: ", response);
-                bootstrap.Modal.getInstance(document.getElementById("deleteModal")).hide();
 
                 applyFilters();
                 updateStatistics();
