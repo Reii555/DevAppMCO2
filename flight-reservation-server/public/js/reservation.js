@@ -45,18 +45,27 @@ $(document).ready(function() {
     });
 
     // ============================================================
-    // MEAL PRICES 
+    // MEAL PRICES
     // ============================================================
     var mealPrices = {
         'Standard': 0,
         'Vegetarian': 150,
         'Vegan': 200,
-        'Halal': 300, 
-        'Kosher': 350,
-        'Gluten-Free': 250
+        'Halal': 250,
+        'Kosher': 300,
+        'Gluten-Free': 200
     };
 
-    // Update meal price display
+    // Extra Services Prices
+    var extraServicePrices = {
+        'Premium Seat': 500,
+        'Checked-in Baggage': 600,
+        'Carry-on Baggage': 300,
+        'Priority Boarding': 500,
+        'Travel Insurance': 700,
+        'Lounge Access': 1000
+    };
+
     function updateMealPrice() {
         var selectedMeal = $('#editMealPreference').val();
         var price = mealPrices[selectedMeal] || 0;
@@ -66,6 +75,30 @@ $(document).ready(function() {
             $('#mealPriceDisplay').text('(Included)');
         }
     }
+
+    // Calculate total price with extras
+    function calculateTotalPrice() {
+        var basePrice = currentTotalPrice - currentExtraServicesTotal;
+        var mealPrice = mealPrices[$('#editMealPreference').val()] || 0;
+        var extrasTotal = 0;
+        
+        // Calculate extra services total
+        $('.extra-service-toggle:checked').each(function() {
+            var price = parseFloat($(this).data('price')) || 0;
+            extrasTotal += price;
+        });
+        
+        var newTotal = basePrice + mealPrice + extrasTotal;
+        $('#editTotalPrice').text('₱' + newTotal.toFixed(2));
+        return newTotal;
+    }
+
+    // ============================================================
+    // EXTRA SERVICES TOGGLE - Update price
+    // ============================================================
+    $(document).on('change', '.extra-service-toggle', function() {
+        calculateTotalPrice();
+    });
 
     // ============================================================
     // EXPAND/CONTRACT RESERVATION DETAILS
@@ -187,7 +220,7 @@ $(document).ready(function() {
     });
 
     // ============================================================
-    // EDIT SEAT MODAL - FIXED
+    // EDIT SEAT MODAL
     // ============================================================
     var currentReservationId = null;
     var selectedSeat = null;
@@ -195,6 +228,8 @@ $(document).ready(function() {
     var currentFlightId = null;
     var currentMeal = null;
     var currentTotalPrice = null;
+    var currentExtraServicesTotal = 0;
+    var currentExtraServices = {};
     
     $(document).on('click', '.edit-seat', function(e) {
         e.preventDefault();
@@ -204,8 +239,6 @@ $(document).ready(function() {
         var seat = $(this).data('seat');
         var meal = $(this).data('meal');
         var price = $(this).data('price');
-        
-        console.log('Edit seat clicked - ID:', reservationId, 'Seat:', seat, 'Meal:', meal);
         
         if (!reservationId) {
             showToast('Invalid reservation ID', 'error');
@@ -217,9 +250,10 @@ $(document).ready(function() {
         currentMeal = meal || 'Standard';
         selectedSeat = seat || null;
         currentTotalPrice = parseFloat(price) || 0;
+        currentExtraServicesTotal = 0;
+        currentExtraServices = {};
         currentFlightId = null;
         
-        // Reset modal
         $('#editReservationId').val(reservationId);
         $('#editSelectedSeat').text(currentSeatNumber);
         $('#editMealPreference').val(currentMeal);
@@ -228,16 +262,16 @@ $(document).ready(function() {
         $('#editTotalPrice').text('₱' + currentTotalPrice.toFixed(2));
         updateMealPrice();
         
-        // Show loading
+        // Reset extra service toggles
+        $('.extra-service-toggle').prop('checked', false);
+        
         $('#editSeatGrid').html('<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Loading seats...</p></div>');
         $('#editFlightInfo').html('<div class="text-center py-2"><i class="fas fa-spinner fa-spin"></i> Loading flight info...</div>');
         
-        // Get flight details
         $.ajax({
             url: '/reservations/details/' + reservationId,
             method: 'GET',
             success: function(detailResponse) {
-                console.log('Details response:', detailResponse);
                 if (detailResponse.success) {
                     var data = detailResponse.data;
                     var flightData = data.flight;
@@ -258,7 +292,6 @@ $(document).ready(function() {
                         '<p>Departure: ' + formattedDeparture + '</p>'
                     );
                     
-                    // Load seats
                     if (currentFlightId) {
                         loadSeats(currentFlightId, reservationId);
                     } else {
@@ -278,42 +311,158 @@ $(document).ready(function() {
         $('#editSeatModal').modal('show');
     });
     
+    // ============================================================
+    // LOAD SEATS
+    // ============================================================
     function loadSeats(flightId, reservationId) {
-        console.log('Loading seats for flight:', flightId);
-        
         $.ajax({
             url: '/reservations/seats/' + flightId + '/' + reservationId,
             method: 'GET',
             success: function(response) {
-                console.log('Seats response:', response);
                 if (response.success) {
                     var data = response.data;
-                    var seatsHtml = '<div class="seat-grid">';
+                    var seatsHtml = '';
+                    var letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+                    var totalRows = 10;
                     
-                    for (var i = 0; i < data.allSeats.length; i++) {
-                        var seat = data.allSeats[i];
-                        var seatClass = 'seat-available';
-                        var isDisabled = '';
-                        var titleText = '';
+                    seatsHtml += '<div class="table-responsive">';
+                    seatsHtml += '<table class="table table-bordered text-center seat-table">';
+                    seatsHtml += '<thead>';
+                    seatsHtml += '<tr>';
+                    seatsHtml += '<th style="width:40px;">#</th>';
+                    seatsHtml += '<th>A</th>';
+                    seatsHtml += '<th>B</th>';
+                    seatsHtml += '<th>C</th>';
+                    seatsHtml += '<th style="width:50px;background:#f1f5f9;color:#94a3b8;font-size:11px;font-weight:700;">AISLE</th>';
+                    seatsHtml += '<th>D</th>';
+                    seatsHtml += '<th>E</th>';
+                    seatsHtml += '<th>F</th>';
+                    seatsHtml += '</tr>';
+                    seatsHtml += '</thead>';
+                    seatsHtml += '<tbody>';
+                    
+                    for (var row = 1; row <= totalRows; row++) {
+                        var isPremium = row <= 3;
+                        seatsHtml += '<tr>';
+                        seatsHtml += '<td style="font-weight:700;color:#64748b;font-size:12px;">' + row + '</td>';
                         
-                        if (seat.isBooked && !seat.isCurrent) {
-                            seatClass = 'seat-booked';
-                            isDisabled = 'disabled';
-                            titleText = 'title="This seat is already booked"';
-                        } else if (seat.isCurrent) {
-                            seatClass = 'seat-current';
-                            titleText = 'title="Your current seat"';
-                            if (selectedSeat === null) {
-                                selectedSeat = seat.seat;
+                        for (var col = 0; col < 3; col++) {
+                            var seatNumber = row + letters[col];
+                            var seatData = null;
+                            
+                            for (var i = 0; i < data.allSeats.length; i++) {
+                                if (data.allSeats[i].seat === seatNumber) {
+                                    seatData = data.allSeats[i];
+                                    break;
+                                }
                             }
-                        } else if (selectedSeat === seat.seat) {
-                            seatClass = 'seat-selected';
+                            
+                            var seatClass = '';
+                            var isDisabled = '';
+                            var titleText = '';
+                            
+                            if (seatData) {
+                                if (seatData.isBooked && !seatData.isCurrent) {
+                                    seatClass = 'btn-secondary';
+                                    isDisabled = 'disabled';
+                                    titleText = 'title="This seat is already booked"';
+                                } else if (seatData.isCurrent) {
+                                    seatClass = 'btn-warning text-dark';
+                                    titleText = 'title="Your current seat"';
+                                    if (selectedSeat === null) {
+                                        selectedSeat = seatNumber;
+                                    }
+                                } else if (selectedSeat === seatNumber) {
+                                    seatClass = 'btn-primary';
+                                } else if (isPremium) {
+                                    seatClass = 'btn-outline-warning premium';
+                                } else {
+                                    seatClass = 'btn-outline-success';
+                                }
+                            } else {
+                                if (isPremium) {
+                                    seatClass = 'btn-outline-warning premium';
+                                } else {
+                                    seatClass = 'btn-outline-success';
+                                }
+                            }
+                            
+                            if (selectedSeat === seatNumber && seatData && !seatData.isBooked) {
+                                seatClass = 'btn-primary';
+                            }
+                            
+                            seatsHtml += '<td style="padding:4px;">';
+                            seatsHtml += '<button class="btn btn-sm ' + seatClass + ' w-100 seat-btn" data-seat="' + seatNumber + '" ' + isDisabled + ' ' + titleText + ' style="font-size:11px;padding:4px 0;min-width:35px;">' + seatNumber + '</button>';
+                            seatsHtml += '</td>';
                         }
                         
-                        seatsHtml += '<button type="button" class="seat-btn ' + seatClass + '" data-seat="' + seat.seat + '" ' + isDisabled + ' ' + titleText + '>' + seat.seat + '</button>';
+                        seatsHtml += '<td style="background:#f1f5f9;padding:2px;width:50px;"></td>';
+                        
+                        for (var col = 3; col < 6; col++) {
+                            var seatNumber = row + letters[col];
+                            var seatData = null;
+                            
+                            for (var i = 0; i < data.allSeats.length; i++) {
+                                if (data.allSeats[i].seat === seatNumber) {
+                                    seatData = data.allSeats[i];
+                                    break;
+                                }
+                            }
+                            
+                            var seatClass = '';
+                            var isDisabled = '';
+                            var titleText = '';
+                            
+                            if (seatData) {
+                                if (seatData.isBooked && !seatData.isCurrent) {
+                                    seatClass = 'btn-secondary';
+                                    isDisabled = 'disabled';
+                                    titleText = 'title="This seat is already booked"';
+                                } else if (seatData.isCurrent) {
+                                    seatClass = 'btn-warning text-dark';
+                                    titleText = 'title="Your current seat"';
+                                    if (selectedSeat === null) {
+                                        selectedSeat = seatNumber;
+                                    }
+                                } else if (selectedSeat === seatNumber) {
+                                    seatClass = 'btn-primary';
+                                } else if (isPremium) {
+                                    seatClass = 'btn-outline-warning premium';
+                                } else {
+                                    seatClass = 'btn-outline-success';
+                                }
+                            } else {
+                                if (isPremium) {
+                                    seatClass = 'btn-outline-warning premium';
+                                } else {
+                                    seatClass = 'btn-outline-success';
+                                }
+                            }
+                            
+                            if (selectedSeat === seatNumber && seatData && !seatData.isBooked) {
+                                seatClass = 'btn-primary';
+                            }
+                            
+                            seatsHtml += '<td style="padding:4px;">';
+                            seatsHtml += '<button class="btn btn-sm ' + seatClass + ' w-100 seat-btn" data-seat="' + seatNumber + '" ' + isDisabled + ' ' + titleText + ' style="font-size:11px;padding:4px 0;min-width:35px;">' + seatNumber + '</button>';
+                            seatsHtml += '</td>';
+                        }
+                        
+                        seatsHtml += '</tr>';
                     }
                     
+                    seatsHtml += '</tbody>';
+                    seatsHtml += '</table>';
                     seatsHtml += '</div>';
+                    
+                    seatsHtml += '<div class="d-flex gap-3 justify-content-center flex-wrap mt-3">';
+                    seatsHtml += '  <span class="badge bg-success">Available</span>';
+                    seatsHtml += '  <span class="badge bg-secondary">Booked</span>';
+                    seatsHtml += '  <span class="badge bg-warning text-dark">Your Current</span>';
+                    seatsHtml += '  <span class="badge bg-primary">Selected</span>';
+                    seatsHtml += '  <span class="badge bg-warning text-dark" style="background:#ffc107 !important;">Premium</span>';
+                    seatsHtml += '</div>';
+                    
                     $('#editSeatGrid').html(seatsHtml);
                     
                     if (selectedSeat) {
@@ -322,17 +471,41 @@ $(document).ready(function() {
                     
                     $('#availableSeatsCount').text(data.availableSeats + ' seats available');
                     
-                    // Click handler for seats - USING ON WITH PREVENT DEFAULT
+                    $(document).off('click', '.seat-btn:not(:disabled)');
                     $(document).on('click', '.seat-btn:not(:disabled)', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
+                        
                         var seat = $(this).data('seat');
+                        var isPremium = parseInt(seat) <= 3;
+                        
+                        if ($(this).hasClass('btn-primary')) {
+                            if (isPremium) {
+                                $(this).removeClass('btn-primary').addClass('btn-outline-warning premium');
+                            } else {
+                                $(this).removeClass('btn-primary').addClass('btn-outline-success');
+                            }
+                            selectedSeat = null;
+                            $('#editSelectedSeat').text('None');
+                            return;
+                        }
+                        
+                        $('.seat-btn').not(this).each(function() {
+                            var s = $(this).data('seat');
+                            var prem = parseInt(s) <= 3;
+                            if ($(this).hasClass('btn-primary')) {
+                                if (prem) {
+                                    $(this).removeClass('btn-primary').addClass('btn-outline-warning premium');
+                                } else {
+                                    $(this).removeClass('btn-primary').addClass('btn-outline-success');
+                                }
+                            }
+                        });
+                        
+                        $(this).removeClass('btn-outline-success btn-outline-warning premium').addClass('btn-primary');
+                        
                         selectedSeat = seat;
                         $('#editSelectedSeat').text(seat);
-                        
-                        $('.seat-btn').removeClass('seat-selected');
-                        $(this).addClass('seat-selected');
-                        console.log('Seat selected:', seat);
                     });
                     
                 } else {
@@ -351,14 +524,8 @@ $(document).ready(function() {
     // MEAL PREFERENCE CHANGE
     // ============================================================
     $('#editMealPreference').on('change', function() {
-        var selectedMeal = $(this).val();
-        var mealPrice = mealPrices[selectedMeal] || 0;
-        var currentMealPrice = mealPrices[currentMeal] || 0;
-        var basePrice = currentTotalPrice - currentMealPrice;
-        var newTotal = basePrice + mealPrice;
-        
-        $('#editTotalPrice').text('₱' + newTotal.toFixed(2));
         updateMealPrice();
+        calculateTotalPrice();
     });
 
     // ============================================================
@@ -370,6 +537,16 @@ $(document).ready(function() {
         var reservationId = $('#editReservationId').val();
         var mealPreference = $('#editMealPreference').val();
         var specialRequests = $('#editSpecialRequests').val().trim();
+        
+        // Get selected extra services
+        var selectedExtras = [];
+        var extrasTotal = 0;
+        $('.extra-service-toggle:checked').each(function() {
+            var name = $(this).data('name');
+            var price = parseFloat($(this).data('price')) || 0;
+            selectedExtras.push({ name: name, price: price });
+            extrasTotal += price;
+        });
         
         if (!selectedSeat) {
             showToast('Please select a seat', 'error');
@@ -386,7 +563,9 @@ $(document).ready(function() {
             data: JSON.stringify({
                 seatNumber: selectedSeat,
                 mealPreference: mealPreference,
-                specialRequests: specialRequests
+                specialRequests: specialRequests,
+                extraServices: selectedExtras,
+                extraServicesPrice: extrasTotal
             }),
             success: function(response) {
                 if (response.success) {
@@ -417,12 +596,10 @@ $(document).ready(function() {
     function updateReservationItem(reservationId, newSeat, newMeal, newPrice) {
         var item = $('.reservation-item[data-id="' + reservationId + '"]');
         if (item.length) {
-            // Update seat in route
             var routeText = item.find('.res-route').text();
             var updatedRoute = routeText.replace(/Seat \S+/, 'Seat ' + newSeat);
             item.find('.res-route').text(updatedRoute);
             
-            // Update meal
             var detailRows = item.find('.detail-row');
             if (detailRows.length >= 2) {
                 var mealValue = detailRows.eq(1).find('.value').eq(0);
@@ -432,16 +609,13 @@ $(document).ready(function() {
                 }
             }
             
-            // Update price
             item.find('.res-price').html('₱' + newPrice + ' <i class="fas fa-chevron-down res-expand-icon"></i>');
             
-            // Update button data
             var editBtn = item.find('.edit-seat');
             editBtn.data('seat', newSeat);
             editBtn.data('meal', newMeal);
             editBtn.data('price', newPrice);
             
-            // Flash effect
             item.css('border', '2px solid #22c55e');
             setTimeout(function() {
                 item.css('border', '');

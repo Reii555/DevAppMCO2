@@ -289,6 +289,8 @@ exports.getReservationCount = async (req, res) => {
 
 exports.updateReservationSeat = async (req, res) => {
     try {
+        console.log('Updating reservation seat:', req.params.id);
+        
         if (!req.session.user) {
             return res.status(401).json({
                 success: false,
@@ -297,8 +299,9 @@ exports.updateReservationSeat = async (req, res) => {
         }
 
         const reservationId = req.params.id;
-        const { seatNumber, mealPreference, specialRequests } = req.body;
+        const { seatNumber, mealPreference, specialRequests, extraServices, extraServicesPrice } = req.body;
 
+        // Validate ID
         if (!reservationId || reservationId === 'undefined' || reservationId === 'null') {
             return res.status(400).json({
                 success: false,
@@ -314,6 +317,7 @@ exports.updateReservationSeat = async (req, res) => {
             });
         }
 
+        // Check authorization
         if (reservation.userId.toString() !== req.session.user._id.toString()) {
             return res.status(403).json({
                 success: false,
@@ -321,6 +325,7 @@ exports.updateReservationSeat = async (req, res) => {
             });
         }
 
+        // Check if reservation can be updated
         if (reservation.status !== 'Pending' && reservation.status !== 'Confirmed') {
             return res.status(400).json({
                 success: false,
@@ -328,6 +333,7 @@ exports.updateReservationSeat = async (req, res) => {
             });
         }
 
+        // Validate seat number
         if (!seatNumber) {
             return res.status(400).json({
                 success: false,
@@ -335,6 +341,7 @@ exports.updateReservationSeat = async (req, res) => {
             });
         }
 
+        // Validate seat format
         const seatRegex = /^[0-9]{1,3}[A-Z]$/;
         if (!seatRegex.test(seatNumber)) {
             return res.status(400).json({
@@ -343,6 +350,7 @@ exports.updateReservationSeat = async (req, res) => {
             });
         }
 
+        // If seat is being changed, validate availability
         if (seatNumber !== reservation.seatNumber) {
             const existingReservation = await Reservation.findOne({
                 flightId: reservation.flightId,
@@ -359,6 +367,7 @@ exports.updateReservationSeat = async (req, res) => {
             }
         }
 
+        // Calculate new total price
         var mealPrices = {
             'Standard': 0,
             'Vegetarian': 150,
@@ -370,13 +379,51 @@ exports.updateReservationSeat = async (req, res) => {
         
         var newMealPrice = mealPrices[mealPreference] || 0;
         var oldMealPrice = mealPrices[reservation.mealPreference] || 0;
-        var priceDifference = newMealPrice - oldMealPrice;
+        var priceDifference = (newMealPrice - oldMealPrice) + (extraServicesPrice || 0);
         var newTotalPrice = reservation.total_price + priceDifference;
 
+        console.log('Old meal:', reservation.mealPreference, 'Old price:', oldMealPrice);
+        console.log('New meal:', mealPreference, 'New price:', newMealPrice);
+        console.log('Extra services price:', extraServicesPrice);
+        console.log('Price difference:', priceDifference, 'New total:', newTotalPrice);
+
+        // Build extra services object
+        var extraServicesObj = {
+            premiumSeat: false,
+            checkedBaggage: 0,
+            carryOn: 0,
+            priorityBoarding: false,
+            travelInsurance: false,
+            loungeAccess: false
+        };
+
+        if (extraServices && extraServices.length > 0) {
+            extraServices.forEach(function(service) {
+                var name = service.name;
+                var price = service.price;
+                if (name === 'Premium Seat') {
+                    extraServicesObj.premiumSeat = true;
+                } else if (name === 'Checked-in Baggage') {
+                    extraServicesObj.checkedBaggage = 1;
+                } else if (name === 'Carry-on Baggage') {
+                    extraServicesObj.carryOn = 1;
+                } else if (name === 'Priority Boarding') {
+                    extraServicesObj.priorityBoarding = true;
+                } else if (name === 'Travel Insurance') {
+                    extraServicesObj.travelInsurance = true;
+                } else if (name === 'Lounge Access') {
+                    extraServicesObj.loungeAccess = true;
+                }
+            });
+        }
+
+        // Update reservation in database
         const updateData = {
             seatNumber: seatNumber.toUpperCase(),
             mealPreference: mealPreference || 'Standard',
             mealPrice: newMealPrice,
+            extraServices: extraServicesObj,
+            extraServicesPrice: extraServicesPrice || 0,
             total_price: newTotalPrice
         };
         
@@ -390,6 +437,8 @@ exports.updateReservationSeat = async (req, res) => {
             { new: true }
         ).populate('flightId');
 
+        console.log('Reservation updated successfully in database');
+
         res.json({
             success: true,
             message: 'Reservation updated successfully',
@@ -397,6 +446,9 @@ exports.updateReservationSeat = async (req, res) => {
                 _id: updatedReservation._id,
                 seatNumber: updatedReservation.seatNumber,
                 mealPreference: updatedReservation.mealPreference,
+                mealPrice: updatedReservation.mealPrice,
+                extraServices: updatedReservation.extraServices,
+                extraServicesPrice: updatedReservation.extraServicesPrice,
                 total_price: updatedReservation.total_price,
                 status: updatedReservation.status
             }

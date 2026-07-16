@@ -87,11 +87,7 @@
                                         </button>
                                         
                                         {{#if (or (eq this.status 'Pending') (eq this.status 'Confirmed'))}}
-                                            <button class="btn-action btn-edit edit-seat" 
-                                                data-id="{{this._id}}" 
-                                                data-seat="{{this.seatNumber}}" 
-                                                data-meal="{{this.meal_id.meal_name}}" 
-                                                data-price="{{this.total_price}}">
+                                            <button class="btn-action btn-edit edit-seat" data-id="{{this._id}}" data-seat="{{this.seatNumber}}" data-meal="{{this.meal_id.meal_name}}" data-price="{{this.total_price}}">
                                                 <i class="fas fa-edit me-1"></i>Edit Seat
                                             </button>
                                             <button class="btn-action btn-cancel cancel-reservation" data-id="{{this._id}}" data-ref="{{this.booking_ref}}" data-passenger="{{this.passengerName}}">
@@ -152,7 +148,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header modal-header-primary">
-                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Seat Selection</h5>
+                <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Reservation</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
@@ -167,14 +163,8 @@
                     <!-- Seat Selection -->
                     <div class="mb-4">
                         <h6><i class="fas fa-chair me-2"></i>Select Seat <span class="text-danger">*</span></h6>
-                        <div class="seat-grid" id="editSeatGrid">
+                        <div id="editSeatGrid">
                             <div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Loading seats...</div>
-                        </div>
-                        <div class="seat-legend mt-2">
-                            <span class="badge bg-success">Available</span>
-                            <span class="badge bg-danger">Booked</span>
-                            <span class="badge bg-warning text-dark">Your Current</span>
-                            <span class="badge bg-primary">Selected</span>
                         </div>
                         <div class="mt-2">
                             <small class="text-muted">Selected seat: <strong id="editSelectedSeat">None</strong></small>
@@ -187,13 +177,86 @@
                         <h6><i class="fas fa-utensils me-2"></i>Meal Preference</h6>
                         <select class="form-select" id="editMealPreference">
                             <option value="Standard">Standard</option>
-                            <option value="Vegetarian">Vegetarian (+₱150.00)</option>
-                            <option value="Vegan">Vegan (+₱200.00)</option>
-                            <option value="Halal">Halal (+₱300.00)</option>
-                            <option value="Kosher">Kosher (+₱350.00)</option>
-                            <option value="Gluten-Free">Gluten-Free (+₱250.00)</option>
+                            <option value="Vegetarian">Vegetarian</option>
+                            <option value="Vegan">Vegan</option>
+                            <option value="Halal">Halal</option>
+                            <option value="Kosher">Kosher</option>
+                            <option value="Gluten-Free">Gluten-Free</option>
                         </select>
                         <small class="text-muted" id="mealPriceDisplay">(Included)</small>
+                    </div>
+
+                    <!-- Extra Services -->
+                    <div class="mb-3">
+                        <h6><i class="fas fa-concierge-bell me-2"></i>Extra Services</h6>
+                        <div class="row g-2">
+                            <!-- Premium Seat -->
+                            <div class="col-md-6">
+                                <div class="extra-service-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span>Premium Seat <small class="text-muted">(+₱500.00)</small></span>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input extra-service-toggle" type="checkbox" id="editPremiumSeat" data-price="500" data-name="Premium Seat">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Checked-in Baggage -->
+                            <div class="col-md-6">
+                                <div class="extra-service-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span>Checked-in Baggage <small class="text-muted">(+₱600.00)</small></span>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input extra-service-toggle" type="checkbox" id="editCheckedBag" data-price="600" data-name="Checked-in Baggage">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Carry-on Baggage -->
+                            <div class="col-md-6">
+                                <div class="extra-service-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span>Carry-on Baggage <small class="text-muted">(+₱300.00)</small></span>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input extra-service-toggle" type="checkbox" id="editCarryBag" data-price="300" data-name="Carry-on Baggage">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Priority Boarding -->
+                            <div class="col-md-6">
+                                <div class="extra-service-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span>Priority Boarding <small class="text-muted">(+₱500.00)</small></span>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input extra-service-toggle" type="checkbox" id="editPriorityBoard" data-price="500" data-name="Priority Boarding">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Travel Insurance -->
+                            <div class="col-md-6">
+                                <div class="extra-service-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span>Travel Insurance <small class="text-muted">(+₱700.00)</small></span>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input extra-service-toggle" type="checkbox" id="editTravelIns" data-price="700" data-name="Travel Insurance">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Lounge Access -->
+                            <div class="col-md-6">
+                                <div class="extra-service-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span>Lounge Access <small class="text-muted">(+₱1000.00)</small></span>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input extra-service-toggle" type="checkbox" id="editLoungeAccess" data-price="1000" data-name="Lounge Access">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Special Requests -->
@@ -201,6 +264,14 @@
                         <h6><i class="fas fa-comment me-2"></i>Special Requests</h6>
                         <textarea class="form-control" id="editSpecialRequests" rows="2" placeholder="Any special requests?"></textarea>
                     </div>
+
+                    <!-- Price Display -->
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <strong>Total Price:</strong>
+                        <span class="fs-5 fw-bold" id="editTotalPrice">₱0.00</span>
+                    </div>
+                    <small class="text-muted">Current price: <span id="editCurrentPrice">₱0.00</span></small>
                 </form>
             </div>
             <div class="modal-footer">
