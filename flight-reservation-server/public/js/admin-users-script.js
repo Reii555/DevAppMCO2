@@ -2,7 +2,7 @@ $(document).ready(function() {
 
     // variablez
     let currentPage = 1;
-    const rowsperPage = 5;
+    const rowsPerPage = 5;
     let filteredUsers = [];
     let totalUsers = 0;
     let currentFilter = 'all';
