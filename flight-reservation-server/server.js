@@ -143,6 +143,10 @@ const adminFlightRoutes = require('./routes/admin-flights-routes');
 const adminDashboardRoutes = require('./routes/admin-dashboard-routes');
 const profileRoutes = require('./routes/profileRoutes');
 const reservationRoutes = require('./routes/reservationRoutes');
+const loginRoutes = require('./routes/login-routes');
+const registerRoutes = require('./routes/register-routes');
+const adminUsersRoutes = require('./routes/admin-users-routes');
+const adminReservationsRoutes = require('./routes/admin-reservations-routes');
 
 app.use('/search', searchRoutes);
 app.use('/booking', bookingRoutes);
@@ -227,9 +231,9 @@ app.post('/login', async (req, res) => {
 
         // Redirect based on role
         if (user.role === 'admin') {
-            return res.redirect('/admin');
+            return res.redirect('/admin-dashboard');
         } else {
-            return res.redirect('/');  // ← Go to home page
+            return res.redirect('/');  
         }
 
     } catch (error) {
@@ -263,10 +267,7 @@ app.get('/admin', (req, res) => {
         return res.send('Access Denied. Admin only.');
     }
 
-    res.render('admin', {
-        title: 'Admin Panel',
-        user: req.session.user
-    });
+    res.redirect('/admin-dashboard'); 
 });
 
 app.use('/admin-dashboard', adminDashboardRoutes);
