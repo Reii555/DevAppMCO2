@@ -150,9 +150,9 @@ function updateSelectedMeal() {
     let mealPrice = $('.meal-card.selected .meal_price').text();
 
     if (mealName === "") {
-        $('#selectedMeal').text("Standard - Included");
+        $('#selectedMeal').text("[Standard] Included");
     } else {
-        $('#selectedMeal').text("[" + mealName + "]" + mealPrice);
+        $('#selectedMeal').text("[" + mealName + "] " + mealPrice);
     }
 
 }
