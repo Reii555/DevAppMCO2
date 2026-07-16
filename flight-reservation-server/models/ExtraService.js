@@ -2,13 +2,6 @@ const mongoose = require("mongoose");
 
 const extraServicesSchema = new mongoose.Schema({
 
-    service_id: { //primary key
-        type: String,
-        required: [true, 'Service ID is required'],
-        unique: true,
-        trim: true    
-    },
-
     service_name: {
         type: String,
         required: [true, 'Service name is required'],
