@@ -139,8 +139,8 @@ app.use('/profile', profileRoutes);
 app.use('/reservations', reservationRoutes);
 app.use('/admin-dashboard', adminDashboardRoutes);
 app.use('/admin-flights', adminFlightRoutes);
-app.use('/admin/users', adminUsersRoutes);
-app.use('/admin/reservations', adminReservationsRoutes);
+app.use('/admin-users', adminUsersRoutes);
+app.use('/admin-reservations', adminReservationsRoutes);
 
 
 
