@@ -131,6 +131,8 @@ app.use('/search', searchRoutes);
 app.use('/booking', bookingRoutes);
 app.use('/profile', profileRoutes);
 app.use('/reservations', reservationRoutes);
+app.use('/admin-dashboard', adminDashboardRoutes);
+app.use('/admin-flights', adminFlightRoutes);
 
 // Home Page
 app.get('/', (req, res) => {
@@ -248,9 +250,6 @@ app.get('/admin', (req, res) => {
     res.redirect('/admin-dashboard'); 
 });
 
-app.use('/admin-dashboard', adminDashboardRoutes);
-app.use('/admin-flights', adminFlightRoutes);
-
 app.get('/admin-users', async (req, res) => {
     if (!req.session.user || req.session.user.role !== 'admin') {
         return res.redirect('/login');
@@ -328,25 +327,6 @@ app.listen(PORT, () => {
             console.log('✅ User created:', testUser.email);
         } else {
             console.log('✅ User already exists:', testUser.email);
-        }
-
-        let adminUser = await User.findOne({ email: 'admin@animoskies.com' });
-
-        if (!adminUser) {
-            adminUser = new User({
-                email: 'test@admin.com',
-                phone: '+639123456789',
-                password: 'admin123',
-                role: 'admin',
-                status: 'active',
-                created_at: new Date()
-            });
-            await adminUser.save();
-            console.log('✅ Admin user created:', adminUser.email);
-            console.log('   Email: test@admin.com');
-            console.log('   Password: admin123');
-        } else {
-            console.log('✅ Admin user already exists:', adminUser.email);
         }
 
         //  Create or get Passenger
