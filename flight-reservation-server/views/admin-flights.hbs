@@ -158,9 +158,15 @@
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="form-label" for="airline">Airline</label>
-                                        <input type="text" class="form-control" id="airline" required>
-                                        <div class="text-danger small" id="airlineError"></div>
+                                        <label class="form-label">Prefered Airlrine</label>
+                                        <select class="form-select" name="airline">
+                                            <option value="">Any Airline</option>
+                                            <option value="Philippine Airlines">Philippine Airlines</option>
+                                            <option value="Cebu Pacific">Cebu Pacific</option>
+                                            <option value="AirAsia">AirAsia</option>
+                                            <option value="Sunlight Air">Sunlight Air</option>
+                                            <option value="Royal Air Philippines">Royal Air Philippines</option>
+                                        </select>
                                     </div>
 
                                     <div class="mb-3">
@@ -177,15 +183,37 @@
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="form-label" for="origin">Origin</label>
-                                        <input type="text" class="form-control" id="origin" placeholder="MNL" required>
-                                        <div class="text-danger small" id="originError"></div>
+                                        <label class="form-label">Origin Airport</label>
+                                        <select class="form-select" id="origin" name="origin">
+                                            <option value="">Select Origin</option>
+                                            <option value="Manila (MNL)">Manila (MNL)</option>
+                                            <option value="Cebu (CEB)">Cebu (CEB)</option>
+                                            <option value="Clark (CRK)">Clark (CRK)</option>
+                                            <option value="Davao (DVO)">Davao (DVO)</option>
+                                            <option value="Iloilo (ILO)">Iloilo (ILO)</option>
+                                            <option value="Bacolod (BCD)">Bacolod (BCD)</option>
+                                            <option value="Puerto Princesa (PPS)">Puerto Princesa (PPS)</option>
+                                            <option value="Siargao (IAO)">Siargao (IAO)</option>
+                                            <option value="Bohol (TAG)">Bohol (TAG)</option>
+                                            <option value="Zamboanga (ZAM)">Zamboanga (ZAM)</option>
+                                        </select>
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="form-label" for="destination">Destination</label>
-                                        <input type="text" class="form-control" id="destination" placeholder="LAX" required>
-                                        <div class="text-danger small" id="destinationError"></div>
+                                        <label class="form-label">Destination Airport</label>
+                                        <select class="form-select" id="origin" name="origin">
+                                            <option value="">Select Destination</option>
+                                            <option value="Manila (MNL)">Manila (MNL)</option>
+                                            <option value="Cebu (CEB)">Cebu (CEB)</option>
+                                            <option value="Clark (CRK)">Clark (CRK)</option>
+                                            <option value="Davao (DVO)">Davao (DVO)</option>
+                                            <option value="Iloilo (ILO)">Iloilo (ILO)</option>
+                                            <option value="Bacolod (BCD)">Bacolod (BCD)</option>
+                                            <option value="Puerto Princesa (PPS)">Puerto Princesa (PPS)</option>
+                                            <option value="Siargao (IAO)">Siargao (IAO)</option>
+                                            <option value="Bohol (TAG)">Bohol (TAG)</option>
+                                            <option value="Zamboanga (ZAM)">Zamboanga (ZAM)</option>
+                                        </select>
                                     </div>
 
                                     <div class="row">
@@ -209,6 +237,27 @@
                                             </div>
                                         </div>
                                     </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label" for="duration">Duration</label>
+                                        <input
+                                            type="text"
+                                            class="form-control"
+                                            id="duration"
+                                            placeholder="e.g. 1h 30m"
+                                            required>
+                                        <div class="text-danger small" id="durationError"></div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label" for="tripType">Trip Type</label>
+                                        <select class="form-select" id="tripType" required>
+                                            <option value="">Select Trip Type</option>
+                                            <option value="One-way">One-way</option>
+                                            <option value="Round-trip">Round-trip</option>
+                                        </select>
+                                        <div class="text-danger small" id="tripTypeError"></div>
+                                    </div>
 
                                     <div class="mb-3">
                                         <label class="form-label" for="availableSeats">Available Seats</label>
@@ -220,6 +269,28 @@
                                         <label class="form-label" for="basePrice">Base Price</label>
                                         <input type="number" class="form-control" id="basePrice" min="0" step="0.01" placeholder="123.00" required>
                                         <div class="text-danger small" id="basePriceError"></div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label" for="checkedIn">Checked-in Baggage Allowance (kg)</label>
+                                        <input type="number" class="form-control" id="checkedIn" min="0" required>
+                                        <div class="text-danger small" id="checkedInError"></div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label" for="carryOn">Carry-on Baggage Allowance (kg)</label>
+                                        <input type="number" class="form-control" id="carryOn" min="0" required>
+                                        <div class="text-danger small" id="carryOnError"></div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label" for="layoverCount">Layover Count</label>
+                                        <input type="number" class="form-control" id="layoverCount">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label" for="layoverDetails">Layover Details</label>
+                                        <input type="text" class="form-control" id="layoverDetails">
                                     </div>
 
                                     <div class="mb-3">
@@ -280,6 +351,7 @@
     </div>
 
     <!--Custom JS-->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="/js/admin-flights.js"></script>
 </body>
 
