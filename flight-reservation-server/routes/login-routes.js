@@ -24,7 +24,7 @@ router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        const user = await User.findOne({ email });
+        const user = await User.findByEmailWithPassword(email);
 
         // Check if user exists
         if (!user) {
@@ -59,7 +59,7 @@ router.post('/login', async (req, res) => {
 
         // Redirect based on role
         if (user.role === 'admin') {
-            return res.redirect('/admin');
+            return res.redirect('/admin-dashboard');
         } else {
             return res.redirect('/');
         }
