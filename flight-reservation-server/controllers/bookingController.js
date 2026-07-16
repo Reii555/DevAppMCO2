@@ -101,15 +101,25 @@ exports.bookFlight = async (req, res) => {
 
         });
 
-        await Seat.findOneAndUpdate(
+        console.log("Flight:", req.body.flightId);
+        console.log("Seat:", req.body.seatNumber);
+        console.log("Reservation ID:", reservation._id);
+
+        const updatedSeat = await Seat.findOneAndUpdate(
             {
                 flight_id: req.body.flightId,
                 seatNumber: req.body.seatNumber
             },
             {
-                status: "Occupied"
+                status: "Occupied",
+                reservation_id: reservation._id
+            },
+            {
+                new: true
             }
         );
+
+        console.log(updatedSeat);
 
         await Passenger.findByIdAndUpdate(
             req.body.passengerId,{reservation_id: reservation._id}

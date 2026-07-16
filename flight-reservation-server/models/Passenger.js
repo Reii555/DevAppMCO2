@@ -28,7 +28,7 @@ const passengerSchema = new mongoose.Schema({
     passport_num: {
         type: String,
         required: true,
-        unique: true,  // This already creates the index
+        unique: true,  
         trim: true,
         uppercase: true,
         match: [/^[A-Z0-9]{6,10}$/, 'Passport number must be 6-10 alphanumeric characters']
