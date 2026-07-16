@@ -184,7 +184,8 @@ body {
 
 .fa-cc-visa { color: #1a1f71; }
 .fa-cc-mastercard { color: #eb001b; }
-.fa-paypal { color: #003087; }
+.fa-cc-maya { color: #008753; }
+.fa-cc-gotyme { color: #5189f1; }
 
 .btn-set-default {
     background: none;

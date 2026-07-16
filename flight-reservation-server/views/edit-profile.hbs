@@ -10,13 +10,9 @@
 
             <form id="editProfileForm">
                 <div class="row g-3">
-                    <div class="col-md-6">
-                        <label class="form-label">First Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="firstName" value="{{user.firstName}}" required>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Last Name <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="lastName" value="{{user.lastName}}" required>
+                    <div class="col-12">
+                        <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="full_name" value="{{user.full_name}}" required>
                     </div>
                     <div class="col-12">
                         <label class="form-label">Email <span class="text-danger">*</span></label>
@@ -24,31 +20,53 @@
                         <small class="text-muted">Email cannot be changed</small>
                     </div>
                     <div class="col-12">
-                        <label class="form-label">Phone <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="phone" value="{{user.phone}}" required>
+                        <label class="form-label">Contact Number <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="contact_num" value="{{user.contact_num}}" required>
                         <small class="text-muted">Format: +63 9XX XXX XXXX</small>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Date of Birth</label>
-                        <input type="date" class="form-control" id="dateOfBirth" value="{{formatDateInput user.dateOfBirth}}">
+                    <div class="col-12">
+                        <label class="form-label">Passport Number <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="passport_num" value="{{user.passport_num}}" required>
+                        <small class="text-muted">Alphanumeric, 6-10 characters</small>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Gender</label>
+                        <label class="form-label">Nationality <span class="text-danger">*</span></label>
+                        <select class="form-select" id="nationality">
+                            <option value="Filipino" {{#if (eq user.nationality 'Filipino')}}selected{{/if}}>Filipino</option>
+                            <option value="American" {{#if (eq user.nationality 'American')}}selected{{/if}}>American</option>
+                            <option value="Japanese" {{#if (eq user.nationality 'Japanese')}}selected{{/if}}>Japanese</option>
+                            <option value="Chinese" {{#if (eq user.nationality 'Chinese')}}selected{{/if}}>Chinese</option>
+                            <option value="Korean" {{#if (eq user.nationality 'Korean')}}selected{{/if}}>Korean</option>
+                            <option value="British" {{#if (eq user.nationality 'British')}}selected{{/if}}>British</option>
+                            <option value="Australian" {{#if (eq user.nationality 'Australian')}}selected{{/if}}>Australian</option>
+                            <option value="Canadian" {{#if (eq user.nationality 'Canadian')}}selected{{/if}}>Canadian</option>
+                            <option value="Other" {{#if (eq user.nationality 'Other')}}selected{{/if}}>Other</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Date of Birth <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="birth_date" value="{{formatDateInput user.birth_date}}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Gender <span class="text-danger">*</span></label>
                         <select class="form-select" id="gender">
-                            <option value="">Select Gender</option>
                             <option value="Male" {{#if (eq user.gender 'Male')}}selected{{/if}}>Male</option>
                             <option value="Female" {{#if (eq user.gender 'Female')}}selected{{/if}}>Female</option>
-                            <option value="Other" {{#if (eq user.gender 'Other')}}selected{{/if}}>Other</option>
+                            <option value="Others" {{#if (eq user.gender 'Others')}}selected{{/if}}>Others</option>
                             <option value="Prefer not to say" {{#if (eq user.gender 'Prefer not to say')}}selected{{/if}}>Prefer not to say</option>
                         </select>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Passport Number</label>
-                        <input type="text" class="form-control" id="passportNumber" value="{{user.passportNumber}}">
+                        <label class="form-label">Passenger Type</label>
+                        <select class="form-select" id="type">
+                            <option value="Adult" {{#if (eq user.type 'Adult')}}selected{{/if}}>Adult</option>
+                            <option value="Child" {{#if (eq user.type 'Child')}}selected{{/if}}>Child</option>
+                            <option value="Infant" {{#if (eq user.type 'Infant')}}selected{{/if}}>Infant</option>
+                        </select>
                     </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Nationality</label>
-                        <input type="text" class="form-control" id="nationality" value="{{user.nationality}}">
+                    <div class="col-12">
+                        <label class="form-label">Emergency Contact</label>
+                        <input type="text" class="form-control" id="emergency_contact" value="{{user.emergency_contact}}" placeholder="Emergency contact name and number">
                     </div>
                 </div>
 

@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Passenger = require('../models/Passenger');
 const Reservation = require('../models/Reservation');
 
 // ============================================================
@@ -7,85 +8,53 @@ const Reservation = require('../models/Reservation');
 
 exports.showProfilePage = async (req, res) => {
     try {
-        // Get the user from the database directly (for testing purposes)
-        let userId = null;
-        
-        // First try to get userId from session
-        if (req.session && req.session.user && req.session.user._id) {
-            userId = req.session.user._id;
-        }
-        
-        // If no session userId, find the first user
-        if (!userId) {
-            const user = await User.findOne({});
-            if (user) {
-                userId = user._id;
-            }
-        }
-        
-        // If still no user, create one
-        if (!userId) {
-            const newUser = new User({
-                firstName: 'Reina',
-                lastName: 'Lagos',
-                email: 'reina.lagos@hotmail.com',
-                password: 'password123',
-                phone: '+639988776655',
-                dateOfBirth: new Date('1992-03-15'),
-                passportNumber: 'A12345678',
-                nationality: 'Filipino',
-                gender: 'Female',
-                role: 'customer',
-                status: 'active'
-            });
-            await newUser.save();
-            userId = newUser._id;
-            if (req.session) {
-                req.session.user = newUser;
-            }
-        }
-        
-        // Get the user data from database
-        const user = await User.findById(userId);
-        
-        if (!user) {
-            // If user not found, create one
-            const newUser = new User({
-                firstName: 'Reina',
-                lastName: 'Lagos',
-                email: 'reina.lagos@hotmail.com',
-                password: 'password123',
-                phone: '+639988776655',
-                dateOfBirth: new Date('1992-03-15'),
-                passportNumber: 'A12345678',
-                nationality: 'Filipino',
-                gender: 'Female',
-                role: 'customer',
-                status: 'active'
-            });
-            await newUser.save();
-            if (req.session) {
-                req.session.user = newUser;
-            }
-            // Update the user variable with the new user
-            const updatedUser = await User.findById(newUser._id);
-            return res.render('profile', {
-                title: 'My Profile',
-                user: updatedUser,
-                reservations: [],
-                isAuthenticated: true
-            });
+        if (!req.session.user) {
+            return res.redirect('/login');
         }
 
-        // Update the session with the latest user data
-        if (req.session) {
-            req.session.user = user;
+        let passenger = await Passenger.findOne({ user_id: req.session.user._id });
+        
+        if (!passenger) {
+            const newPassenger = new Passenger({
+                user_id: req.session.user._id,
+                full_name: req.session.user.full_name || 'User',
+                contact_num: req.session.user.phone || 'N/A',
+                passport_num: 'PENDING' + Math.random().toString(36).substring(2, 7).toUpperCase(),
+                nationality: 'Filipino',
+                birth_date: new Date('2000-01-01'),
+                gender: 'Prefer not to say',
+                emergency_contact: 'N/A',
+                savedPassengers: [],
+                paymentMethods: [],
+                notificationPreferences: {
+                    promotionalOffers: true,
+                    flightStatusAlerts: true,
+                    loyaltyUpdates: true,
+                    smsAlerts: true
+                }
+            });
+            await newPassenger.save();
+            passenger = newPassenger;
         }
 
-        // Get user's reservations
+        if (!passenger.savedPassengers) {
+            passenger.savedPassengers = [];
+        }
+        if (!passenger.paymentMethods) {
+            passenger.paymentMethods = [];
+        }
+        if (!passenger.notificationPreferences) {
+            passenger.notificationPreferences = {
+                promotionalOffers: true,
+                flightStatusAlerts: true,
+                loyaltyUpdates: true,
+                smsAlerts: true
+            };
+        }
+
         let reservations = [];
         try {
-            reservations = await Reservation.find({ userId: user._id })
+            reservations = await Reservation.find({ userId: req.session.user._id })
                 .populate('flightId')
                 .sort({ createdAt: -1 })
                 .limit(5);
@@ -93,34 +62,42 @@ exports.showProfilePage = async (req, res) => {
             console.log('No reservations found');
         }
 
+        const userData = {
+            _id: req.session.user._id,
+            email: req.session.user.email,
+            phone: req.session.user.phone,
+            role: req.session.user.role,
+            full_name: passenger.full_name || '',
+            contact_num: passenger.contact_num || '',
+            passport_num: passenger.passport_num || '',
+            nationality: passenger.nationality || 'Filipino',
+            birth_date: passenger.birth_date || new Date('2000-01-01'),
+            gender: passenger.gender || 'Prefer not to say',
+            type: passenger.type || 'Adult',
+            emergency_contact: passenger.emergency_contact || '',
+            profilePicture: passenger.profilePicture || null,
+            savedPassengers: passenger.savedPassengers || [],
+            paymentMethods: passenger.paymentMethods || [],
+            notificationPreferences: passenger.notificationPreferences || {
+                promotionalOffers: true,
+                flightStatusAlerts: true,
+                loyaltyUpdates: true,
+                smsAlerts: true
+            },
+            createdAt: passenger.createdAt || new Date()
+        };
+
         res.render('profile', {
             title: 'My Profile',
-            user: user,
+            user: userData,
             reservations: reservations,
             isAuthenticated: true
         });
     } catch (error) {
         console.error('Profile error:', error);
-        // Try to find any user as fallback
-        try {
-            const anyUser = await User.findOne({});
-            if (anyUser) {
-                if (req.session) {
-                    req.session.user = anyUser;
-                }
-                return res.render('profile', {
-                    title: 'My Profile',
-                    user: anyUser,
-                    reservations: [],
-                    isAuthenticated: true
-                });
-            }
-        } catch (e) {
-            console.error('Fallback error:', e);
-        }
         res.render('profile', {
             title: 'My Profile',
-            user: { firstName: 'Guest', lastName: 'User', profilePicture: null },
+            user: req.session.user || { email: 'Guest' },
             reservations: [],
             isAuthenticated: false
         });
@@ -129,187 +106,187 @@ exports.showProfilePage = async (req, res) => {
 
 exports.showEditProfilePage = async (req, res) => {
     try {
-        let userId = null;
-        
-        if (req.session && req.session.user && req.session.user._id) {
-            userId = req.session.user._id;
-        }
-        
-        if (!userId) {
-            const user = await User.findOne({});
-            if (user) {
-                userId = user._id;
-            }
-        }
-        
-        if (!userId) {
-            const newUser = new User({
-                firstName: 'Reina',
-                lastName: 'Lagos',
-                email: 'reina.lagos@hotmail.com',
-                password: 'password123',
-                phone: '+639988776655',
-                dateOfBirth: new Date('1992-03-15'),
-                passportNumber: 'A12345678',
-                nationality: 'Filipino',
-                gender: 'Female',
-                role: 'customer',
-                status: 'active'
-            });
-            await newUser.save();
-            userId = newUser._id;
-            if (req.session) {
-                req.session.user = newUser;
-            }
-        }
-        
-        // Get the user data from database
-        const user = await User.findById(userId);
-        
-        if (!user) {
-            const newUser = new User({
-                firstName: 'Reina',
-                lastName: 'Lagos',
-                email: 'reina.lagos@hotmail.com',
-                password: 'password123',
-                phone: '+639988776655',
-                dateOfBirth: new Date('1992-03-15'),
-                passportNumber: 'A12345678',
-                nationality: 'Filipino',
-                gender: 'Female',
-                role: 'customer',
-                status: 'active'
-            });
-            await newUser.save();
-            if (req.session) {
-                req.session.user = newUser;
-            }
-            const updatedUser = await User.findById(newUser._id);
-            return res.render('edit-profile', {
-                title: 'Edit Profile',
-                user: updatedUser,
-                isAuthenticated: true
-            });
+        if (!req.session.user) {
+            return res.redirect('/login');
         }
 
-        if (req.session) {
-            req.session.user = user;
+        let passenger = await Passenger.findOne({ user_id: req.session.user._id });
+        
+        if (!passenger) {
+            const newPassenger = new Passenger({
+                user_id: req.session.user._id,
+                full_name: req.session.user.full_name || 'User',
+                contact_num: req.session.user.phone || 'N/A',
+                passport_num: 'PENDING' + Math.random().toString(36).substring(2, 7).toUpperCase(),
+                nationality: 'Filipino',
+                birth_date: new Date('2000-01-01'),
+                gender: 'Prefer not to say',
+                emergency_contact: 'N/A'
+            });
+            await newPassenger.save();
+            passenger = newPassenger;
         }
+
+        const userData = {
+            _id: req.session.user._id,
+            email: req.session.user.email,
+            phone: req.session.user.phone,
+            role: req.session.user.role,
+            full_name: passenger.full_name || '',
+            contact_num: passenger.contact_num || '',
+            passport_num: passenger.passport_num || '',
+            nationality: passenger.nationality || 'Filipino',
+            birth_date: passenger.birth_date || new Date('2000-01-01'),
+            gender: passenger.gender || 'Prefer not to say',
+            type: passenger.type || 'Adult',
+            emergency_contact: passenger.emergency_contact || '',
+            profilePicture: passenger.profilePicture || null
+        };
 
         res.render('edit-profile', {
             title: 'Edit Profile',
-            user: user,
+            user: userData,
             isAuthenticated: true
         });
     } catch (error) {
         console.error('Edit profile error:', error);
-        try {
-            const anyUser = await User.findOne({});
-            if (anyUser) {
-                if (req.session) {
-                    req.session.user = anyUser;
-                }
-                return res.render('edit-profile', {
-                    title: 'Edit Profile',
-                    user: anyUser,
-                    isAuthenticated: true
-                });
-            }
-        } catch (e) {
-            console.error('Fallback error:', e);
-        }
         res.render('edit-profile', {
             title: 'Edit Profile',
-            user: req.session.user || { firstName: 'Guest', lastName: 'User' },
+            user: req.session.user || { email: 'Guest' },
             isAuthenticated: false
         });
     }
 };
 
+// ============================================================
+// HELPER FUNCTION - Check duplicate passport
+// ============================================================
+
+async function isPassportDuplicate(passportNumber, excludeUserId) {
+    const passport = passportNumber.toUpperCase().trim();
+    
+    // Check if any passenger has this passport number (excluding the current user)
+    const existingPassenger = await Passenger.findOne({
+        passport_num: passport,
+        user_id: { $ne: excludeUserId }
+    });
+    
+    if (existingPassenger) {
+        return true;
+    }
+    
+    // Check if any saved passenger has this passport number
+    const allPassengers = await Passenger.find({
+        user_id: { $ne: excludeUserId }
+    });
+    
+    for (let p of allPassengers) {
+        if (p.savedPassengers && p.savedPassengers.length > 0) {
+            const found = p.savedPassengers.some(function(sp) {
+                return sp.passportNumber && sp.passportNumber.toUpperCase() === passport;
+            });
+            if (found) {
+                return true;
+            }
+        }
+    }
+    
+    return false;
+}
+
+// ============================================================
+// AJAX FUNCTIONALITY - Profile
+// ============================================================
+
 exports.updateProfile = async (req, res) => {
     try {
-        console.log('Update profile called with body:', req.body);
-        
-        const { firstName, lastName, phone, dateOfBirth, passportNumber, nationality, gender } = req.body;
+        if (!req.session.user) {
+            return res.status(401).json({
+                success: false,
+                message: 'Not authenticated'
+            });
+        }
 
-        if (!firstName || !lastName || !phone) {
+        const { full_name, contact_num, passport_num, nationality, birth_date, gender, type, emergency_contact } = req.body;
+
+        if (!full_name || !contact_num || !passport_num || !nationality || !birth_date || !gender) {
             return res.status(400).json({
                 success: false,
-                message: 'First name, last name, and phone are required'
+                message: 'All required fields must be filled'
             });
         }
 
         const phoneRegex = /^\+?[0-9\s\-\(\)]{7,20}$/;
-        if (!phoneRegex.test(phone)) {
+        if (!phoneRegex.test(contact_num)) {
             return res.status(400).json({
                 success: false,
                 message: 'Please enter a valid phone number (e.g., +63 912 345 6789)'
             });
         }
 
-        let userId = null;
-        if (req.session && req.session.user && req.session.user._id) {
-            userId = req.session.user._id;
-        } else {
-            const user = await User.findOne({});
-            if (user) {
-                userId = user._id;
-            }
-        }
-
-        if (!userId) {
-            return res.status(404).json({
+        const formattedPassport = passport_num.toUpperCase().trim();
+        if (!/^[A-Z0-9]{6,10}$/.test(formattedPassport)) {
+            return res.status(400).json({
                 success: false,
-                message: 'User not found'
+                message: 'Passport number must be 6-10 alphanumeric characters'
             });
         }
 
-        const updateData = {
-            firstName: firstName,
-            lastName: lastName,
-            phone: phone
-        };
-
-        if (dateOfBirth) {
-            updateData.dateOfBirth = new Date(dateOfBirth);
-        }
-        if (passportNumber) {
-            updateData.passportNumber = passportNumber.toUpperCase();
-        }
-        if (nationality) {
-            updateData.nationality = nationality;
-        }
-        if (gender) {
-            updateData.gender = gender;
+        // Check for duplicate passport number (excluding current user)
+        const isDuplicate = await isPassportDuplicate(formattedPassport, req.session.user._id);
+        if (isDuplicate) {
+            return res.status(400).json({
+                success: false,
+                message: 'This passport number is already registered to another passenger'
+            });
         }
 
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            updateData,
-            { new: true, runValidators: true }
+        // Update User phone
+        await User.findByIdAndUpdate(
+            req.session.user._id,
+            { phone: contact_num },
+            { new: true }
         );
 
-        if (!updatedUser) {
+        // Update Passenger
+        const updateData = {
+            full_name: full_name,
+            contact_num: contact_num,
+            passport_num: formattedPassport,
+            nationality: nationality || 'Filipino',
+            birth_date: new Date(birth_date),
+            gender: gender || 'Prefer not to say',
+            type: type || 'Adult',
+            emergency_contact: emergency_contact || 'N/A'
+        };
+
+        const updatedPassenger = await Passenger.findOneAndUpdate(
+            { user_id: req.session.user._id },
+            updateData,
+            { new: true, runValidators: true, upsert: true }
+        );
+
+        if (!updatedPassenger) {
             return res.status(404).json({
                 success: false,
-                message: 'User not found'
+                message: 'Passenger profile not found'
             });
         }
-
-        // Update the session with the latest user data
-        if (req.session) {
-            req.session.user = updatedUser;
-        }
-
-        console.log('User updated successfully, returning:', updatedUser.firstName, updatedUser.lastName);
 
         res.json({
             success: true,
             message: 'Profile updated successfully',
-            data: updatedUser
+            data: updatedPassenger
         });
     } catch (error) {
         console.error('Update profile error:', error);
+        // Check if it's a duplicate key error
+        if (error.code === 11000) {
+            return res.status(400).json({
+                success: false,
+                message: 'This passport number is already registered to another passenger'
+            });
+        }
         res.status(500).json({
             success: false,
             message: error.message || 'Error updating profile'
@@ -319,6 +296,13 @@ exports.updateProfile = async (req, res) => {
 
 exports.uploadProfilePicture = async (req, res) => {
     try {
+        if (!req.session.user) {
+            return res.status(401).json({
+                success: false,
+                message: 'Not authenticated'
+            });
+        }
+
         const { profilePicture } = req.body;
 
         if (!profilePicture) {
@@ -328,44 +312,30 @@ exports.uploadProfilePicture = async (req, res) => {
             });
         }
 
-        let userId = null;
-        if (req.session && req.session.user && req.session.user._id) {
-            userId = req.session.user._id;
+        let passenger = await Passenger.findOne({ user_id: req.session.user._id });
+        
+        if (!passenger) {
+            passenger = new Passenger({
+                user_id: req.session.user._id,
+                full_name: req.session.user.full_name || 'User',
+                contact_num: req.session.user.phone || 'N/A',
+                passport_num: 'PENDING' + Math.random().toString(36).substring(2, 7).toUpperCase(),
+                nationality: 'Filipino',
+                birth_date: new Date('2000-01-01'),
+                gender: 'Prefer not to say',
+                emergency_contact: 'N/A',
+                profilePicture: profilePicture
+            });
+            await passenger.save();
         } else {
-            const user = await User.findOne({});
-            if (user) {
-                userId = user._id;
-            }
-        }
-
-        if (!userId) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found'
-            });
-        }
-
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            { profilePicture: profilePicture },
-            { new: true }
-        );
-
-        if (!updatedUser) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found'
-            });
-        }
-
-        if (req.session) {
-            req.session.user = updatedUser;
+            passenger.profilePicture = profilePicture;
+            await passenger.save();
         }
 
         res.json({
             success: true,
             message: 'Profile picture updated successfully',
-            data: updatedUser
+            data: passenger
         });
     } catch (error) {
         console.error('Upload picture error:', error);
@@ -378,34 +348,48 @@ exports.uploadProfilePicture = async (req, res) => {
 
 exports.getProfileData = async (req, res) => {
     try {
-        let userId = null;
-        if (req.session && req.session.user && req.session.user._id) {
-            userId = req.session.user._id;
-        } else {
-            const user = await User.findOne({});
-            if (user) {
-                userId = user._id;
-            }
-        }
-
-        if (!userId) {
-            return res.status(404).json({
+        if (!req.session.user) {
+            return res.status(401).json({
                 success: false,
-                message: 'User not found'
+                message: 'Not authenticated'
             });
         }
 
-        const user = await User.findById(userId);
+        const passenger = await Passenger.findOne({ user_id: req.session.user._id });
         
-        const recentReservations = await Reservation.find({ userId: user._id })
+        if (!passenger) {
+            return res.status(404).json({
+                success: false,
+                message: 'Passenger profile not found'
+            });
+        }
+
+        const recentReservations = await Reservation.find({ userId: req.session.user._id })
             .populate('flightId')
             .sort({ createdAt: -1 })
             .limit(3);
 
+        const userData = {
+            _id: req.session.user._id,
+            email: req.session.user.email,
+            phone: req.session.user.phone,
+            full_name: passenger.full_name || '',
+            contact_num: passenger.contact_num || '',
+            passport_num: passenger.passport_num || '',
+            nationality: passenger.nationality || 'Filipino',
+            birth_date: passenger.birth_date || new Date('2000-01-01'),
+            gender: passenger.gender || 'Prefer not to say',
+            type: passenger.type || 'Adult',
+            emergency_contact: passenger.emergency_contact || '',
+            profilePicture: passenger.profilePicture || null,
+            savedPassengers: passenger.savedPassengers || [],
+            paymentMethods: passenger.paymentMethods || []
+        };
+
         res.json({
             success: true,
             data: {
-                user: user,
+                user: userData,
                 recentReservations: recentReservations
             }
         });
@@ -418,29 +402,31 @@ exports.getProfileData = async (req, res) => {
     }
 };
 
+// ============================================================
+// AJAX FUNCTIONALITY - Saved Passengers
+// ============================================================
+
 exports.getSavedPassengers = async (req, res) => {
     try {
-        let userId = null;
-        if (req.session && req.session.user && req.session.user._id) {
-            userId = req.session.user._id;
-        } else {
-            const user = await User.findOne({});
-            if (user) {
-                userId = user._id;
-            }
-        }
-
-        if (!userId) {
-            return res.status(404).json({
+        if (!req.session.user) {
+            return res.status(401).json({
                 success: false,
-                message: 'User not found'
+                message: 'Not authenticated'
             });
         }
 
-        const user = await User.findById(userId);
+        const passenger = await Passenger.findOne({ user_id: req.session.user._id });
+        
+        if (!passenger) {
+            return res.status(404).json({
+                success: false,
+                message: 'Passenger profile not found'
+            });
+        }
+
         res.json({
             success: true,
-            data: user.savedPassengers || []
+            data: passenger.savedPassengers || []
         });
     } catch (error) {
         console.error('Get saved passengers error:', error);
@@ -453,6 +439,13 @@ exports.getSavedPassengers = async (req, res) => {
 
 exports.addSavedPassenger = async (req, res) => {
     try {
+        if (!req.session.user) {
+            return res.status(401).json({
+                success: false,
+                message: 'Not authenticated'
+            });
+        }
+
         const { firstName, lastName, passportNumber, dateOfBirth, nationality, gender, type } = req.body;
 
         if (!firstName || !lastName || !passportNumber || !dateOfBirth || !nationality || !gender) {
@@ -462,44 +455,72 @@ exports.addSavedPassenger = async (req, res) => {
             });
         }
 
-        let userId = null;
-        if (req.session && req.session.user && req.session.user._id) {
-            userId = req.session.user._id;
-        } else {
-            const user = await User.findOne({});
-            if (user) {
-                userId = user._id;
-            }
-        }
-
-        if (!userId) {
-            return res.status(404).json({
+        const formattedPassport = passportNumber.toUpperCase().trim();
+        if (!/^[A-Z0-9]{6,10}$/.test(formattedPassport)) {
+            return res.status(400).json({
                 success: false,
-                message: 'User not found'
+                message: 'Passport number must be 6-10 alphanumeric characters'
             });
         }
 
-        const user = await User.findById(userId);
-        user.savedPassengers.push({
+        // Check for duplicate passport number
+        const isDuplicate = await isPassportDuplicate(formattedPassport, req.session.user._id);
+        if (isDuplicate) {
+            return res.status(400).json({
+                success: false,
+                message: 'This passport number is already registered to another passenger'
+            });
+        }
+
+        let passenger = await Passenger.findOne({ user_id: req.session.user._id });
+        
+        if (!passenger) {
+            passenger = new Passenger({
+                user_id: req.session.user._id,
+                full_name: req.session.user.full_name || 'User',
+                contact_num: req.session.user.phone || 'N/A',
+                passport_num: 'PENDING' + Math.random().toString(36).substring(2, 7).toUpperCase(),
+                nationality: 'Filipino',
+                birth_date: new Date('2000-01-01'),
+                gender: 'Prefer not to say',
+                emergency_contact: 'N/A',
+                savedPassengers: []
+            });
+            await passenger.save();
+        }
+
+        if (!passenger.savedPassengers) {
+            passenger.savedPassengers = [];
+        }
+
+        // Also check within the user's own saved passengers
+        const ownDuplicate = passenger.savedPassengers.some(function(sp) {
+            return sp.passportNumber && sp.passportNumber.toUpperCase() === formattedPassport;
+        });
+
+        if (ownDuplicate) {
+            return res.status(400).json({
+                success: false,
+                message: 'This passport number is already in your saved passengers list'
+            });
+        }
+
+        passenger.savedPassengers.push({
             firstName: firstName,
             lastName: lastName,
-            passportNumber: passportNumber,
+            passportNumber: formattedPassport,
             dateOfBirth: new Date(dateOfBirth),
             nationality: nationality,
             gender: gender,
             type: type || 'Adult'
         });
 
-        await user.save();
-        
-        if (req.session) {
-            req.session.user = user;
-        }
+        await passenger.save();
 
         res.json({
             success: true,
             message: 'Passenger saved successfully',
-            data: user.savedPassengers
+            data: passenger.savedPassengers
         });
     } catch (error) {
         console.error('Add saved passenger error:', error);
@@ -512,45 +533,39 @@ exports.addSavedPassenger = async (req, res) => {
 
 exports.removeSavedPassenger = async (req, res) => {
     try {
+        if (!req.session.user) {
+            return res.status(401).json({
+                success: false,
+                message: 'Not authenticated'
+            });
+        }
+
         const passengerIndex = req.params.index;
 
-        let userId = null;
-        if (req.session && req.session.user && req.session.user._id) {
-            userId = req.session.user._id;
-        } else {
-            const user = await User.findOne({});
-            if (user) {
-                userId = user._id;
-            }
-        }
-
-        if (!userId) {
+        const passenger = await Passenger.findOne({ user_id: req.session.user._id });
+        
+        if (!passenger) {
             return res.status(404).json({
                 success: false,
-                message: 'User not found'
+                message: 'Passenger profile not found'
             });
         }
 
-        const user = await User.findById(userId);
-        if (passengerIndex >= 0 && passengerIndex < user.savedPassengers.length) {
-            user.savedPassengers.splice(passengerIndex, 1);
-            await user.save();
-            
-            if (req.session) {
-                req.session.user = user;
-            }
-
-            res.json({
-                success: true,
-                message: 'Passenger removed successfully',
-                data: user.savedPassengers
-            });
-        } else {
-            res.status(404).json({
+        if (!passenger.savedPassengers || passengerIndex >= passenger.savedPassengers.length) {
+            return res.status(404).json({
                 success: false,
                 message: 'Passenger not found'
             });
         }
+
+        passenger.savedPassengers.splice(passengerIndex, 1);
+        await passenger.save();
+
+        res.json({
+            success: true,
+            message: 'Passenger removed successfully',
+            data: passenger.savedPassengers
+        });
     } catch (error) {
         console.error('Remove saved passenger error:', error);
         res.status(500).json({
@@ -560,29 +575,31 @@ exports.removeSavedPassenger = async (req, res) => {
     }
 };
 
+// ============================================================
+// AJAX FUNCTIONALITY - Payment Methods
+// ============================================================
+
 exports.getPaymentMethods = async (req, res) => {
     try {
-        let userId = null;
-        if (req.session && req.session.user && req.session.user._id) {
-            userId = req.session.user._id;
-        } else {
-            const user = await User.findOne({});
-            if (user) {
-                userId = user._id;
-            }
-        }
-
-        if (!userId) {
-            return res.status(404).json({
+        if (!req.session.user) {
+            return res.status(401).json({
                 success: false,
-                message: 'User not found'
+                message: 'Not authenticated'
             });
         }
 
-        const user = await User.findById(userId);
+        const passenger = await Passenger.findOne({ user_id: req.session.user._id });
+        
+        if (!passenger) {
+            return res.status(404).json({
+                success: false,
+                message: 'Passenger profile not found'
+            });
+        }
+
         res.json({
             success: true,
-            data: user.paymentMethods || []
+            data: passenger.paymentMethods || []
         });
     } catch (error) {
         console.error('Get payment methods error:', error);
@@ -595,6 +612,13 @@ exports.getPaymentMethods = async (req, res) => {
 
 exports.addPaymentMethod = async (req, res) => {
     try {
+        if (!req.session.user) {
+            return res.status(401).json({
+                success: false,
+                message: 'Not authenticated'
+            });
+        }
+
         const { cardType, cardNumber, cardholderName, expiryMonth, expiryYear, isDefault } = req.body;
 
         if (!cardType || !cardNumber || !cardholderName || !expiryMonth || !expiryYear) {
@@ -604,32 +628,34 @@ exports.addPaymentMethod = async (req, res) => {
             });
         }
 
-        let userId = null;
-        if (req.session && req.session.user && req.session.user._id) {
-            userId = req.session.user._id;
-        } else {
-            const user = await User.findOne({});
-            if (user) {
-                userId = user._id;
-            }
-        }
-
-        if (!userId) {
-            return res.status(404).json({
-                success: false,
-                message: 'User not found'
+        let passenger = await Passenger.findOne({ user_id: req.session.user._id });
+        
+        if (!passenger) {
+            passenger = new Passenger({
+                user_id: req.session.user._id,
+                full_name: req.session.user.full_name || 'User',
+                contact_num: req.session.user.phone || 'N/A',
+                passport_num: 'PENDING' + Math.random().toString(36).substring(2, 7).toUpperCase(),
+                nationality: 'Filipino',
+                birth_date: new Date('2000-01-01'),
+                gender: 'Prefer not to say',
+                emergency_contact: 'N/A',
+                paymentMethods: []
             });
+            await passenger.save();
         }
 
-        const user = await User.findById(userId);
+        if (!passenger.paymentMethods) {
+            passenger.paymentMethods = [];
+        }
 
         if (isDefault) {
-            user.paymentMethods.forEach(function(card) {
+            passenger.paymentMethods.forEach(function(card) {
                 card.isDefault = false;
             });
         }
 
-        user.paymentMethods.push({
+        passenger.paymentMethods.push({
             cardType: cardType,
             cardNumber: cardNumber,
             cardholderName: cardholderName,
@@ -638,16 +664,12 @@ exports.addPaymentMethod = async (req, res) => {
             isDefault: isDefault || false
         });
 
-        await user.save();
-        
-        if (req.session) {
-            req.session.user = user;
-        }
+        await passenger.save();
 
         res.json({
             success: true,
             message: 'Payment method added successfully',
-            data: user.paymentMethods
+            data: passenger.paymentMethods
         });
     } catch (error) {
         console.error('Add payment method error:', error);
@@ -660,51 +682,45 @@ exports.addPaymentMethod = async (req, res) => {
 
 exports.removePaymentMethod = async (req, res) => {
     try {
+        if (!req.session.user) {
+            return res.status(401).json({
+                success: false,
+                message: 'Not authenticated'
+            });
+        }
+
         const cardIndex = req.params.index;
 
-        let userId = null;
-        if (req.session && req.session.user && req.session.user._id) {
-            userId = req.session.user._id;
-        } else {
-            const user = await User.findOne({});
-            if (user) {
-                userId = user._id;
-            }
-        }
-
-        if (!userId) {
+        const passenger = await Passenger.findOne({ user_id: req.session.user._id });
+        
+        if (!passenger) {
             return res.status(404).json({
                 success: false,
-                message: 'User not found'
+                message: 'Passenger profile not found'
             });
         }
 
-        const user = await User.findById(userId);
-        if (cardIndex >= 0 && cardIndex < user.paymentMethods.length) {
-            const removedCard = user.paymentMethods[cardIndex];
-            user.paymentMethods.splice(cardIndex, 1);
-
-            if (removedCard.isDefault && user.paymentMethods.length > 0) {
-                user.paymentMethods[0].isDefault = true;
-            }
-
-            await user.save();
-            
-            if (req.session) {
-                req.session.user = user;
-            }
-
-            res.json({
-                success: true,
-                message: 'Payment method removed successfully',
-                data: user.paymentMethods
-            });
-        } else {
-            res.status(404).json({
+        if (!passenger.paymentMethods || cardIndex >= passenger.paymentMethods.length) {
+            return res.status(404).json({
                 success: false,
                 message: 'Payment method not found'
             });
         }
+
+        const removedCard = passenger.paymentMethods[cardIndex];
+        passenger.paymentMethods.splice(cardIndex, 1);
+
+        if (removedCard.isDefault && passenger.paymentMethods.length > 0) {
+            passenger.paymentMethods[0].isDefault = true;
+        }
+
+        await passenger.save();
+
+        res.json({
+            success: true,
+            message: 'Payment method removed successfully',
+            data: passenger.paymentMethods
+        });
     } catch (error) {
         console.error('Remove payment method error:', error);
         res.status(500).json({
@@ -716,48 +732,42 @@ exports.removePaymentMethod = async (req, res) => {
 
 exports.setDefaultPaymentMethod = async (req, res) => {
     try {
+        if (!req.session.user) {
+            return res.status(401).json({
+                success: false,
+                message: 'Not authenticated'
+            });
+        }
+
         const cardIndex = req.params.index;
 
-        let userId = null;
-        if (req.session && req.session.user && req.session.user._id) {
-            userId = req.session.user._id;
-        } else {
-            const user = await User.findOne({});
-            if (user) {
-                userId = user._id;
-            }
-        }
-
-        if (!userId) {
+        const passenger = await Passenger.findOne({ user_id: req.session.user._id });
+        
+        if (!passenger) {
             return res.status(404).json({
                 success: false,
-                message: 'User not found'
+                message: 'Passenger profile not found'
             });
         }
 
-        const user = await User.findById(userId);
-        if (cardIndex >= 0 && cardIndex < user.paymentMethods.length) {
-            user.paymentMethods.forEach(function(card, index) {
-                card.isDefault = (index === parseInt(cardIndex));
-            });
-
-            await user.save();
-            
-            if (req.session) {
-                req.session.user = user;
-            }
-
-            res.json({
-                success: true,
-                message: 'Default payment method updated',
-                data: user.paymentMethods
-            });
-        } else {
-            res.status(404).json({
+        if (!passenger.paymentMethods || cardIndex >= passenger.paymentMethods.length) {
+            return res.status(404).json({
                 success: false,
                 message: 'Payment method not found'
             });
         }
+
+        passenger.paymentMethods.forEach(function(card, index) {
+            card.isDefault = (index === parseInt(cardIndex));
+        });
+
+        await passenger.save();
+
+        res.json({
+            success: true,
+            message: 'Default payment method updated',
+            data: passenger.paymentMethods
+        });
     } catch (error) {
         console.error('Set default payment method error:', error);
         res.status(500).json({
@@ -767,66 +777,65 @@ exports.setDefaultPaymentMethod = async (req, res) => {
     }
 };
 
+// ============================================================
+// AJAX FUNCTIONALITY - Notification Preferences
+// ============================================================
+
 exports.updateNotificationPreferences = async (req, res) => {
     try {
-        const { promotionalOffers, flightStatusAlerts, loyaltyUpdates, smsAlerts } = req.body;
-
-        let userId = null;
-        if (req.session && req.session.user && req.session.user._id) {
-            userId = req.session.user._id;
-        } else {
-            const user = await User.findOne({});
-            if (user) {
-                userId = user._id;
-            }
-        }
-
-        if (!userId) {
-            return res.status(404).json({
+        if (!req.session.user) {
+            return res.status(401).json({
                 success: false,
-                message: 'User not found'
+                message: 'Not authenticated'
             });
         }
 
-        const user = await User.findById(userId);
+        const { promotionalOffers, flightStatusAlerts, loyaltyUpdates, smsAlerts } = req.body;
+
+        let passenger = await Passenger.findOne({ user_id: req.session.user._id });
         
-        let promoValue = promotionalOffers;
-        if (promoValue === undefined) {
-            promoValue = user.notificationPreferences.promotionalOffers;
-        }
-        
-        let flightValue = flightStatusAlerts;
-        if (flightValue === undefined) {
-            flightValue = user.notificationPreferences.flightStatusAlerts;
-        }
-        
-        let loyaltyValue = loyaltyUpdates;
-        if (loyaltyValue === undefined) {
-            loyaltyValue = user.notificationPreferences.loyaltyUpdates;
-        }
-        
-        let smsValue = smsAlerts;
-        if (smsValue === undefined) {
-            smsValue = user.notificationPreferences.smsAlerts;
+        if (!passenger) {
+            passenger = new Passenger({
+                user_id: req.session.user._id,
+                full_name: req.session.user.full_name || 'User',
+                contact_num: req.session.user.phone || 'N/A',
+                passport_num: 'PENDING' + Math.random().toString(36).substring(2, 7).toUpperCase(),
+                nationality: 'Filipino',
+                birth_date: new Date('2000-01-01'),
+                gender: 'Prefer not to say',
+                emergency_contact: 'N/A'
+            });
+            await passenger.save();
         }
 
-        user.notificationPreferences = {
-            promotionalOffers: promoValue,
-            flightStatusAlerts: flightValue,
-            loyaltyUpdates: loyaltyValue,
-            smsAlerts: smsValue
-        };
-
-        await user.save();
-        
-        if (req.session) {
-            req.session.user = user;
+        if (!passenger.notificationPreferences) {
+            passenger.notificationPreferences = {
+                promotionalOffers: true,
+                flightStatusAlerts: true,
+                loyaltyUpdates: true,
+                smsAlerts: true
+            };
         }
+
+        if (promotionalOffers !== undefined) {
+            passenger.notificationPreferences.promotionalOffers = promotionalOffers;
+        }
+        if (flightStatusAlerts !== undefined) {
+            passenger.notificationPreferences.flightStatusAlerts = flightStatusAlerts;
+        }
+        if (loyaltyUpdates !== undefined) {
+            passenger.notificationPreferences.loyaltyUpdates = loyaltyUpdates;
+        }
+        if (smsAlerts !== undefined) {
+            passenger.notificationPreferences.smsAlerts = smsAlerts;
+        }
+
+        await passenger.save();
 
         res.json({
             success: true,
             message: 'Notification preferences updated',
-            data: user.notificationPreferences
+            data: passenger.notificationPreferences
         });
     } catch (error) {
         console.error('Update notification preferences error:', error);

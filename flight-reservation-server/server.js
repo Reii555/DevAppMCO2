@@ -242,13 +242,6 @@ app.post('/signup', async (req, res) => {
 });
 
 // LOGIN ROUTES
-app.get('/login', (req, res) => {
-    if (req.session.user) {
-        return res.redirect('/dashboard');
-    }
-    res.render('login', { title: 'Login' });
-});
-
 app.post('/login', async (req, res) => {
     try {
         const user = await User.findOne({
@@ -259,6 +252,10 @@ app.post('/login', async (req, res) => {
         if (!user) {
             return res.send('Invalid email or password.');
         }
+
+        // Update last_login
+        user.last_login = new Date();
+        await user.save();
 
         req.session.user = user;
         console.log('User logged in:', user.email);
