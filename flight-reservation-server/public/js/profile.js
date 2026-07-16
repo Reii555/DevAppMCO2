@@ -1,177 +1,225 @@
 $(document).ready(function() {
-    // Toast notification function
-    function showToast(message, isError = false) {
-        $('#toastText').text(message);
-        $('#toastMsg').css('background-color', isError ? '#dc2626' : '#1e293b');
-        $('#toastMsg').fadeIn();
-        setTimeout(() => $('#toastMsg').fadeOut(), 3000);
+    
+    // ============================================================
+    // TOAST NOTIFICATION FUNCTION
+    // ============================================================
+    function showToast(message, type) {
+        var toast = $('#toastMsg');
+        var toastText = $('#toastText');
+        var toastIcon = toast.find('i');
+        
+        toast.removeClass('success error warning info show');
+        
+        if (type === 'success') {
+            toast.addClass('success');
+            toastIcon.removeClass().addClass('fas fa-check-circle');
+        } else if (type === 'error') {
+            toast.addClass('error');
+            toastIcon.removeClass().addClass('fas fa-exclamation-circle');
+        } else if (type === 'warning') {
+            toast.addClass('warning');
+            toastIcon.removeClass().addClass('fas fa-exclamation-triangle');
+        } else {
+            toast.addClass('info');
+            toastIcon.removeClass().addClass('fas fa-info-circle');
+        }
+        
+        toastText.text(message);
+        toast.addClass('show');
+        
+        if (toast.data('timeout')) {
+            clearTimeout(toast.data('timeout'));
+        }
+        
+        var timeout = setTimeout(function() {
+            toast.removeClass('show');
+        }, 4000);
+        toast.data('timeout', timeout);
     }
+    
+    $('#toastMsg').on('click', function() {
+        $(this).removeClass('show');
+        if ($(this).data('timeout')) {
+            clearTimeout($(this).data('timeout'));
+        }
+    });
 
-    // Avatar upload
+    // ============================================================
+    // AVATAR UPLOAD
+    // ============================================================
     $('#uploadBtn').on('click', function() {
         $('#avatarUpload').click();
     });
 
     $('#avatarUpload').on('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        // Validate file type
-        if (!['image/jpeg', 'image/png', 'image/jpg'].includes(file.type)) {
-            showToast('Please select a valid image (PNG/JPG)', true);
+        var file = e.target.files[0];
+        if (!file) {
             return;
         }
 
-        // Validate file size
+        var validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+        if (validTypes.indexOf(file.type) === -1) {
+            showToast('Please select a valid image (PNG/JPG)', 'error');
+            $(this).val('');
+            return;
+        }
+
         if (file.size > 2 * 1024 * 1024) {
-            showToast('File size must be less than 2MB', true);
+            showToast('File size must be less than 2MB', 'error');
+            $(this).val('');
             return;
         }
 
-        // Preview image
-        const reader = new FileReader();
+        $('#uploadBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Uploading...');
+
+        var reader = new FileReader();
         reader.onload = function(event) {
-            $('#avatarPreview').html(`<img src="${event.target.result}" alt="Profile Picture">`);
+            var imageData = event.target.result;
             
-            // Upload to server
+            $('#avatarPreview').html('<img src="' + imageData + '" alt="Profile Picture">');
+            
             $.ajax({
                 url: '/profile/picture',
                 method: 'POST',
                 contentType: 'application/json',
-                data: JSON.stringify({ profilePicture: event.target.result }),
+                data: JSON.stringify({ profilePicture: imageData }),
                 success: function(response) {
                     if (response.success) {
-                        showToast('Profile picture updated successfully!');
+                        showToast('Profile picture updated successfully!', 'success');
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 1500);
                     } else {
-                        showToast(response.message || 'Error updating profile picture', true);
+                        showToast(response.message || 'Error updating profile picture', 'error');
                     }
+                    $('#uploadBtn').prop('disabled', false).html('<i class="fas fa-camera me-1"></i> Upload photo');
                 },
-                error: function() {
-                    showToast('Error uploading profile picture', true);
+                error: function(xhr) {
+                    var response = xhr.responseJSON;
+                    var errorMsg = response ? response.message : 'Error uploading profile picture';
+                    showToast(errorMsg, 'error');
+                    $('#uploadBtn').prop('disabled', false).html('<i class="fas fa-camera me-1"></i> Upload photo');
                 }
             });
         };
         reader.readAsDataURL(file);
     });
 
-    // Edit profile form submission
+    // ============================================================
+    // EDIT PROFILE FORM SUBMISSION - FIXED
+    // ============================================================
     $('#editProfileForm').on('submit', function(e) {
         e.preventDefault();
+        console.log('Form submitted!');
 
-        const firstName = $('#firstName').val().trim();
-        const lastName = $('#lastName').val().trim();
-        const phone = $('#phone').val().trim();
-        const dateOfBirth = $('#dateOfBirth').val();
-        const passportNumber = $('#passportNumber').val().trim().toUpperCase();
-        const nationality = $('#nationality').val().trim();
-        const gender = $('#gender').val();
+        var firstName = $('#firstName').val().trim();
+        var lastName = $('#lastName').val().trim();
+        var phone = $('#phone').val().trim();
+        var dateOfBirth = $('#dateOfBirth').val();
+        var passportNumber = $('#passportNumber').val().trim().toUpperCase();
+        var nationality = $('#nationality').val().trim();
+        var gender = $('#gender').val();
 
-        // Validation
+        console.log('Form data:', { firstName, lastName, phone, dateOfBirth, passportNumber, nationality, gender });
+
         if (!firstName || !lastName || !phone) {
-            showToast('First name, last name, and phone are required', true);
+            showToast('First name, last name, and phone are required', 'error');
             return;
         }
 
-        // Validate phone format
-        const phoneRegex = /^\+63\s?[0-9]{3}\s?[0-9]{3}\s?[0-9]{4}$/;
+        var phoneRegex = /^\+?[0-9\s\-\(\)]{7,20}$/;
         if (!phoneRegex.test(phone)) {
-            showToast('Valid phone format: +63 9XX XXX XXXX', true);
+            showToast('Please enter a valid phone number (e.g., +63 912 345 6789)', 'error');
             return;
         }
 
-        // Validate passport if provided
         if (passportNumber && !/^[A-Z0-9]{6,10}$/.test(passportNumber)) {
-            showToast('Passport number must be 6-10 alphanumeric characters', true);
+            showToast('Passport number must be 6-10 alphanumeric characters', 'error');
             return;
         }
 
+        var submitBtn = $(this).find('button[type="submit"]');
+        submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Saving...');
+
+        // FIRST TEST THE TEST ROUTE
         $.ajax({
-            url: '/profile',
+            url: '/profile/test',
             method: 'PUT',
             contentType: 'application/json',
             data: JSON.stringify({
-                firstName,
-                lastName,
-                phone,
-                dateOfBirth,
-                passportNumber,
-                nationality,
-                gender
+                firstName: firstName,
+                lastName: lastName,
+                phone: phone,
+                dateOfBirth: dateOfBirth,
+                passportNumber: passportNumber,
+                nationality: nationality,
+                gender: gender
             }),
             success: function(response) {
+                console.log('Test route response:', response);
                 if (response.success) {
-                    showToast('Profile updated successfully!');
-                    setTimeout(() => window.location.href = '/profile', 1500);
+                    showToast('Test route works! Now trying real update...', 'success');
+                    
+                    // NOW DO THE REAL UPDATE
+                    $.ajax({
+                        url: '/profile',
+                        method: 'PUT',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            firstName: firstName,
+                            lastName: lastName,
+                            phone: phone,
+                            dateOfBirth: dateOfBirth,
+                            passportNumber: passportNumber,
+                            nationality: nationality,
+                            gender: gender
+                        }),
+                        success: function(response) {
+                            console.log('Real update response:', response);
+                            if (response.success) {
+                                showToast('Profile updated successfully!', 'success');
+                                setTimeout(function() {
+                                    window.location.href = '/profile';
+                                }, 1500);
+                            } else {
+                                showToast(response.message || 'Error updating profile', 'error');
+                                submitBtn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Save Changes');
+                            }
+                        },
+                        error: function(xhr) {
+                            console.log('Real update error:', xhr);
+                            var response = xhr.responseJSON;
+                            var errorMsg = response ? response.message : 'Error updating profile';
+                            showToast(errorMsg, 'error');
+                            submitBtn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Save Changes');
+                        }
+                    });
                 } else {
-                    showToast(response.message || 'Error updating profile', true);
+                    showToast(response.message || 'Test route failed', 'error');
+                    submitBtn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Save Changes');
                 }
             },
             error: function(xhr) {
-                const response = xhr.responseJSON;
-                showToast(response?.message || 'Error updating profile', true);
+                console.log('Test route error:', xhr);
+                showToast('Test route failed. Check if server is running.', 'error');
+                submitBtn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Save Changes');
             }
         });
     });
 
-    // Change password form submission (AJAX)
-    $('#changePasswordForm').on('submit', function(e) {
-        e.preventDefault();
-
-        const currentPassword = $('#currentPassword').val();
-        const newPassword = $('#newPassword').val();
-        const confirmPassword = $('#confirmPassword').val();
-
-        // Validation
-        if (!currentPassword || !newPassword || !confirmPassword) {
-            showToast('All password fields are required', true);
-            return;
-        }
-
-        if (newPassword.length < 6) {
-            showToast('New password must be at least 6 characters', true);
-            return;
-        }
-
-        if (newPassword !== confirmPassword) {
-            showToast('New passwords do not match', true);
-            return;
-        }
-
-        $.ajax({
-            url: '/profile/password',
-            method: 'PUT',
-            contentType: 'application/json',
-            data: JSON.stringify({
-                currentPassword,
-                newPassword,
-                confirmPassword
-            }),
-            success: function(response) {
-                if (response.success) {
-                    showToast('Password updated successfully!');
-                    $('#changePasswordForm')[0].reset();
-                    // Clear error states
-                    $('.is-invalid').removeClass('is-invalid');
-                } else {
-                    showToast(response.message || 'Error updating password', true);
-                }
-            },
-            error: function(xhr) {
-                const response = xhr.responseJSON;
-                showToast(response?.message || 'Error updating password', true);
-            }
-        });
-    });
-
-    // Cancel button
+    // ============================================================
+    // CANCEL BUTTON
+    // ============================================================
     $('#cancelBtn').on('click', function() {
         window.location.href = '/profile';
     });
 
-    // Validation for phone (dapat ba andito 'to question mark)
+    // ============================================================
+    // REAL-TIME VALIDATION
+    // ============================================================
     $('#phone').on('blur', function() {
-        const phone = $(this).val().trim();
-        const phoneRegex = /^\+63\s?[0-9]{3}\s?[0-9]{3}\s?[0-9]{4}$/;
+        var phone = $(this).val().trim();
+        var phoneRegex = /^\+?[0-9\s\-\(\)]{7,20}$/;
         if (phone && !phoneRegex.test(phone)) {
             $(this).addClass('is-invalid');
         } else {
@@ -179,9 +227,8 @@ $(document).ready(function() {
         }
     });
 
-    // Validation for passport (ito rin)
     $('#passportNumber').on('blur', function() {
-        const passport = $(this).val().trim().toUpperCase();
+        var passport = $(this).val().trim().toUpperCase();
         if (passport && !/^[A-Z0-9]{6,10}$/.test(passport)) {
             $(this).addClass('is-invalid');
         } else {
@@ -189,26 +236,243 @@ $(document).ready(function() {
         }
     });
 
-    // Load profile data via AJAX (for dashboard)
-    function loadProfileData() {
+    // ============================================================
+    // SAVED PASSENGERS - ADD
+    // ============================================================
+    $('#addPassengerBtn').on('click', function() {
+        var firstName = $('#passengerFirstName').val().trim();
+        var lastName = $('#passengerLastName').val().trim();
+        var passportNumber = $('#passengerPassport').val().trim().toUpperCase();
+        var dateOfBirth = $('#passengerDob').val();
+        var nationality = $('#passengerNationality').val().trim();
+        var gender = $('#passengerGender').val();
+        var type = $('#passengerType').val();
+
+        if (!firstName || !lastName || !passportNumber || !dateOfBirth || !nationality || !gender) {
+            showToast('All passenger fields are required', 'error');
+            return;
+        }
+
+        if (!/^[A-Z0-9]{6,10}$/.test(passportNumber)) {
+            showToast('Passport number must be 6-10 alphanumeric characters', 'error');
+            return;
+        }
+
+        var submitBtn = $(this);
+        submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Adding...');
+
         $.ajax({
-            url: '/profile/data',
-            method: 'GET',
+            url: '/profile/passengers',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                firstName: firstName,
+                lastName: lastName,
+                passportNumber: passportNumber,
+                dateOfBirth: dateOfBirth,
+                nationality: nationality,
+                gender: gender,
+                type: type
+            }),
             success: function(response) {
                 if (response.success) {
-                    // Update any dynamic elements
-                    const data = response.data;
-                    // will update dashboard elements
+                    showToast('Passenger saved successfully!', 'success');
+                    $('#passengerFirstName').val('');
+                    $('#passengerLastName').val('');
+                    $('#passengerPassport').val('');
+                    $('#passengerDob').val('');
+                    $('#passengerNationality').val('');
+                    $('#passengerGender').val('');
+                    $('#passengerType').val('Adult');
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showToast(response.message || 'Error saving passenger', 'error');
+                }
+                submitBtn.prop('disabled', false).html('<i class="fas fa-plus me-1"></i> Add Passenger');
+            },
+            error: function(xhr) {
+                var response = xhr.responseJSON;
+                var errorMsg = response ? response.message : 'Error saving passenger';
+                showToast(errorMsg, 'error');
+                submitBtn.prop('disabled', false).html('<i class="fas fa-plus me-1"></i> Add Passenger');
+            }
+        });
+    });
+
+    // ============================================================
+    // SAVED PASSENGERS - REMOVE
+    // ============================================================
+    $(document).on('click', '.remove-passenger', function() {
+        var index = $(this).data('index');
+        if (confirm('Are you sure you want to remove this passenger?')) {
+            $.ajax({
+                url: '/profile/passengers/' + index,
+                method: 'DELETE',
+                success: function(response) {
+                    if (response.success) {
+                        showToast('Passenger removed successfully!', 'success');
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        showToast(response.message || 'Error removing passenger', 'error');
+                    }
+                },
+                error: function() {
+                    showToast('Error removing passenger', 'error');
+                }
+            });
+        }
+    });
+
+    // ============================================================
+    // PAYMENT METHODS - ADD
+    // ============================================================
+    $('#addPaymentBtn').on('click', function() {
+        var cardType = $('#paymentCardType').val();
+        var cardNumber = $('#paymentCardNumber').val().trim();
+        var cardholderName = $('#paymentCardholder').val().trim();
+        var expiryMonth = $('#paymentExpiryMonth').val().trim();
+        var expiryYear = $('#paymentExpiryYear').val().trim();
+        var isDefault = $('#paymentDefault').is(':checked');
+
+        if (!cardType || !cardNumber || !cardholderName || !expiryMonth || !expiryYear) {
+            showToast('All payment fields are required', 'error');
+            return;
+        }
+
+        if (!/^\d{4}$/.test(cardNumber)) {
+            showToast('Please enter the last 4 digits of your card', 'error');
+            return;
+        }
+
+        if (!/^\d{2}$/.test(expiryMonth) || parseInt(expiryMonth) < 1 || parseInt(expiryMonth) > 12) {
+            showToast('Please enter a valid expiry month (01-12)', 'error');
+            return;
+        }
+
+        if (!/^\d{2}$/.test(expiryYear)) {
+            showToast('Please enter a valid expiry year (YY)', 'error');
+            return;
+        }
+
+        var submitBtn = $(this);
+        submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Adding...');
+
+        $.ajax({
+            url: '/profile/payments',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                cardType: cardType,
+                cardNumber: '**** **** **** ' + cardNumber,
+                cardholderName: cardholderName,
+                expiryMonth: expiryMonth,
+                expiryYear: expiryYear,
+                isDefault: isDefault
+            }),
+            success: function(response) {
+                if (response.success) {
+                    showToast('Payment method added successfully!', 'success');
+                    $('#paymentCardType').val('');
+                    $('#paymentCardNumber').val('');
+                    $('#paymentCardholder').val('');
+                    $('#paymentExpiryMonth').val('');
+                    $('#paymentExpiryYear').val('');
+                    $('#paymentDefault').prop('checked', false);
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showToast(response.message || 'Error adding payment method', 'error');
+                }
+                submitBtn.prop('disabled', false).html('<i class="fas fa-plus me-1"></i> Add Payment');
+            },
+            error: function(xhr) {
+                var response = xhr.responseJSON;
+                var errorMsg = response ? response.message : 'Error adding payment method';
+                showToast(errorMsg, 'error');
+                submitBtn.prop('disabled', false).html('<i class="fas fa-plus me-1"></i> Add Payment');
+            }
+        });
+    });
+
+    // ============================================================
+    // PAYMENT METHODS - REMOVE
+    // ============================================================
+    $(document).on('click', '.remove-payment', function() {
+        var index = $(this).data('index');
+        if (confirm('Are you sure you want to remove this payment method?')) {
+            $.ajax({
+                url: '/profile/payments/' + index,
+                method: 'DELETE',
+                success: function(response) {
+                    if (response.success) {
+                        showToast('Payment method removed successfully!', 'success');
+                        setTimeout(function() {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        showToast(response.message || 'Error removing payment method', 'error');
+                    }
+                },
+                error: function() {
+                    showToast('Error removing payment method', 'error');
+                }
+            });
+        }
+    });
+
+    // ============================================================
+    // PAYMENT METHODS - SET DEFAULT
+    // ============================================================
+    $(document).on('click', '.set-default-payment', function() {
+        var index = $(this).data('index');
+        $.ajax({
+            url: '/profile/payments/' + index + '/default',
+            method: 'PUT',
+            success: function(response) {
+                if (response.success) {
+                    showToast('Default payment method updated!', 'success');
+                    setTimeout(function() {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showToast(response.message || 'Error updating default payment', 'error');
                 }
             },
             error: function() {
-                console.error('Error loading profile data');
+                showToast('Error updating default payment', 'error');
             }
         });
-    }
+    });
 
-    // Load profile data on page load if on dashboard
-    if ($('#profileDashboard').length) {
-        loadProfileData();
-    }
+    // ============================================================
+    // NOTIFICATION PREFERENCES
+    // ============================================================
+    $('.notif-toggle').on('change', function() {
+        var key = $(this).data('key');
+        var value = $(this).is(':checked');
+        var data = {};
+        data[key] = value;
+
+        $.ajax({
+            url: '/profile/notifications',
+            method: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function(response) {
+                if (response.success) {
+                    showToast('Notification preference updated!', 'success');
+                } else {
+                    showToast(response.message || 'Error updating preference', 'error');
+                }
+            },
+            error: function() {
+                showToast('Error updating preference', 'error');
+            }
+        });
+    });
 });

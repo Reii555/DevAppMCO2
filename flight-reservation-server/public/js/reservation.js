@@ -1,340 +1,602 @@
 $(document).ready(function() {
-    // Toast notification
-    function showToast(message, isError = false) {
-        $('#toastText').text(message);
-        $('#toastMsg').css('background-color', isError ? '#dc2626' : '#1e293b');
-        $('#toastMsg').fadeIn();
-        setTimeout(() => $('#toastMsg').fadeOut(), 3000);
+    
+    // ============================================================
+    // TOAST NOTIFICATION FUNCTION
+    // ============================================================
+    function showToast(message, type) {
+        var toast = $('#toastMsg');
+        var toastText = $('#toastText');
+        var toastIcon = toast.find('i');
+        
+        toast.removeClass('success error warning info show');
+        
+        if (type === 'success') {
+            toast.addClass('success');
+            toastIcon.removeClass().addClass('fas fa-check-circle');
+        } else if (type === 'error') {
+            toast.addClass('error');
+            toastIcon.removeClass().addClass('fas fa-exclamation-circle');
+        } else if (type === 'warning') {
+            toast.addClass('warning');
+            toastIcon.removeClass().addClass('fas fa-exclamation-triangle');
+        } else {
+            toast.addClass('info');
+            toastIcon.removeClass().addClass('fas fa-info-circle');
+        }
+        
+        toastText.text(message);
+        toast.addClass('show');
+        
+        if (toast.data('timeout')) {
+            clearTimeout(toast.data('timeout'));
+        }
+        
+        var timeout = setTimeout(function() {
+            toast.removeClass('show');
+        }, 4000);
+        toast.data('timeout', timeout);
     }
-
-    // ========== EXPAND RESERVATION DETAILS ==========
-    $('.reservation-item').on('click', function(e) {
-        if (!$(e.target).closest('.detail-actions').length) {
-            $(this).toggleClass('expanded');
+    
+    $('#toastMsg').on('click', function() {
+        $(this).removeClass('show');
+        if ($(this).data('timeout')) {
+            clearTimeout($(this).data('timeout'));
         }
     });
 
-    // ========== VIEW DETAILS ==========
-    $(document).on('click', '.view-details', function(e) {
+    // ============================================================
+    // MEAL PRICES 
+    // ============================================================
+    var mealPrices = {
+        'Standard': 0,
+        'Vegetarian': 150,
+        'Vegan': 200,
+        'Halal': 300, 
+        'Kosher': 350,
+        'Gluten-Free': 250
+    };
+
+    // Update meal price display
+    function updateMealPrice() {
+        var selectedMeal = $('#editMealPreference').val();
+        var price = mealPrices[selectedMeal] || 0;
+        if (price > 0) {
+            $('#mealPriceDisplay').text('(+₱' + price + '.00)');
+        } else {
+            $('#mealPriceDisplay').text('(Included)');
+        }
+    }
+
+    // ============================================================
+    // EXPAND/CONTRACT RESERVATION DETAILS
+    // ============================================================
+    $(document).on('click', '.res-expand-icon', function(e) {
         e.stopPropagation();
-        const id = $(this).data('id');
+        var item = $(this).closest('.reservation-item');
+        item.find('.res-detail').slideToggle();
+        $(this).toggleClass('fa-chevron-down fa-chevron-up');
+    });
+
+    $(document).on('click', '.res-summary', function() {
+        var icon = $(this).find('.res-expand-icon');
+        var item = $(this).closest('.reservation-item');
+        item.find('.res-detail').slideToggle();
+        icon.toggleClass('fa-chevron-down fa-chevron-up');
+    });
+
+    // ============================================================
+    // VIEW DETAILS MODAL
+    // ============================================================
+    $(document).on('click', '.view-details', function(e) {
+        e.preventDefault();
+        var reservationId = $(this).data('id');
+        
+        $('#detailsContent').html('<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Loading details...</p></div>');
         
         $.ajax({
-            url: `/reservations/details/${id}`,
+            url: '/reservations/details/' + reservationId,
             method: 'GET',
             success: function(response) {
                 if (response.success) {
-                    const r = response.data;
-                    const content = `
-                        <div class="row">
-                            <div class="col-md-6">
-                                <p><strong>Booking Reference:</strong> ${r.bookingRef}</p>
-                                <p><strong>Passenger:</strong> ${r.passengerName}</p>
-                                <p><strong>Email:</strong> ${r.passengerEmail}</p>
-                                <p><strong>Phone:</strong> ${r.passengerPhone}</p>
-                                <p><strong>Passport:</strong> ${r.passportNumber || 'N/A'}</p>
-                            </div>
-                            <div class="col-md-6">
-                                <p><strong>Flight:</strong> ${r.flightId.flightId}</p>
-                                <p><strong>Route:</strong> ${r.flightId.route}</p>
-                                <p><strong>Seat:</strong> ${r.seatNumber}</p>
-                                <p><strong>Status:</strong> <span class="badge status-${r.status}">${r.status}</span></p>
-                                <p><strong>Price:</strong> ₱${r.totalPrice}</p>
-                                <p><strong>Departure:</strong> ${formatDate(r.flightId.departureDate)} at ${r.flightId.departureTime}</p>
-                            </div>
-                        </div>
-                        ${r.specialRequests ? `<div class="mt-3"><strong>Special Requests:</strong> ${r.specialRequests}</div>` : ''}
-                    `;
-                    $('#detailsContent').html(content);
+                    var data = response.data;
+                    var html = '';
+                    
+                    var bookingDate = new Date(data.booking_date);
+                    var formattedDate = bookingDate.toLocaleDateString('en-PH', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    
+                    var departureDate = new Date(data.flight.departureTime);
+                    var formattedDeparture = departureDate.toLocaleDateString('en-PH', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    
+                    var statusClass = '';
+                    if (data.status === 'Confirmed') {
+                        statusClass = 'success';
+                    } else if (data.status === 'Pending') {
+                        statusClass = 'warning';
+                    } else if (data.status === 'Cancelled') {
+                        statusClass = 'danger';
+                    } else {
+                        statusClass = 'secondary';
+                    }
+                    
+                    var mealPrice = mealPrices[data.mealPreference] || 0;
+                    
+                    html += '<div class="row">';
+                    html += '  <div class="col-md-6">';
+                    html += '    <p><strong>Booking Reference:</strong> ' + data.booking_ref + '</p>';
+                    html += '    <p><strong>Passenger:</strong> ' + data.passengerName + '</p>';
+                    html += '    <p><strong>Flight:</strong> ' + data.flight.flight_number + ' (' + data.flight.airline + ')</p>';
+                    html += '    <p><strong>Route:</strong> ' + data.flight.origin + ' → ' + data.flight.destination + '</p>';
+                    html += '    <p><strong>Departure:</strong> ' + formattedDeparture + '</p>';
+                    html += '  </div>';
+                    html += '  <div class="col-md-6">';
+                    html += '    <p><strong>Seat:</strong> ' + data.seatNumber + '</p>';
+                    html += '    <p><strong>Meal:</strong> ' + data.mealPreference + ' ' + (mealPrice > 0 ? '(+₱' + mealPrice + '.00)' : '') + '</p>';
+                    html += '    <p><strong>Status:</strong> <span class="badge bg-' + statusClass + '">' + data.status + '</span></p>';
+                    html += '    <p><strong>Total Price:</strong> ₱' + data.total_price + '.00</p>';
+                    html += '    <p><strong>Booked On:</strong> ' + formattedDate + '</p>';
+                    html += '  </div>';
+                    html += '</div>';
+                    
+                    if (data.specialRequests) {
+                        html += '<hr>';
+                        html += '<p><strong>Special Requests:</strong> ' + data.specialRequests + '</p>';
+                    }
+                    
+                    if (data.passengerDetails) {
+                        html += '<hr>';
+                        html += '<h6>Passenger Details</h6>';
+                        html += '<div class="row">';
+                        html += '  <div class="col-md-6">';
+                        html += '    <p><strong>Full Name:</strong> ' + data.passengerDetails.fullName + '</p>';
+                        html += '    <p><strong>Email:</strong> ' + data.passengerDetails.email + '</p>';
+                        html += '    <p><strong>Contact:</strong> ' + data.passengerDetails.contactNumber + '</p>';
+                        html += '  </div>';
+                        html += '  <div class="col-md-6">';
+                        html += '    <p><strong>Passport:</strong> ' + data.passengerDetails.passportNumber + '</p>';
+                        html += '    <p><strong>Nationality:</strong> ' + data.passengerDetails.nationality + '</p>';
+                        html += '    <p><strong>Gender:</strong> ' + data.passengerDetails.gender + '</p>';
+                        html += '  </div>';
+                        html += '</div>';
+                    }
+                    
+                    $('#detailsContent').html(html);
                     $('#detailsModal').modal('show');
                 } else {
-                    showToast('Error loading details', true);
+                    showToast(response.message || 'Error loading reservation details', 'error');
+                }
+            },
+            error: function(xhr) {
+                var response = xhr.responseJSON;
+                var errorMsg = response ? response.message : 'Error loading reservation details';
+                showToast(errorMsg, 'error');
+                $('#detailsContent').html('<p class="text-danger text-center">Error loading details. Please try again.</p>');
+            }
+        });
+    });
+
+    // ============================================================
+    // EDIT SEAT MODAL - FIXED
+    // ============================================================
+    var currentReservationId = null;
+    var selectedSeat = null;
+    var currentSeatNumber = null;
+    var currentFlightId = null;
+    var currentMeal = null;
+    var currentTotalPrice = null;
+    
+    $(document).on('click', '.edit-seat', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        var reservationId = $(this).data('id');
+        var seat = $(this).data('seat');
+        var meal = $(this).data('meal');
+        var price = $(this).data('price');
+        
+        console.log('Edit seat clicked - ID:', reservationId, 'Seat:', seat, 'Meal:', meal);
+        
+        if (!reservationId) {
+            showToast('Invalid reservation ID', 'error');
+            return;
+        }
+        
+        currentReservationId = reservationId;
+        currentSeatNumber = seat || 'None';
+        currentMeal = meal || 'Standard';
+        selectedSeat = seat || null;
+        currentTotalPrice = parseFloat(price) || 0;
+        currentFlightId = null;
+        
+        // Reset modal
+        $('#editReservationId').val(reservationId);
+        $('#editSelectedSeat').text(currentSeatNumber);
+        $('#editMealPreference').val(currentMeal);
+        $('#editSpecialRequests').val('');
+        $('#editCurrentPrice').text('₱' + currentTotalPrice.toFixed(2));
+        $('#editTotalPrice').text('₱' + currentTotalPrice.toFixed(2));
+        updateMealPrice();
+        
+        // Show loading
+        $('#editSeatGrid').html('<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Loading seats...</p></div>');
+        $('#editFlightInfo').html('<div class="text-center py-2"><i class="fas fa-spinner fa-spin"></i> Loading flight info...</div>');
+        
+        // Get flight details
+        $.ajax({
+            url: '/reservations/details/' + reservationId,
+            method: 'GET',
+            success: function(detailResponse) {
+                console.log('Details response:', detailResponse);
+                if (detailResponse.success) {
+                    var data = detailResponse.data;
+                    var flightData = data.flight;
+                    currentFlightId = flightData._id || flightData.id;
+                    
+                    var departureDate = new Date(flightData.departureTime);
+                    var formattedDeparture = departureDate.toLocaleDateString('en-PH', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    
+                    $('#editFlightInfo').html(
+                        '<p><strong>' + flightData.flight_number + '</strong> - ' + flightData.airline + '</p>' +
+                        '<p>' + flightData.origin + ' → ' + flightData.destination + '</p>' +
+                        '<p>Departure: ' + formattedDeparture + '</p>'
+                    );
+                    
+                    // Load seats
+                    if (currentFlightId) {
+                        loadSeats(currentFlightId, reservationId);
+                    } else {
+                        $('#editSeatGrid').html('<p class="text-danger text-center">Could not find flight ID</p>');
+                    }
+                } else {
+                    showToast(detailResponse.message || 'Error loading flight', 'error');
+                    $('#editFlightInfo').html('<p class="text-danger text-center">Error loading flight info</p>');
                 }
             },
             error: function() {
-                showToast('Error loading details', true);
+                showToast('Error loading flight information', 'error');
+                $('#editFlightInfo').html('<p class="text-danger text-center">Error loading flight info</p>');
             }
         });
-    });
-
-    // ========== CANCEL RESERVATION ==========
-    let currentCancelId = null;
-
-    $(document).on('click', '.cancel-reservation', function(e) {
-        e.stopPropagation();
-        currentCancelId = $(this).data('id');
-        $('#modalBookingRef').text($(this).data('ref'));
-        $('#modalBookingPassenger').text($(this).data('passenger'));
-        $('#cancelModal').modal('show');
-    });
-
-    $('#modalConfirmCancel').on('click', function() {
-        if (!currentCancelId) return;
-
-        const btn = $(this);
-        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Cancelling...');
-
-        $.ajax({
-            url: `/reservations/${currentCancelId}/cancel`,
-            method: 'PATCH',
-            success: function(response) {
-                if (response.success) {
-                    showToast('Reservation cancelled successfully');
-                    $('#cancelModal').modal('hide');
-
-                    const item = $(`.reservation-item[data-id="${currentCancelId}"]`);
-                    item.find('.res-status')
-                        .removeClass('status-Pending status-Confirmed')
-                        .addClass('status-Cancelled')
-                        .text('Cancelled');
-                    
-                    // Remove action buttons
-                    item.find('.detail-actions .btn-edit, .detail-actions .btn-cancel').remove();
-                    
-                    // Add cancelled badge to summary
-                    currentCancelId = null;
-                } else {
-                    showToast(response.message || 'Error cancelling reservation', true);
-                }
-                btn.prop('disabled', false).html('Yes, Cancel');
-            },
-            error: function(xhr) {
-                const response = xhr.responseJSON;
-                showToast(response?.message || 'Error cancelling reservation', true);
-                btn.prop('disabled', false).html('Yes, Cancel');
-            }
-        });
-    });
-
-    // ========== EDIT SEAT ==========
-    $(document).on('click', '.edit-seat', function(e) {
-        e.stopPropagation();
-        const id = $(this).data('id');
-        const currentSeat = $(this).data('seat');
-        const currentMeal = $(this).data('meal');
-
-        $('#editReservationId').val(id);
-        $('#editSelectedSeat').text(currentSeat);
-
-        // Set meal preference
-        $('#editMealPreference').val(currentMeal || 'Standard');
-        $('#editSpecialRequests').val('');
-
-        // Load available seats
-        loadAvailableSeats(id);
         
         $('#editSeatModal').modal('show');
     });
-
-    function loadAvailableSeats(reservationId) {
-        // First get the reservation to get flightId
+    
+    function loadSeats(flightId, reservationId) {
+        console.log('Loading seats for flight:', flightId);
+        
         $.ajax({
-            url: `/reservations/details/${reservationId}`,
+            url: '/reservations/seats/' + flightId + '/' + reservationId,
             method: 'GET',
             success: function(response) {
+                console.log('Seats response:', response);
                 if (response.success) {
-                    const reservation = response.data;
-                    const flightId = reservation.flightId._id;
+                    var data = response.data;
+                    var seatsHtml = '<div class="seat-grid">';
                     
-                    // Update flight info
-                    $('#editFlightInfo').html(`
-                        <div class="row">
-                            <div class="col-md-6">
-                                <strong>Flight:</strong> ${reservation.flightId.flightId} - ${reservation.flightId.route}
-                            </div>
-                            <div class="col-md-6 text-md-end">
-                                <strong>Departure:</strong> ${formatDate(reservation.flightId.departureDate)} at ${reservation.flightId.departureTime}
-                            </div>
-                        </div>
-                    `);
-
-                    // Load seats for this flight
-                    $.ajax({
-                        url: `/reservations/seats/${flightId}/${reservationId}`,
-                        method: 'GET',
-                        success: function(seatResponse) {
-                            if (seatResponse.success) {
-                                renderSeatGrid(seatResponse.data, reservation.seatNumber);
-                            } else {
-                                showToast('Error loading seats', true);
+                    for (var i = 0; i < data.allSeats.length; i++) {
+                        var seat = data.allSeats[i];
+                        var seatClass = 'seat-available';
+                        var isDisabled = '';
+                        var titleText = '';
+                        
+                        if (seat.isBooked && !seat.isCurrent) {
+                            seatClass = 'seat-booked';
+                            isDisabled = 'disabled';
+                            titleText = 'title="This seat is already booked"';
+                        } else if (seat.isCurrent) {
+                            seatClass = 'seat-current';
+                            titleText = 'title="Your current seat"';
+                            if (selectedSeat === null) {
+                                selectedSeat = seat.seat;
                             }
-                        },
-                        error: function() {
-                            showToast('Error loading seats', true);
+                        } else if (selectedSeat === seat.seat) {
+                            seatClass = 'seat-selected';
                         }
+                        
+                        seatsHtml += '<button type="button" class="seat-btn ' + seatClass + '" data-seat="' + seat.seat + '" ' + isDisabled + ' ' + titleText + '>' + seat.seat + '</button>';
+                    }
+                    
+                    seatsHtml += '</div>';
+                    $('#editSeatGrid').html(seatsHtml);
+                    
+                    if (selectedSeat) {
+                        $('#editSelectedSeat').text(selectedSeat);
+                    }
+                    
+                    $('#availableSeatsCount').text(data.availableSeats + ' seats available');
+                    
+                    // Click handler for seats - USING ON WITH PREVENT DEFAULT
+                    $(document).on('click', '.seat-btn:not(:disabled)', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        var seat = $(this).data('seat');
+                        selectedSeat = seat;
+                        $('#editSelectedSeat').text(seat);
+                        
+                        $('.seat-btn').removeClass('seat-selected');
+                        $(this).addClass('seat-selected');
+                        console.log('Seat selected:', seat);
                     });
+                    
+                } else {
+                    showToast(response.message || 'Error loading seats', 'error');
+                    $('#editSeatGrid').html('<p class="text-danger text-center">Error loading seats</p>');
                 }
             },
             error: function() {
-                showToast('Error loading reservation details', true);
+                showToast('Error loading seats', 'error');
+                $('#editSeatGrid').html('<p class="text-danger text-center">Error loading seats</p>');
             }
         });
     }
 
-    function renderSeatGrid(data, currentSeat) {
-        const grid = $('#editSeatGrid');
-        grid.empty();
+    // ============================================================
+    // MEAL PREFERENCE CHANGE
+    // ============================================================
+    $('#editMealPreference').on('change', function() {
+        var selectedMeal = $(this).val();
+        var mealPrice = mealPrices[selectedMeal] || 0;
+        var currentMealPrice = mealPrices[currentMeal] || 0;
+        var basePrice = currentTotalPrice - currentMealPrice;
+        var newTotal = basePrice + mealPrice;
+        
+        $('#editTotalPrice').text('₱' + newTotal.toFixed(2));
+        updateMealPrice();
+    });
 
-        let selectedSeat = null;
-
-        data.allSeats.forEach(seat => {
-            const col = $('<div class="col-2">');
-            let btnClass = 'btn-outline-success';
-            let disabled = false;
-            
-            if (seat.isBooked && !seat.isCurrent) {
-                btnClass = 'btn-danger';
-                disabled = true;
-            } else if (seat.isCurrent) {
-                btnClass = 'btn-warning';
-            }
-            
-            const btn = $(`<button class="btn btn-sm w-100 seat-btn ${btnClass}" 
-                           data-seat="${seat.seat}" 
-                           data-booked="${seat.isBooked}"
-                           ${disabled ? 'disabled' : ''}>
-                           ${seat.seat}
-                           ${seat.isCurrent ? ' ✓' : ''}
-                       </button>`);
-            
-            if (!seat.isBooked || seat.isCurrent) {
-                btn.on('click', function() {
-                    // Deselect previous
-                    $('.seat-btn').not('.btn-danger').removeClass('btn-primary btn-success').addClass('btn-outline-success');
-                    
-                    if (selectedSeat === seat.seat) {
-                        selectedSeat = null;
-                        $('#editSelectedSeat').text(data.currentSeat || 'None');
-                        return;
-                    }
-                    
-                    btn.removeClass('btn-outline-success').addClass('btn-primary');
-                    selectedSeat = seat.seat;
-                    $('#editSelectedSeat').text(seat.seat);
-                });
-            }
-            
-            col.append(btn);
-            grid.append(col);
-        });
-
-        // Store selected seat for form submission
-        window.selectedSeat = null;
-        $(document).on('click', '.seat-btn:not(.btn-danger)', function() {
-            const seat = $(this).data('seat');
-            if (!$(this).hasClass('btn-danger')) {
-                window.selectedSeat = seat;
-            }
-        });
-    }
-
-    // ========== SAVE SEAT EDIT ==========
-    $('#saveSeatEdit').on('click', function() {
-        const id = $('#editReservationId').val();
-        const seatNumber = window.selectedSeat || $('#editSelectedSeat').text();
-        const mealPreference = $('#editMealPreference').val();
-        const specialRequests = $('#editSpecialRequests').val().trim();
-
-        if (!seatNumber || seatNumber === 'None') {
-            showToast('Please select a seat', true);
+    // ============================================================
+    // SAVE SEAT EDIT
+    // ============================================================
+    $('#saveSeatEdit').on('click', function(e) {
+        e.preventDefault();
+        
+        var reservationId = $('#editReservationId').val();
+        var mealPreference = $('#editMealPreference').val();
+        var specialRequests = $('#editSpecialRequests').val().trim();
+        
+        if (!selectedSeat) {
+            showToast('Please select a seat', 'error');
             return;
         }
-
-        const btn = $(this);
-        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Saving...');
-
+        
+        var submitBtn = $(this);
+        submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Saving...');
+        
         $.ajax({
-            url: `/reservations/${id}/seat`,
+            url: '/reservations/' + reservationId + '/seat',
             method: 'PUT',
             contentType: 'application/json',
-            data: JSON.stringify({ 
-                seatNumber: seatNumber, 
-                mealPreference, 
-                specialRequests 
+            data: JSON.stringify({
+                seatNumber: selectedSeat,
+                mealPreference: mealPreference,
+                specialRequests: specialRequests
             }),
             success: function(response) {
                 if (response.success) {
-                    showToast('Seat updated successfully!');
-                    $('#editSeatModal').modal('hide');
+                    showToast('Reservation updated successfully!', 'success');
                     
-                    const item = $(`.reservation-item[data-id="${id}"]`);
-                    item.find('.res-route').html(`<i class="fas fa-plane"></i> ${response.data.flightId.route} | Seat ${response.data.seatNumber}`);
-                    item.find('.detail-row .value').filter(function() {
-                        return $(this).closest('.detail-row').find('.label').text().trim() === 'Meal:';
-                    }).text(response.data.mealPreference);
-
-                    item.find('.edit-seat').data('seat', response.data.seatNumber);
-                    item.find('.edit-seat').data('meal', response.data.mealPreference);
+                    var newPrice = response.data.total_price || 0;
+                    $('#editTotalPrice').text('₱' + newPrice.toFixed(2));
                     
-                    setTimeout(() => location.reload(), 1500);
+                    updateReservationItem(reservationId, selectedSeat, mealPreference, newPrice);
+                    
+                    setTimeout(function() {
+                        $('#editSeatModal').modal('hide');
+                        submitBtn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Save Changes');
+                    }, 1000);
                 } else {
-                    showToast(response.message || 'Error updating seat', true);
+                    showToast(response.message || 'Error updating reservation', 'error');
+                    submitBtn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Save Changes');
                 }
-                btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Save Changes');
             },
             error: function(xhr) {
-                const response = xhr.responseJSON;
-                showToast(response?.message || 'Error updating seat', true);
-                btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Save Changes');
+                var response = xhr.responseJSON;
+                showToast(response?.message || 'Error updating reservation', 'error');
+                submitBtn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Save Changes');
+            }
+        });
+    });
+    
+    function updateReservationItem(reservationId, newSeat, newMeal, newPrice) {
+        var item = $('.reservation-item[data-id="' + reservationId + '"]');
+        if (item.length) {
+            // Update seat in route
+            var routeText = item.find('.res-route').text();
+            var updatedRoute = routeText.replace(/Seat \S+/, 'Seat ' + newSeat);
+            item.find('.res-route').text(updatedRoute);
+            
+            // Update meal
+            var detailRows = item.find('.detail-row');
+            if (detailRows.length >= 2) {
+                var mealValue = detailRows.eq(1).find('.value').eq(0);
+                if (mealValue.length) {
+                    var mealPrice = mealPrices[newMeal] || 0;
+                    mealValue.text(newMeal + (mealPrice > 0 ? ' (+₱' + mealPrice + '.00)' : ''));
+                }
+            }
+            
+            // Update price
+            item.find('.res-price').html('₱' + newPrice + ' <i class="fas fa-chevron-down res-expand-icon"></i>');
+            
+            // Update button data
+            var editBtn = item.find('.edit-seat');
+            editBtn.data('seat', newSeat);
+            editBtn.data('meal', newMeal);
+            editBtn.data('price', newPrice);
+            
+            // Flash effect
+            item.css('border', '2px solid #22c55e');
+            setTimeout(function() {
+                item.css('border', '');
+            }, 2000);
+        }
+    }
+
+    // ============================================================
+    // CANCEL RESERVATION
+    // ============================================================
+    var cancelReservationId = null;
+    
+    $(document).on('click', '.cancel-reservation', function(e) {
+        e.preventDefault();
+        cancelReservationId = $(this).data('id');
+        var bookingRef = $(this).data('ref');
+        var passengerName = $(this).data('passenger');
+        
+        $('#modalBookingRef').text(bookingRef || 'N/A');
+        $('#modalBookingPassenger').text(passengerName || 'N/A');
+        $('#cancelModal').modal('show');
+    });
+    
+    $('#modalConfirmCancel').on('click', function(e) {
+        e.preventDefault();
+        
+        if (!cancelReservationId) {
+            showToast('No reservation selected', 'error');
+            return;
+        }
+        
+        var submitBtn = $(this);
+        submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Cancelling...');
+        
+        $.ajax({
+            url: '/reservations/' + cancelReservationId + '/cancel',
+            method: 'PATCH',
+            success: function(response) {
+                if (response.success) {
+                    showToast('Reservation cancelled successfully!', 'success');
+                    
+                    var item = $('.reservation-item[data-id="' + cancelReservationId + '"]');
+                    if (item.length) {
+                        var statusSpan = item.find('.res-status');
+                        statusSpan.text('Cancelled');
+                        statusSpan.removeClass('status-Pending status-Confirmed');
+                        statusSpan.addClass('status-Cancelled');
+                        item.find('.detail-actions .btn-edit, .detail-actions .btn-cancel').hide();
+                    }
+                    
+                    $('#cancelModal').modal('hide');
+                } else {
+                    showToast(response.message || 'Error cancelling reservation', 'error');
+                }
+                submitBtn.prop('disabled', false).html('Yes, Cancel');
+            },
+            error: function(xhr) {
+                var response = xhr.responseJSON;
+                showToast(response?.message || 'Error cancelling reservation', 'error');
+                submitBtn.prop('disabled', false).html('Yes, Cancel');
             }
         });
     });
 
-    // ========== SEARCH AND FILTER ==========
-    let searchTimeout;
-
+    // ============================================================
+    // SEARCH, FILTER, SORT, PAGINATION
+    // ============================================================
     $('#searchInput').on('keyup', function() {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => applyFilters(), 500);
+        var searchTerm = $(this).val().toLowerCase();
+        $('.reservation-item').each(function() {
+            var text = $(this).text().toLowerCase();
+            $(this).toggle(text.indexOf(searchTerm) > -1);
+        });
+    });
+    
+    $('#filterStatus').on('change', function() {
+        var status = $(this).val();
+        $('.reservation-item').each(function() {
+            var itemStatus = $(this).find('.res-status').text().trim();
+            $(this).toggle(status === 'all' || itemStatus === status);
+        });
     });
 
-    $('#filterStatus').on('change', applyFilters);
-
-    function applyFilters() {
-        const search = $('#searchInput').val().toLowerCase();
-        const status = $('#filterStatus').val();
-
-        $('.reservation-item').each(function() {
-            const item = $(this);
-            const text = item.text().toLowerCase();
-            const itemStatus = item.find('.res-status').text().trim();
-            
-            const matchesSearch = text.includes(search);
-            const matchesStatus = status === 'all' || itemStatus === status;
-            
-            if (matchesSearch && matchesStatus) {
-                item.show();
-            } else {
-                item.hide();
+    $('#sortSelect').on('change', function() {
+        var sortValue = $(this).val();
+        if (!sortValue) return;
+        
+        var container = $('#reservationsList');
+        var items = container.find('.reservation-item').get();
+        
+        items.sort(function(a, b) {
+            var aVal, bVal;
+            switch(sortValue) {
+                case 'priceAsc':
+                    aVal = parseFloat($(a).find('.res-price').text().replace('₱', '').trim());
+                    bVal = parseFloat($(b).find('.res-price').text().replace('₱', '').trim());
+                    return aVal - bVal;
+                case 'priceDesc':
+                    aVal = parseFloat($(a).find('.res-price').text().replace('₱', '').trim());
+                    bVal = parseFloat($(b).find('.res-price').text().replace('₱', '').trim());
+                    return bVal - aVal;
+                case 'status':
+                    aVal = $(a).find('.res-status').text().trim();
+                    bVal = $(b).find('.res-status').text().trim();
+                    return aVal.localeCompare(bVal);
+                case 'dateAsc':
+                    aVal = new Date($(a).data('date'));
+                    bVal = new Date($(b).data('date'));
+                    return aVal - bVal;
+                case 'dateDesc':
+                    aVal = new Date($(a).data('date'));
+                    bVal = new Date($(b).data('date'));
+                    return bVal - aVal;
+                default:
+                    return 0;
             }
         });
-    }
-
-    // ========== PAGINATION ==========
-    $('#prevPage, #nextPage').on('click', function() {
-        const direction = $(this).attr('id') === 'prevPage' ? -1 : 1;
-        const currentPage = parseInt($('.active-page').text().split('/')[0]);
-        const newPage = currentPage + direction;
-        const totalPages = parseInt($('.active-page').text().split('/')[1]);
         
-        if (newPage < 1 || newPage > totalPages) return;
-        
-        window.location.href = `/reservations?page=${newPage}`;
-    });
-
-    // ========== GO BACK ==========
-    $('#goBackBtn').on('click', function() {
-        window.location.href = '/';
-    });
-
-    // ========== HELPER FUNCTIONS ==========
-    function formatDate(dateStr) {
-        if (!dateStr) return 'N/A';
-        const date = new Date(dateStr);
-        return date.toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'short', 
-            day: 'numeric' 
+        container.empty();
+        $.each(items, function(_, item) {
+            container.append(item);
         });
-    }
+    });
+
+    $('#prevPage').on('click', function(e) {
+        e.preventDefault();
+        var text = $('.active-page').text();
+        if (text) {
+            var parts = text.split('/');
+            if (parts.length === 2) {
+                var current = parseInt(parts[0].trim());
+                if (current > 1) {
+                    window.location.href = '/reservations?page=' + (current - 1);
+                }
+            }
+        }
+    });
+    
+    $('#nextPage').on('click', function(e) {
+        e.preventDefault();
+        var text = $('.active-page').text();
+        if (text) {
+            var parts = text.split('/');
+            if (parts.length === 2) {
+                var current = parseInt(parts[0].trim());
+                var total = parseInt(parts[1].trim());
+                if (current < total) {
+                    window.location.href = '/reservations?page=' + (current + 1);
+                }
+            }
+        }
+    });
+
+    $('#goBackBtn').on('click', function(e) {
+        e.preventDefault();
+        window.history.back();
+    });
 });

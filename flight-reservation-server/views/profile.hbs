@@ -10,7 +10,11 @@
                 <div class="d-flex align-items-center gap-4 mb-4 pb-2 border-bottom">
                     <div class="avatar-wrapper" id="avatarPreview">
                         {{#if user.profilePicture}}
-                            <img src="{{user.profilePicture}}" alt="Profile Picture">
+                            {{#if (eq user.profilePicture "placeholder")}}
+                                <i class="fas fa-user avatar-placeholder"></i>
+                            {{else}}
+                                <img src="{{user.profilePicture}}" alt="Profile Picture">
+                            {{/if}}
                         {{else}}
                             <i class="fas fa-user avatar-placeholder"></i>
                         {{/if}}
@@ -66,28 +70,89 @@
                     </a>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Right Column -->
-    <div class="col-lg-7">
-        <div class="profile-card p-4">
-            <!-- Recent Reservations -->
+            <!-- Saved Passengers -->
             <div class="mb-4">
-                <div class="section-title">Recent Reservations</div>
+                <div class="section-title">Saved Passengers</div>
+                
+                <!-- Add Passenger Form -->
+                <div class="passenger-form mb-3 p-3" style="background: #f8fafc; border-radius: 14px;">
+                    <h6 class="mb-2">Add New Passenger</h6>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <input type="text" class="form-control form-control-sm" id="passengerFirstName" placeholder="First Name">
+                        </div>
+                        <div class="col-6">
+                            <input type="text" class="form-control form-control-sm" id="passengerLastName" placeholder="Last Name">
+                        </div>
+                        <div class="col-6">
+                            <input type="text" class="form-control form-control-sm" id="passengerPassport" placeholder="Passport Number">
+                        </div>
+                        <div class="col-6">
+                            <input type="date" class="form-control form-control-sm" id="passengerDob">
+                        </div>
+                        <div class="col-6">
+                            <input type="text" class="form-control form-control-sm" id="passengerNationality" placeholder="Nationality">
+                        </div>
+                        <div class="col-6">
+                            <select class="form-select form-select-sm" id="passengerGender">
+                                <option value="">Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                                <option value="Prefer not to say">Prefer not to say</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <select class="form-select form-select-sm" id="passengerType">
+                                <option value="Adult">Adult</option>
+                                <option value="Child">Child</option>
+                                <option value="Infant">Infant</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-primary btn-sm w-100" id="addPassengerBtn">
+                                <i class="fas fa-plus me-1"></i> Add Passenger
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="savedPassengersList">
+                    {{#if user.savedPassengers.length}}
+                        {{#each user.savedPassengers}}
+                            <div class="passenger-item">
+                                <div class="passenger-info">
+                                    <span>{{this.firstName}} {{this.lastName}}</span>
+                                    <span class="passenger-badge">{{this.type}}</span>
+                                </div>
+                                <button class="btn-remove remove-passenger" data-index="{{@index}}">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        {{/each}}
+                    {{else}}
+                        <p class="text-muted text-center">No saved passengers yet.</p>
+                    {{/if}}
+                </div>
+            </div>
+
+            <!-- Travel History -->
+            <div class="mb-4">
+                <div class="section-title">Travel History</div>
                 {{#if reservations.length}}
                     {{#each reservations}}
                         <div class="history-item">
                             <div class="d-flex justify-content-between align-items-center flex-wrap">
                                 <div>
-                                    <strong>{{this.flightId.flightId}}</strong>
-                                    <span class="ms-2">{{this.flightId.route}}</span>
+                                    <strong>{{this.flightId.flight_number}}</strong>
+                                    <span class="ms-2">{{this.flightId.origin}} → {{this.flightId.destination}}</span>
                                 </div>
                                 <span class="status-badge status-{{this.status}}">{{this.status}}</span>
                             </div>
                             <div class="small text-muted mt-1">
                                 <i class="fas fa-calendar-alt me-1"></i>
-                                {{formatDate this.flightId.departureDate}} at {{this.flightId.departureTime}}
+                                {{formatDate this.flightId.departureTime}}
                                 <span class="mx-2">|</span>
                                 Seat {{this.seatNumber}}
                             </div>
@@ -102,9 +167,130 @@
                     <p class="text-muted text-center">No reservations yet. <a href="/search">Book a flight now!</a></p>
                 {{/if}}
             </div>
+        </div>
+    </div>
+
+    <!-- Right Column -->
+    <div class="col-lg-7">
+        <div class="profile-card p-4">
+            <!-- Payment Methods -->
+            <div class="mb-4">
+                <div class="section-title">Payment Methods</div>
+                
+                <!-- Add Payment Form -->
+                <div class="payment-form mb-3 p-3" style="background: #f8fafc; border-radius: 14px;">
+                    <h6 class="mb-2">Add Payment Method</h6>
+                    <div class="row g-2">
+                        <div class="col-6">
+                            <select class="form-select form-select-sm" id="paymentCardType">
+                                <option value="">Card Type</option>
+                                <option value="VISA">VISA</option>
+                                <option value="Mastercard">Mastercard</option>
+                                <option value="Amex">Amex</option>
+                                <option value="Discover">Discover</option>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <input type="text" class="form-control form-control-sm" id="paymentCardNumber" placeholder="Card Number (last 4 digits)">
+                        </div>
+                        <div class="col-6">
+                            <input type="text" class="form-control form-control-sm" id="paymentCardholder" placeholder="Cardholder Name">
+                        </div>
+                        <div class="col-3">
+                            <input type="text" class="form-control form-control-sm" id="paymentExpiryMonth" placeholder="MM">
+                        </div>
+                        <div class="col-3">
+                            <input type="text" class="form-control form-control-sm" id="paymentExpiryYear" placeholder="YY">
+                        </div>
+                        <div class="col-6">
+                            <div class="form-check mt-1">
+                                <input class="form-check-input" type="checkbox" id="paymentDefault">
+                                <label class="form-check-label small" for="paymentDefault">
+                                    Set as default
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <button class="btn btn-primary btn-sm w-100" id="addPaymentBtn">
+                                <i class="fas fa-plus me-1"></i> Add Payment
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="paymentMethodsList">
+                    {{#if user.paymentMethods.length}}
+                        {{#each user.paymentMethods}}
+                            <div class="payment-card {{#if this.isDefault}}active{{/if}}" data-index="{{@index}}">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <i class="fab fa-cc-{{this.cardType}} fa-2x me-2"></i>
+                                        <strong>{{this.cardType}}</strong>
+                                        <span class="ms-2">{{this.cardNumber}}</span>
+                                        <span class="text-muted ms-2">Exp {{this.expiryMonth}}/{{this.expiryYear}}</span>
+                                    </div>
+                                    <div>
+                                        {{#if this.isDefault}}
+                                            <span class="badge bg-success">Default</span>
+                                        {{else}}
+                                            <button class="btn-set-default set-default-payment" data-index="{{@index}}">
+                                                Set Default
+                                            </button>
+                                        {{/if}}
+                                        <button class="btn-remove remove-payment ms-2" data-index="{{@index}}">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        {{/each}}
+                    {{else}}
+                        <p class="text-muted text-center">No payment methods saved.</p>
+                    {{/if}}
+                </div>
+            </div>
+
+            <!-- Notification Preferences -->
+            <div>
+                <div class="section-title">Notification Preferences</div>
+                <div class="notifications-box p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Promotional offers and deals</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" class="notif-toggle" data-key="promotionalOffers" 
+                                {{#if user.notificationPreferences.promotionalOffers}}checked{{/if}}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Flight status and delay alerts</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" class="notif-toggle" data-key="flightStatusAlerts" 
+                                {{#if user.notificationPreferences.flightStatusAlerts}}checked{{/if}}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span>Loyalty program updates</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" class="notif-toggle" data-key="loyaltyUpdates" 
+                                {{#if user.notificationPreferences.loyaltyUpdates}}checked{{/if}}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>SMS alerts</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" class="notif-toggle" data-key="smsAlerts" 
+                                {{#if user.notificationPreferences.smsAlerts}}checked{{/if}}>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </div>
 
             <!-- Quick Actions -->
-            <div>
+            <div class="mt-4">
                 <div class="section-title">Quick Actions</div>
                 <div class="row g-3">
                     <div class="col-6">
@@ -122,3 +308,6 @@
         </div>
     </div>
 </div>
+
+<!-- Custom JS -->
+<script src="/js/profile.js"></script>

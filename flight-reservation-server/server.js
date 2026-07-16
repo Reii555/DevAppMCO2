@@ -34,26 +34,157 @@ app.use(express.json());
 // Serve static files (CSS, JS, images)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// EXPRESS SESSION
-app.use(session({
-    secret: process.env.SESSION_SECRET || 'mysecretkey',
-    resave: false,
-    saveUninitialized: false
-}));
+// EXPRESS SESSION - COMMENTED OUT FOR TESTING
+// app.use(session({
+//     secret: process.env.SESSION_SECRET || 'mysecretkey',
+//     resave: false,
+//     saveUninitialized: false
+// }));
 
-// Make user data available to all
-app.use((req, res, next) => {
+// Make user data available to all - FIXED FOR TESTING
+app.use(async (req, res, next) => {
+    if (!req.session) {
+        req.session = {};
+    }
+    
+    if (!req.session.user) {
+        try {
+            const user = await User.findOne({ email: 'reina.lagos@hotmail.com' });
+            if (user) {
+                if (!user.profilePicture) {
+                    user.profilePicture = null;
+                }
+                req.session.user = user;
+                console.log('Using user from database:', user.email);
+            } else {
+                // Try to find any user
+                const anyUser = await User.findOne({});
+                if (anyUser) {
+                    if (!anyUser.profilePicture) {
+                        anyUser.profilePicture = null;
+                    }
+                    req.session.user = anyUser;
+                    console.log('Using any user from database:', anyUser.email);
+                } else {
+                    // Create a new user
+                    const newUser = new User({
+                        firstName: 'Reina',
+                        lastName: 'Lagos',
+                        email: 'reina.lagos@hotmail.com',
+                        password: 'password123',
+                        phone: '+639988776655',
+                        dateOfBirth: new Date('1992-03-15'),
+                        passportNumber: 'A12345678',
+                        nationality: 'Filipino',
+                        gender: 'Female',
+                        role: 'customer',
+                        status: 'active',
+                        profilePicture: null
+                    });
+                    await newUser.save();
+                    req.session.user = newUser;
+                    console.log('Created new user:', newUser.email);
+                }
+            }
+        } catch (error) {
+            console.error('Error finding/creating user:', error);
+        }
+    } else {
+        // Refresh user data from database on each request
+        try {
+            if (req.session.user._id) {
+                const freshUser = await User.findById(req.session.user._id);
+                if (freshUser) {
+                    if (!freshUser.profilePicture) {
+                        freshUser.profilePicture = null;
+                    }
+                    req.session.user = freshUser;
+                }
+            }
+        } catch (error) {
+            console.error('Error refreshing user data:', error);
+        }
+    }
     res.locals.user = req.session.user || null;
     next();
 });
 
-// HANDLEBARS VIEW ENGINE
-app.engine('hbs', exphbs.engine({
+// HANDLEBARS VIEW ENGINE WITH HELPERS
+const hbs = exphbs.create({
     extname: 'hbs',
     defaultLayout: 'main',
     layoutsDir: path.join(__dirname, 'views/layouts'),
-    partialsDir: path.join(__dirname, 'views/partials')
-}));
+    partialsDir: path.join(__dirname, 'views/partials'),
+    runtimeOptions: {
+        allowProtoPropertiesByDefault: true,
+        allowProtoMethodsByDefault: true
+    },
+    helpers: {
+        formatDate: function(date) {
+            if (!date) {
+                return 'N/A';
+            }
+            const d = new Date(date);
+            if (isNaN(d.getTime())) {
+                return 'N/A';
+            }
+            return d.toLocaleDateString('en-PH', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                timeZone: 'Asia/Manila'
+            });
+        },
+        formatDateInput: function(date) {
+            if (!date) {
+                return '';
+            }
+            const d = new Date(date);
+            if (isNaN(d.getTime())) {
+                return '';
+            }
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return year + '-' + month + '-' + day;
+        },
+        eq: function(a, b) {
+            return a === b;
+        },
+        or: function(a, b) {
+            return a || b;
+        },
+        formatTime: function(date) {
+            if (!date) {
+                return 'N/A';
+            }
+            const d = new Date(date);
+            if (isNaN(d.getTime())) {
+                return 'N/A';
+            }
+            return d.toLocaleTimeString('en-PH', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true,
+                timeZone: 'Asia/Manila'
+            });
+        },
+        formatCurrency: function(amount) {
+            if (!amount && amount !== 0) {
+                return '₱0.00';
+            }
+            return '₱' + parseFloat(amount).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        },
+        inc: function(value) {
+            return parseInt(value) + 1;
+        },
+        dec: function(value) {
+            return parseInt(value) - 1;
+        }
+    }
+});
+
+app.engine('hbs', hbs.engine);
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -62,9 +193,13 @@ const searchRoutes = require('./routes/searchRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const adminFlightRoutes = require('./routes/admin-flights-routes');
 const adminDashboardRoutes = require('./routes/admin-dashboard-routes');
+const profileRoutes = require('./routes/profileRoutes');
+const reservationRoutes = require('./routes/reservationRoutes');
 
 app.use('/search', searchRoutes);
 app.use('/booking', bookingRoutes);
+app.use('/profile', profileRoutes);
+app.use('/reservations', reservationRoutes);
 
 // Home Page
 app.get('/', (req, res) => {
@@ -75,7 +210,6 @@ app.get('/', (req, res) => {
 });
 
 // SIGNUP ROUTES
-// Show Signup Form
 app.get('/signup', (req, res) => {
     if (req.session.user) {
         return res.redirect('/dashboard');
@@ -83,17 +217,14 @@ app.get('/signup', (req, res) => {
     res.render('signup', { title: 'Sign Up' });
 });
 
-// Process Signup Form
 app.post('/signup', async (req, res) => {
     try {
-        // Check if email already exists
         const existingUser = await User.findOne({ email: req.body.email });
         if (existingUser) {
             return res.send('Email already registered. Please login using a new email.');
         }
 
-        // Create new user
-        const user = new ({
+        const user = new User({
             firstName: req.body.firstName,
             lastName: req.body.lastName,
             email: req.body.email,
@@ -111,7 +242,6 @@ app.post('/signup', async (req, res) => {
 });
 
 // LOGIN ROUTES
-// Show Login Form
 app.get('/login', (req, res) => {
     if (req.session.user) {
         return res.redirect('/dashboard');
@@ -119,7 +249,6 @@ app.get('/login', (req, res) => {
     res.render('login', { title: 'Login' });
 });
 
-// Process Login Form
 app.post('/login', async (req, res) => {
     try {
         const user = await User.findOne({
@@ -138,16 +267,6 @@ app.post('/login', async (req, res) => {
         console.error('Login error:', error);
         res.send('Error logging in. Please try again.');
     }
-});
-
-// BOOKING ROUTES
-app.get('/booking', (req, res) => {
-    res.render('booking', { title: 'Book Flight' });
-});
-
-// MY RESERVATIONS ROUTES
-app.get('/my-reservations', (req, res) => {
-    res.render('my-reservations', { title: 'My Reservations' });
 });
 
 // DASHBOARD ROUTE
@@ -180,10 +299,8 @@ app.get('/admin', (req, res) => {
 
 // ADMIN DASHBOARD ROUTE
 app.use('/admin-dashboard', adminDashboardRoutes);
-// ADMIN FLIGHT ROUTE
 app.use('/admin-flights', adminFlightRoutes);
 
-// ADMIN-USERS ROUTE
 app.get('/admin-users', async (req, res) => {
     res.render('admin-users', {
         title: 'Users',
@@ -191,7 +308,6 @@ app.get('/admin-users', async (req, res) => {
     });
 });
 
-// ADMIN-RESERVATIONS ROUTE
 app.get('/admin-reservations', async (req, res) => {
     res.render('admin-reservations', {
         title: 'Reservations',
@@ -199,7 +315,6 @@ app.get('/admin-reservations', async (req, res) => {
     });
 });
 
-// CUSTOMER ROUTE
 app.get('/customer', (req, res) => {
     if (!req.session.user) {
         return res.redirect('/login');
@@ -215,7 +330,6 @@ app.get('/customer', (req, res) => {
     });
 });
 
-// LOGOUT ROUTE
 app.get('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
@@ -232,177 +346,404 @@ app.listen(PORT, () => {
 });
 
 // SAMPLE DATA 
-
 (async () => {
     try {
+        // Check if users already exist
+        const existingUsers = await User.find({});
+        let testUser = null;
+        
+        if (existingUsers.length === 0) {
+            // Create sample users
+            testUser = new User({
+                firstName: "Reina",
+                lastName: "Lagos",
+                email: "reina.lagos@hotmail.com",
+                password: "password123",
+                phone: "+639988776655",
+                dateOfBirth: new Date("1992-03-15"),
+                passportNumber: "A12345678",
+                nationality: "Filipino",
+                gender: "Female",
+                role: "customer",
+                status: "active",
+                lastLogin: new Date("2026-07-12"),
+                profilePicture: null,
+                emergencyContact: {
+                    name: "ParentTest",
+                    relationship: "Father",
+                    phone: "+639987654321",
+                    email: "parent@test.com"
+                },
+                savedPassengers: [
+                    {
+                        firstName: "Isabel",
+                        lastName: "Cubangbang",
+                        passportNumber: "B98765432",
+                        dateOfBirth: new Date("1995-08-20"),
+                        nationality: "Filipino",
+                        gender: "Female",
+                        type: "Adult"
+                    }
+                ],
+                paymentMethods: [
+                    {
+                        cardType: "VISA",
+                        cardNumber: "**** **** **** 5555",
+                        cardholderName: "Reina Lagos",
+                        expiryMonth: "08",
+                        expiryYear: "27",
+                        isDefault: true
+                    },
+                    {
+                        cardType: "VISA",
+                        cardNumber: "**** **** **** 6666",
+                        cardholderName: "Reina Lagos",
+                        expiryMonth: "11",
+                        expiryYear: "27",
+                        isDefault: false
+                    }
+                ],
+                notificationPreferences: {
+                    promotionalOffers: true,
+                    flightStatusAlerts: true,
+                    loyaltyUpdates: true,
+                    smsAlerts: true
+                }
+            });
 
-        // Sample data for admin user
-        const customerUser = await User.create({
-            firstName: "Test",
-            lastName: "User",
-            email: "test@test.com",
-            password: "password123",
-            phone: "+639123456789",
-            dateOfBirth: new Date("2005-07-11"),
-            passportNumber: "A12345678",
-            nationality: "Filipino",
-            gender: "Female",
-            role: "customer",
-            status: "active",
-            lastLogin: new Date("2026-07-12"),
-            profilePicture: "placeholder",
-            emergencyContact: {
-                name: "ParentTest",
-                relationship: "Father",
+            await testUser.save();
+
+            const adminUser = new User({
+                firstName: "Admin",
+                lastName: "User",
+                email: "test@admin.com",
+                password: "admin123",
                 phone: "+639987654321",
-                email: "parent@test.com"
+                dateOfBirth: new Date("2003-07-11"),
+                passportNumber: "A12345679",
+                nationality: "Filipino",
+                gender: "Female",
+                role: "admin",
+                status: "active",
+                lastLogin: new Date("2026-07-14"),
+                profilePicture: null,
+                emergencyContact: {
+                    name: "ParentTest",
+                    relationship: "Father",
+                    phone: "+639987654322",
+                    email: "parent@admin.com"
+                }
+            });
+
+            await adminUser.save();
+            console.log("Sample Users Created");
+        } else {
+            // Get the test user
+            testUser = await User.findOne({ email: 'reina.lagos@hotmail.com' });
+            if (!testUser) {
+                testUser = existingUsers[0];
             }
-        });
-
-        const adminUser = await User.create({
-            firstName: "Admin",
-            lastName: "User",
-            email: "test@admin.com",
-            password: "admin123",
-            phone: "+639987654321",
-            dateOfBirth: new Date("2003-07-11"),
-            passportNumber: "A12345679",
-            nationality: "Filipino",
-            gender: "Female",
-            role: "admin",
-            status: "active",
-            lastLogin: new Date("2026-07-14"),
-            profilePicture: "placeholder",
-            emergencyContact: {
-                name: "ParentTest",
-                relationship: "Father",
-                phone: "+639987654322",
-                email: "parent@admin.com"
-            }
-        });
-
-        console.log("Sample Users 1-2 Created");
-
-        // Sample data for flight collection
-        const flight = await Flight.create({
-            flight_number: "AS1001",
-            airline: "Philippine Airlines",
-            cabinClass: "Economy",
-            origin: "Manila (MNL)",
-            destination: "Cebu (CEB)",
-            departureTime: new Date("2026-07-14T08:00:00"),
-            arrivalTime: new Date("2026-07-14T09:30:00"),
-            duration: "1h 30m",
-            tripType: "One-way",
-            layoversCount: 1,
-            layoverDetails: "Layover at Iloilo (ILO) - 30 minutes",
-            checkedIn: 15,
-            carryOn: 6,
-            basePrice: 3000,
-            cabinClass: "Economy",
-            status: "Upcoming",
-            airlineLogo: "placeholder"
-        });
-
-        const flight2 = await Flight.create({
-            flight_number: "AS1002",
-            airline: "Cebu Pacific",
-            origin: "Cebu (CEB)",
-            destination: "Davao (DVO)",
-            departureTime: new Date("2026-07-15T13:15:00"),
-            arrivalTime: new Date("2026-07-15T14:40:00"),
-            duration: "1h 25m",
-            tripType: "One-way",
-            layoversCount: 1,
-            layoverDetails: "Layover at Iloilo (ILO) - 45 minutes",
-            checkedIn: 20,
-            carryOn: 7,
-            basePrice: 2800,
-            cabinClass: "Economy",
-            status: "Upcoming",
-            airlineLogo: "placeholder"
-
-        });
-
-        const flight3 = await Flight.create({
-            flight_number: "AS1003",
-            airline: "AirAsia",
-            origin: "Manila (MNL)",
-            destination: "Puerto Princesa (PPS)",
-            departureTime: new Date("2026-07-16T06:45:00"),
-            arrivalTime: new Date("2026-07-16T08:10:00"),
-            duration: "1h 25m",
-            tripType: "Round-trip",
-            returnDate: new Date("2026-07-20T18:30:00"),
-            checkedIn: 20,
-            carryOn: 7,
-            basePrice: 3300,
-            cabinClass: "Premium Economy",
-            status: "Upcoming",
-            airlineLogo: "placeholder"
-        });
-
-        console.log("Sample Flights 1-3 Created");
-
-        // Sample data for seats collection
-        const seats = [];
-
-        for (let row = 1; row <= 10; row++) {
-            const letters = ["A", "B", "C", "D"];
-
-            for (const letter of letters) {
-                seats.push({
-                    flight_id: flight._id,
-                    seatNumber: `${row}${letter}`,
-                    status: "Unoccupied"
-                });
-            }
+            console.log("Users already exist, using existing user:", testUser.email);
         }
 
-        seats[1].status = "Occupied";   // occupied = 1B (for testing purposes)
+        // Check if flights already exist
+        const existingFlights = await Flight.find({});
+        let flight1, flight2, flight3;
+        
+        if (existingFlights.length === 0) {
+            flight1 = new Flight({
+                flight_number: "AS1001",
+                airline: "Philippine Airlines",
+                cabinClass: "Economy",
+                origin: "Manila (MNL)",
+                destination: "Cebu (CEB)",
+                departureTime: new Date("2026-07-20T08:00:00"),
+                arrivalTime: new Date("2026-07-20T09:30:00"),
+                duration: "1h 30m",
+                tripType: "One-way",
+                layoversCount: 0,
+                layoverDetails: "Direct Flight",
+                checkedIn: 15,
+                carryOn: 6,
+                basePrice: 3000,
+                availableSeats: 40,
+                status: "Upcoming",
+                airlineLogo: null
+            });
 
-        await Seat.insertMany(seats);
+            flight2 = new Flight({
+                flight_number: "AS1002",
+                airline: "Cebu Pacific",
+                origin: "Cebu (CEB)",
+                destination: "Davao (DVO)",
+                departureTime: new Date("2026-07-21T13:15:00"),
+                arrivalTime: new Date("2026-07-21T14:40:00"),
+                duration: "1h 25m",
+                tripType: "One-way",
+                layoversCount: 0,
+                layoverDetails: "Direct Flight",
+                checkedIn: 20,
+                carryOn: 7,
+                basePrice: 2800,
+                availableSeats: 40,
+                cabinClass: "Economy",
+                status: "Upcoming",
+                airlineLogo: null
+            });
 
-        // Sample data for seats collection (flight2)
-        const seats2 = [];
+            flight3 = new Flight({
+                flight_number: "AS1003",
+                airline: "AirAsia",
+                origin: "Manila (MNL)",
+                destination: "Puerto Princesa (PPS)",
+                departureTime: new Date("2026-07-22T06:45:00"),
+                arrivalTime: new Date("2026-07-22T08:10:00"),
+                duration: "1h 25m",
+                tripType: "Round-trip",
+                returnDate: new Date("2026-07-26T18:30:00"),
+                checkedIn: 20,
+                carryOn: 7,
+                basePrice: 3300,
+                availableSeats: 40,
+                cabinClass: "Premium Economy",
+                status: "Upcoming",
+                airlineLogo: null
+            });
 
-        for (let row = 1; row <= 10; row++) {
-            const letters = ["A", "B", "C", "D"];
-
-            for (const letter of letters) {
-                seats2.push({
-                    flight_id: flight2._id,
-                    seatNumber: `${row}${letter}`,
-                    status: "Unoccupied"
-                });
-            }
+            await flight1.save();
+            await flight2.save();
+            await flight3.save();
+            console.log("Sample Flights Created");
+        } else {
+            flight1 = existingFlights[0];
+            flight2 = existingFlights[1] || existingFlights[0];
+            flight3 = existingFlights[2] || existingFlights[0];
+            console.log("Flights already exist, using existing flights");
         }
 
-        seats2[3].status = "Occupied";   // occupied = 1C (for testing purposes)
-        seats2[4].status = "Occupied";   // occupied = 1D (for testing purposes)
-
-        await Seat.insertMany(seats2);
-
-        // Sample data for seats collection (flight3)
-        const seats3 = [];
-
-        for (let row = 1; row <= 10; row++) {
-            const letters = ["A", "B", "C", "D"];
-
-            for (const letter of letters) {
-                seats3.push({
-                    flight_id: flight3._id,
-                    seatNumber: `${row}${letter}`,
-                    status: "Unoccupied"
-                });
+        // Check if reservations already exist
+        const existingReservations = await Reservation.find({});
+        
+        if (existingReservations.length === 0 && testUser) {
+            // Get the next reservation_id
+            const lastReservation = await Reservation.findOne({}, {}, { sort: { 'reservation_id': -1 } });
+            let nextId = 1000;
+            if (lastReservation) {
+                nextId = lastReservation.reservation_id + 1;
             }
+            
+            // Create sample reservations with manual reservation_id
+            const reservationData = [
+                {
+                    reservation_id: nextId,
+                    userId: testUser._id,
+                    flightId: flight1._id,
+                    passengerDetails: {
+                        fullName: "Reina Lagos",
+                        email: "reina.lagos@hotmail.com",
+                        contactNumber: "+639988776655",
+                        passportNumber: "A12345678",
+                        nationality: "Filipino",
+                        dateOfBirth: new Date("1992-03-15"),
+                        gender: "Female"
+                    },
+                    seatNumber: "12A",
+                    mealPreference: "Vegetarian",
+                    mealPrice: 150,
+                    extraServices: {
+                        checkedBaggage: 0,
+                        carryOn: 0,
+                        priorityBoarding: false,
+                        travelInsurance: false,
+                        loungeAccess: false
+                    },
+                    extraServicesPrice: 0,
+                    booking_ref: "BK20260720",
+                    trip_type: "One-way",
+                    status: "Confirmed",
+                    basePrice: 3000,
+                    total_price: 3150,
+                    booking_date: new Date("2026-07-10T10:30:00"),
+                    specialRequests: "Window seat preferred"
+                },
+                {
+                    reservation_id: nextId + 1,
+                    userId: testUser._id,
+                    flightId: flight2._id,
+                    passengerDetails: {
+                        fullName: "Reina Lagos",
+                        email: "reina.lagos@hotmail.com",
+                        contactNumber: "+639988776655",
+                        passportNumber: "A12345678",
+                        nationality: "Filipino",
+                        dateOfBirth: new Date("1992-03-15"),
+                        gender: "Female"
+                    },
+                    seatNumber: "7C",
+                    mealPreference: "Standard",
+                    mealPrice: 0,
+                    extraServices: {
+                        checkedBaggage: 1,
+                        carryOn: 0,
+                        priorityBoarding: true,
+                        travelInsurance: false,
+                        loungeAccess: false
+                    },
+                    extraServicesPrice: 500,
+                    booking_ref: "BK20260721",
+                    trip_type: "One-way",
+                    status: "Pending",
+                    basePrice: 2800,
+                    total_price: 3300,
+                    booking_date: new Date("2026-07-11T14:20:00"),
+                    specialRequests: ""
+                },
+                {
+                    reservation_id: nextId + 2,
+                    userId: testUser._id,
+                    flightId: flight3._id,
+                    passengerDetails: {
+                        fullName: "Reina Lagos",
+                        email: "reina.lagos@hotmail.com",
+                        contactNumber: "+639988776655",
+                        passportNumber: "A12345678",
+                        nationality: "Filipino",
+                        dateOfBirth: new Date("1992-03-15"),
+                        gender: "Female"
+                    },
+                    seatNumber: "3F",
+                    mealPreference: "Halal",
+                    mealPrice: 300,
+                    extraServices: {
+                        checkedBaggage: 2,
+                        carryOn: 1,
+                        priorityBoarding: true,
+                        travelInsurance: true,
+                        loungeAccess: true
+                    },
+                    extraServicesPrice: 1200,
+                    booking_ref: "BK20260722",
+                    trip_type: "Roundtrip",
+                    status: "Confirmed",
+                    basePrice: 3300,
+                    total_price: 4800,
+                    booking_date: new Date("2026-07-12T09:15:00"),
+                    specialRequests: "Aisle seat preferred"
+                },
+                {
+                    reservation_id: nextId + 3,
+                    userId: testUser._id,
+                    flightId: flight1._id,
+                    passengerDetails: {
+                        fullName: "Reina Lagos",
+                        email: "reina.lagos@hotmail.com",
+                        contactNumber: "+639988776655",
+                        passportNumber: "A12345678",
+                        nationality: "Filipino",
+                        dateOfBirth: new Date("1992-03-15"),
+                        gender: "Female"
+                    },
+                    seatNumber: "8B",
+                    mealPreference: "Standard",
+                    mealPrice: 0,
+                    extraServices: {
+                        checkedBaggage: 0,
+                        carryOn: 0,
+                        priorityBoarding: false,
+                        travelInsurance: false,
+                        loungeAccess: false
+                    },
+                    extraServicesPrice: 0,
+                    booking_ref: "BK20260715",
+                    trip_type: "One-way",
+                    status: "Completed",
+                    basePrice: 3000,
+                    total_price: 3000,
+                    booking_date: new Date("2026-07-01T16:45:00"),
+                    specialRequests: ""
+                },
+                {
+                    reservation_id: nextId + 4,
+                    userId: testUser._id,
+                    flightId: flight2._id,
+                    passengerDetails: {
+                        fullName: "Reina Lagos",
+                        email: "reina.lagos@hotmail.com",
+                        contactNumber: "+639988776655",
+                        passportNumber: "A12345678",
+                        nationality: "Filipino",
+                        dateOfBirth: new Date("1992-03-15"),
+                        gender: "Female"
+                    },
+                    seatNumber: "10A",
+                    mealPreference: "Vegan",
+                    mealPrice: 200,
+                    extraServices: {
+                        checkedBaggage: 0,
+                        carryOn: 1,
+                        priorityBoarding: false,
+                        travelInsurance: false,
+                        loungeAccess: false
+                    },
+                    extraServicesPrice: 200,
+                    booking_ref: "BK20260716",
+                    trip_type: "One-way",
+                    status: "Cancelled",
+                    basePrice: 2800,
+                    total_price: 3200,
+                    booking_date: new Date("2026-07-02T11:00:00"),
+                    specialRequests: ""
+                }
+            ];
+
+            // Save each reservation individually
+            for (let data of reservationData) {
+                const reservation = new Reservation(data);
+                await reservation.save();
+            }
+            
+            console.log("Sample Reservations Created");
+
+            // Update available seats for flights
+            await Flight.findByIdAndUpdate(flight1._id, { $inc: { availableSeats: -3 } });
+            await Flight.findByIdAndUpdate(flight2._id, { $inc: { availableSeats: -2 } });
+            await Flight.findByIdAndUpdate(flight3._id, { $inc: { availableSeats: -1 } });
+            console.log("Updated available seats for flights");
+        } else {
+            console.log("Reservations already exist, skipping reservation creation");
         }
 
-        await Seat.insertMany(seats3);
-
-        console.log("Sample Seats created.");
+        // Create seats if they don't exist
+        const existingSeats = await Seat.find({});
+        if (existingSeats.length === 0) {
+            const flights = await Flight.find({});
+            for (let flight of flights) {
+                const seats = [];
+                const letters = ["A", "B", "C", "D", "E", "F"];
+                for (let row = 1; row <= 10; row++) {
+                    for (let letter of letters) {
+                        seats.push({
+                            flight_id: flight._id,
+                            seatNumber: row + letter,
+                            status: "Unoccupied"
+                        });
+                    }
+                }
+                // Mark some seats as occupied
+                if (seats.length > 0) {
+                    seats[1].status = "Occupied";
+                    seats[5].status = "Occupied";
+                    seats[10].status = "Occupied";
+                }
+                await Seat.insertMany(seats);
+            }
+            console.log("Sample Seats created.");
+        } else {
+            console.log("Seats already exist, skipping seat creation");
+        }
 
     } catch (err) {
-        console.log("Error: Sample Data Exists");
+        console.log("Error creating sample data:", err.message);
+        console.log("Stack trace:", err.stack);
     }
 })();
