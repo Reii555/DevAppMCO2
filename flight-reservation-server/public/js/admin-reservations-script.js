@@ -26,7 +26,7 @@ $(document).ready(function() {
 
         // Make AJAX request
         $.ajax({
-            url: '/api/admin/reservations',
+            url: '/admin/reservations/api',
             method: 'GET',
             data: {
                 page: currentPage,
