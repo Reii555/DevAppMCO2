@@ -37,11 +37,9 @@ const userSchema = new mongoose.Schema({
     validate: {
       validator: function(v) {
         const phoneRegex = /^\+?[0-9\s\-\(\)]{7,20}$/;
-
-        if (!phoneRegex.test(v))
+        if (!phoneRegex.test(v)) {
           return false;
-
-        // count only the digits
+        }
         const digits = v.replace(/\D/g, '');
         return digits.length >= 7 && digits.length <= 15;
       },
@@ -92,62 +90,135 @@ const userSchema = new mongoose.Schema({
   },
 
   emergencyContact: {
-        name: {
-            type: String,
-            trim: true
-        },
-        relationship: {
-            type: String,
-            trim: true
-        },
-        phone: {
-            type: String,
-            trim: true,
-            validate: {
-                validator: function(v) {
-                    if (!v) return true; // Optional field
-                    const phoneRegex = /^\+?[0-9\s\-\(\)]{7,20}$/;
-                    if (!phoneRegex.test(v)) return false;
-                    const digits = v.replace(/\D/g, '');
-                    return digits.length >= 7 && digits.length <= 15;
-                },
-                message: 'Please enter a valid emergency phone number'
-            }
-        },
-        email: {
-            type: String,
-            lowercase: true,
-            trim: true,
-            match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email']
-        }
+    name: {
+      type: String,
+      trim: true
     },
-
-    createdAt: {
-        type: Date,
-        default: Date.now
+    relationship: {
+      type: String,
+      trim: true
     },
-    updatedAt: {
-        type: Date,
-        default: Date.now
+    phone: {
+      type: String,
+      trim: true
+    },
+    email: {
+      type: String,
+      lowercase: true,
+      trim: true,
+      match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email']
     }
+  },
+
+  savedPassengers: [{
+    firstName: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    lastName: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    passportNumber: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    dateOfBirth: {
+      type: Date,
+      required: true
+    },
+    nationality: {
+      type: String,
+      required: true
+    },
+    gender: {
+      type: String,
+      enum: ['Male', 'Female', 'Other', 'Prefer not to say'],
+      required: true
+    },
+    type: {
+      type: String,
+      enum: ['Adult', 'Child', 'Infant'],
+      default: 'Adult'
+    }
+  }],
+
+  paymentMethods: [{
+    cardType: {
+      type: String,
+      enum: ['VISA', 'Mastercard', 'Amex', 'Discover'],
+      required: true
+    },
+    cardNumber: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    cardholderName: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    expiryMonth: {
+      type: String,
+      required: true
+    },
+    expiryYear: {
+      type: String,
+      required: true
+    },
+    isDefault: {
+      type: Boolean,
+      default: false
+    }
+  }],
+
+  notificationPreferences: {
+    promotionalOffers: {
+      type: Boolean,
+      default: true
+    },
+    flightStatusAlerts: {
+      type: Boolean,
+      default: true
+    },
+    loyaltyUpdates: {
+      type: Boolean,
+      default: true
+    },
+    smsAlerts: {
+      type: Boolean,
+      default: true
+    }
+  },
+
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+  updatedAt: {
+    type: Date,
+    default: Date.now    
+  }
 }, {
-    timestamps: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true }
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
 });
 
 userSchema.virtual('fullName').get(function() {
-    return `${this.firstName} ${this.lastName}`;
+  return this.firstName + ' ' + this.lastName;
 });
 
-// Method to compare password (simple comparison without bcrypt)
 userSchema.methods.comparePassword = async function(candidatePassword) {
-    return this.password === candidatePassword;
+  return this.password === candidatePassword;
 };
 
-// Static method to find by email with password
 userSchema.statics.findByEmailWithPassword = function(email) {
-    return this.findOne({ email }).select('+password');
+  return this.findOne({ email }).select('+password');
 };
 
 module.exports = mongoose.model('User', userSchema);

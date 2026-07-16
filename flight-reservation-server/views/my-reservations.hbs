@@ -15,6 +15,14 @@
                             <option value="Cancelled">Cancelled</option>
                             <option value="Completed">Completed</option>
                         </select>
+                        <select class="form-select" id="sortSelect">
+                            <option value="">Sort By</option>
+                            <option value="dateDesc">Newest First</option>
+                            <option value="dateAsc">Oldest First</option>
+                            <option value="priceAsc">Price ↑</option>
+                            <option value="priceDesc">Price ↓</option>
+                            <option value="status">By Status</option>
+                        </select>
                     </div>
                 </div>
 
@@ -22,7 +30,7 @@
                 <div id="reservationsList">
                     {{#if reservations.length}}
                         {{#each reservations}}
-                            <div class="reservation-item" data-id="{{this._id}}">
+                            <div class="reservation-item" data-id="{{this._id}}" data-date="{{this.booking_date}}">
                                 <div class="res-summary">
                                     <div>
                                         <span class="res-ref">{{this.booking_ref}}</span>
@@ -61,6 +69,16 @@
                                             <span class="value">{{this.trip_type}}</span>
                                         </div>
                                     </div>
+                                    <div class="detail-row">
+                                        <div>
+                                            <span class="label">Passenger:</span>
+                                            <span class="value">{{this.passengerDetails.fullName}}</span>
+                                        </div>
+                                        <div>
+                                            <span class="label">Booking Date:</span>
+                                            <span class="value">{{formatDate this.booking_date}}</span>
+                                        </div>
+                                    </div>
 
                                     <!-- Action Buttons -->
                                     <div class="detail-actions">
@@ -69,7 +87,11 @@
                                         </button>
                                         
                                         {{#if (or (eq this.status 'Pending') (eq this.status 'Confirmed'))}}
-                                            <button class="btn-action btn-edit edit-seat" data-id="{{this._id}}" data-seat="{{this.seatNumber}}" data-meal="{{this.meal_id.meal_name}}">
+                                            <button class="btn-action btn-edit edit-seat" 
+                                                data-id="{{this._id}}" 
+                                                data-seat="{{this.seatNumber}}" 
+                                                data-meal="{{this.meal_id.meal_name}}" 
+                                                data-price="{{this.total_price}}">
                                                 <i class="fas fa-edit me-1"></i>Edit Seat
                                             </button>
                                             <button class="btn-action btn-cancel cancel-reservation" data-id="{{this._id}}" data-ref="{{this.booking_ref}}" data-passenger="{{this.passengerName}}">
@@ -139,14 +161,14 @@
 
                     <!-- Current Flight Info -->
                     <div class="flight-info-box mb-4" id="editFlightInfo">
-        
+                        <p class="text-muted">Loading flight information...</p>
                     </div>
 
                     <!-- Seat Selection -->
                     <div class="mb-4">
                         <h6><i class="fas fa-chair me-2"></i>Select Seat <span class="text-danger">*</span></h6>
                         <div class="seat-grid" id="editSeatGrid">
-                            <!-- Seats rendered -->
+                            <div class="text-center py-4"><i class="fas fa-spinner fa-spin"></i> Loading seats...</div>
                         </div>
                         <div class="seat-legend mt-2">
                             <span class="badge bg-success">Available</span>
@@ -156,6 +178,7 @@
                         </div>
                         <div class="mt-2">
                             <small class="text-muted">Selected seat: <strong id="editSelectedSeat">None</strong></small>
+                            <span class="ms-3"><small class="text-muted" id="availableSeatsCount"></small></span>
                         </div>
                     </div>
 
@@ -164,12 +187,13 @@
                         <h6><i class="fas fa-utensils me-2"></i>Meal Preference</h6>
                         <select class="form-select" id="editMealPreference">
                             <option value="Standard">Standard</option>
-                            <option value="Vegetarian">Vegetarian (+Php 150.00)</option>
-                            <option value="Vegan">Vegan (+Php 200.00)</option>
-                            <option value="Halal">Halal (+Php 150.00)</option>
-                            <option value="Kosher">Kosher (+Php 250.00)</option>
-                            <option value="Gluten-Free">Gluten-Free (+Php 200.00)</option>
+                            <option value="Vegetarian">Vegetarian (+₱150.00)</option>
+                            <option value="Vegan">Vegan (+₱200.00)</option>
+                            <option value="Halal">Halal (+₱300.00)</option>
+                            <option value="Kosher">Kosher (+₱350.00)</option>
+                            <option value="Gluten-Free">Gluten-Free (+₱250.00)</option>
                         </select>
+                        <small class="text-muted" id="mealPriceDisplay">(Included)</small>
                     </div>
 
                     <!-- Special Requests -->
@@ -215,3 +239,6 @@
 <div id="toastMsg" class="toast-message">
     <i class="fas fa-check-circle me-2"></i> <span id="toastText"></span>
 </div>
+
+<!-- Custom JS -->
+<script src="/js/reservation.js"></script>
