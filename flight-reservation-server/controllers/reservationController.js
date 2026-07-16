@@ -84,7 +84,7 @@ exports.showMyReservations = async (req, res) => {
 };
 
 // ============================================================
-// AJAX FUNCTIONALITY
+// GET reservation deets using AJAX
 // ============================================================
 
 exports.getReservationDetails = async (req, res) => {

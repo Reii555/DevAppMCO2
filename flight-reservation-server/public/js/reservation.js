@@ -1,7 +1,7 @@
 $(document).ready(function() {
     
     // ============================================================
-    // TOAST NOTIFICATION FUNCTION
+    // TOAST NOTIFICATION 
     // ============================================================
     function showToast(message, type) {
         var toast = $('#toastMsg');
@@ -94,14 +94,14 @@ $(document).ready(function() {
     }
 
     // ============================================================
-    // EXTRA SERVICES TOGGLE - Update price
+    // Update price for Extra Service
     // ============================================================
     $(document).on('change', '.extra-service-toggle', function() {
         calculateTotalPrice();
     });
 
     // ============================================================
-    // EXPAND/CONTRACT RESERVATION DETAILS
+    // EXPAND RESERVATION DETAILS
     // ============================================================
     $(document).on('click', '.res-expand-icon', function(e) {
         e.stopPropagation();

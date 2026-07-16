@@ -159,7 +159,7 @@ exports.showEditProfilePage = async (req, res) => {
 };
 
 // ============================================================
-// HELPER FUNCTION - Check duplicate passport
+// HELPER FUNCTION - Check for duplicate passport
 // ============================================================
 
 async function isPassportDuplicate(passportNumber, excludeUserId) {
@@ -195,7 +195,7 @@ async function isPassportDuplicate(passportNumber, excludeUserId) {
 }
 
 // ============================================================
-// AJAX FUNCTIONALITY - Profile
+// Profile using AJAX
 // ============================================================
 
 exports.updateProfile = async (req, res) => {
@@ -403,7 +403,7 @@ exports.getProfileData = async (req, res) => {
 };
 
 // ============================================================
-// AJAX FUNCTIONALITY - Saved Passengers
+// Saved Passengers using AJAX
 // ============================================================
 
 exports.getSavedPassengers = async (req, res) => {
@@ -576,7 +576,7 @@ exports.removeSavedPassenger = async (req, res) => {
 };
 
 // ============================================================
-// AJAX FUNCTIONALITY - Payment Methods
+// Payment Methods using AJAX
 // ============================================================
 
 exports.getPaymentMethods = async (req, res) => {
@@ -778,7 +778,7 @@ exports.setDefaultPaymentMethod = async (req, res) => {
 };
 
 // ============================================================
-// AJAX FUNCTIONALITY - Notification Preferences
+// Notification Preferences using AJAX
 // ============================================================
 
 exports.updateNotificationPreferences = async (req, res) => {

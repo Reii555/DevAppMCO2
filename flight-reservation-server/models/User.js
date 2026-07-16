@@ -90,12 +90,12 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
-// Method to compare password
+// Compare password
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return this.password === candidatePassword;
 };
 
-// Static method to find by email with password
+// Find by email with password
 userSchema.statics.findByEmailWithPassword = function(email) {
   return this.findOne({ email }).select('+password');
 };
