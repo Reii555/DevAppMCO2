@@ -3,6 +3,8 @@ const session = require('express-session');
 const exphbs = require('express-handlebars');
 const path = require('path');
 const connectDB = require('./config/database');
+//for admin auth
+const adminOnly = require("./middleware/auth")
 
 // MODELS
 const User = require('./models/User');
@@ -295,7 +297,11 @@ app.get('/admin', (req, res) => {
 });
 
 // ADMIN DASHBOARD ROUTE
-app.use('/admin-dashboard', adminDashboardRoutes);
+// app.use('/admin-dashboard', adminOnly, adminDashboardRoutes);
+app.use('/admin-dashboard', adminDashboardRoutes); //removed auth so i can test it out
+
+// ADMIN FLIGHTS ROUTE
+// app.use('/admin-flights', adminOnly, adminFlightRoutes);
 app.use('/admin-flights', adminFlightRoutes);
 
 app.get('/admin-users', async (req, res) => {
@@ -395,6 +401,59 @@ app.listen(PORT, () => {
             console.log("Sample Meals Created");
         } else {
             console.log("Meals already exist");
+        }
+
+        // Check if extra services already exist
+        const existingServices = await ExtraService.find({});
+
+        if (existingServices.length === 0) {
+            // Create default extra services
+            const premiumSeat = new ExtraService({
+                service_name: "Premium Seat",
+                description: "Select a premium seat with extra comfort and preferred location.",
+                price: 500
+            });
+
+            const checkedIn = new ExtraService({
+                service_name: "Checked-in Baggage",
+                description: "Add one checked-in baggage to your reservation.",
+                price: 600
+            });
+
+            const carryOn = new ExtraService({
+                service_name: "Carry-on Baggage",
+                description: "Additional carry-on baggage allowance.",
+                price: 300
+            });
+
+            const priorityBoarding = new ExtraService({
+                service_name: "Priority Boarding",
+                description: "Board the aircraft earlier for a more convenient experience.",
+                price: 500
+            });
+
+            const travelInsurance = new ExtraService({
+                service_name: "Travel Insurance",
+                description: "Provides coverage for unexpected travel-related emergencies.",
+                price: 700
+            });
+
+            const loungeAccess = new ExtraService({
+                service_name: "Lounge Access",
+                description: "Enjoy airport lounge facilities before your flight.",
+                price: 1000
+            });
+
+            await premiumSeat.save();
+            await checkedIn.save();
+            await carryOn.save();
+            await priorityBoarding.save();
+            await travelInsurance.save();
+            await loungeAccess.save();
+
+            console.log("Sample Extra Services Created");
+        } else {
+            console.log("Extra Services already exist");
         }
 
         // Check if users already exist
