@@ -1,13 +1,9 @@
 const express = require('express');
 const router = express.Router();
 
-// page route
-router.get('/', (req, res) => {
-    res.render('booking', {
-        title: 'Book Flight'
-    });
-});
+const bookingController = require('../controllers/bookingController');
 
-// will add other functionality
+router.get('/:id', bookingController.showBookingPage);
 
 module.exports = router;
+
