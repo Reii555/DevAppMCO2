@@ -348,6 +348,58 @@ app.listen(PORT, () => {
 // SAMPLE DATA 
 (async () => {
     try {
+        // Check if meals already exist
+        const existingMeals = await Meal.find({});
+        
+        if (existingMeals.length === 0) {
+            // Create default meals
+            standard = new Meal({
+                meal_name: "Standard",
+                description: "Classic in-flight meal: Chicken or Pasta with Salad.",
+                additional_price: "0"                
+            });
+
+            vegetarian = new Meal({
+                meal_name: "Standard",
+                description: "Fresh stir-fry vegetables with quinoa & green salad.",
+                additional_price: "500"                
+            });
+
+            vegan = new Meal({
+                meal_name: "Vegan",
+                description: "Plant-based protein bowl, roasted veggies, dairy-free.",
+                additional_price: "700"                
+            });
+
+            halal = new Meal({
+                meal_name: "Halal",
+                description: "Certified Halal chicken with saffron rice.",
+                additional_price: "1000"                
+            });
+
+            kosher = new Meal({
+                meal_name: "Kosher",
+                description: "Glatt Kosher meal, pre-packaged under supervision.",
+                additional_price: "1200"                
+            });
+
+            glutenFree = new Meal({
+                meal_name: "Gluten Free",
+                description: "Gluten-free pasta, fresh vegetables, GF dessert.",
+                additional_price: "1500"                
+            });
+
+            await standard.save();
+            await vegetarian.save();
+            await vegan.save();
+            await halal.save();
+            await kosher.save();
+            await glutenFree.save();
+            console.log("Sample Meals Created");
+        } else {
+            console.log("Meals already exist");
+        }
+
         // Check if users already exist
         const existingUsers = await User.find({});
         let testUser = null;
@@ -526,6 +578,35 @@ app.listen(PORT, () => {
             flight3 = existingFlights[2] || existingFlights[0];
 
             console.log("Flights already exist, using existing flights");
+        }
+
+        // Create seats if they don't exist
+        const existingSeats = await Seat.find({});
+        if (existingSeats.length === 0) {
+            const flights = await Flight.find({});
+            for (let flight of flights) {
+                const seats = [];
+                const letters = ["A", "B", "C", "D", "E", "F"];
+                for (let row = 1; row <= 10; row++) {
+                    for (let letter of letters) {
+                        seats.push({
+                            flight_id: flight._id,
+                            seatNumber: row + letter,
+                            status: "Unoccupied"
+                        });
+                    }
+                }
+                // Mark some seats as occupied
+                if (seats.length > 0) {
+                    seats[1].status = "Occupied";
+                    seats[5].status = "Occupied";
+                    seats[10].status = "Occupied";
+                }
+                await Seat.insertMany(seats);
+            }
+            console.log("Sample Seats created.");
+        } else {
+            console.log("Seats already exist, skipping seat creation");
         }
 
         // Check if reservations already exist
@@ -718,35 +799,6 @@ app.listen(PORT, () => {
             console.log("Updated available seats for flights");
         } else {
             console.log("Reservations already exist, skipping reservation creation");
-        }
-
-        // Create seats if they don't exist
-        const existingSeats = await Seat.find({});
-        if (existingSeats.length === 0) {
-            const flights = await Flight.find({});
-            for (let flight of flights) {
-                const seats = [];
-                const letters = ["A", "B", "C", "D", "E", "F"];
-                for (let row = 1; row <= 10; row++) {
-                    for (let letter of letters) {
-                        seats.push({
-                            flight_id: flight._id,
-                            seatNumber: row + letter,
-                            status: "Unoccupied"
-                        });
-                    }
-                }
-                // Mark some seats as occupied
-                if (seats.length > 0) {
-                    seats[1].status = "Occupied";
-                    seats[5].status = "Occupied";
-                    seats[10].status = "Occupied";
-                }
-                await Seat.insertMany(seats);
-            }
-            console.log("Sample Seats created.");
-        } else {
-            console.log("Seats already exist, skipping seat creation");
         }
 
     } catch (err) {
