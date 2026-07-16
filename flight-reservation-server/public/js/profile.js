@@ -47,11 +47,13 @@ $(document).ready(function() {
     // ============================================================
     // AVATAR UPLOAD
     // ============================================================
-    $('#uploadBtn').on('click', function() {
+    $('#uploadBtn').on('click', function(e) {
+        e.preventDefault();
         $('#avatarUpload').click();
     });
 
     $('#avatarUpload').on('change', function(e) {
+        e.preventDefault();
         var file = e.target.files[0];
         if (!file) {
             return;
@@ -70,7 +72,8 @@ $(document).ready(function() {
             return;
         }
 
-        $('#uploadBtn').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Uploading...');
+        var uploadBtn = $('#uploadBtn');
+        uploadBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Uploading...');
 
         var reader = new FileReader();
         reader.onload = function(event) {
@@ -86,19 +89,16 @@ $(document).ready(function() {
                 success: function(response) {
                     if (response.success) {
                         showToast('Profile picture updated successfully!', 'success');
-                        setTimeout(function() {
-                            window.location.reload();
-                        }, 1500);
                     } else {
                         showToast(response.message || 'Error updating profile picture', 'error');
                     }
-                    $('#uploadBtn').prop('disabled', false).html('<i class="fas fa-camera me-1"></i> Upload photo');
+                    uploadBtn.prop('disabled', false).html('<i class="fas fa-camera me-1"></i> Upload photo');
                 },
                 error: function(xhr) {
                     var response = xhr.responseJSON;
                     var errorMsg = response ? response.message : 'Error uploading profile picture';
                     showToast(errorMsg, 'error');
-                    $('#uploadBtn').prop('disabled', false).html('<i class="fas fa-camera me-1"></i> Upload photo');
+                    uploadBtn.prop('disabled', false).html('<i class="fas fa-camera me-1"></i> Upload photo');
                 }
             });
         };
@@ -106,34 +106,32 @@ $(document).ready(function() {
     });
 
     // ============================================================
-    // EDIT PROFILE FORM SUBMISSION - FIXED
+    // EDIT PROFILE FORM SUBMISSION
     // ============================================================
     $('#editProfileForm').on('submit', function(e) {
         e.preventDefault();
-        console.log('Form submitted!');
 
-        var firstName = $('#firstName').val().trim();
-        var lastName = $('#lastName').val().trim();
-        var phone = $('#phone').val().trim();
-        var dateOfBirth = $('#dateOfBirth').val();
-        var passportNumber = $('#passportNumber').val().trim().toUpperCase();
-        var nationality = $('#nationality').val().trim();
+        var full_name = $('#full_name').val().trim();
+        var contact_num = $('#contact_num').val().trim();
+        var passport_num = $('#passport_num').val().trim().toUpperCase();
+        var nationality = $('#nationality').val();
+        var birth_date = $('#birth_date').val();
         var gender = $('#gender').val();
+        var type = $('#type').val();
+        var emergency_contact = $('#emergency_contact').val().trim();
 
-        console.log('Form data:', { firstName, lastName, phone, dateOfBirth, passportNumber, nationality, gender });
-
-        if (!firstName || !lastName || !phone) {
-            showToast('First name, last name, and phone are required', 'error');
+        if (!full_name || !contact_num || !passport_num || !nationality || !birth_date || !gender) {
+            showToast('All required fields must be filled', 'error');
             return;
         }
 
         var phoneRegex = /^\+?[0-9\s\-\(\)]{7,20}$/;
-        if (!phoneRegex.test(phone)) {
+        if (!phoneRegex.test(contact_num)) {
             showToast('Please enter a valid phone number (e.g., +63 912 345 6789)', 'error');
             return;
         }
 
-        if (passportNumber && !/^[A-Z0-9]{6,10}$/.test(passportNumber)) {
+        if (!/^[A-Z0-9]{6,10}$/.test(passport_num)) {
             showToast('Passport number must be 6-10 alphanumeric characters', 'error');
             return;
         }
@@ -141,67 +139,35 @@ $(document).ready(function() {
         var submitBtn = $(this).find('button[type="submit"]');
         submitBtn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Saving...');
 
-        // FIRST TEST THE TEST ROUTE
         $.ajax({
-            url: '/profile/test',
+            url: '/profile',
             method: 'PUT',
             contentType: 'application/json',
             data: JSON.stringify({
-                firstName: firstName,
-                lastName: lastName,
-                phone: phone,
-                dateOfBirth: dateOfBirth,
-                passportNumber: passportNumber,
+                full_name: full_name,
+                contact_num: contact_num,
+                passport_num: passport_num,
                 nationality: nationality,
-                gender: gender
+                birth_date: birth_date,
+                gender: gender,
+                type: type,
+                emergency_contact: emergency_contact
             }),
             success: function(response) {
-                console.log('Test route response:', response);
                 if (response.success) {
-                    showToast('Test route works! Now trying real update...', 'success');
-                    
-                    // NOW DO THE REAL UPDATE
-                    $.ajax({
-                        url: '/profile',
-                        method: 'PUT',
-                        contentType: 'application/json',
-                        data: JSON.stringify({
-                            firstName: firstName,
-                            lastName: lastName,
-                            phone: phone,
-                            dateOfBirth: dateOfBirth,
-                            passportNumber: passportNumber,
-                            nationality: nationality,
-                            gender: gender
-                        }),
-                        success: function(response) {
-                            console.log('Real update response:', response);
-                            if (response.success) {
-                                showToast('Profile updated successfully!', 'success');
-                                setTimeout(function() {
-                                    window.location.href = '/profile';
-                                }, 1500);
-                            } else {
-                                showToast(response.message || 'Error updating profile', 'error');
-                                submitBtn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Save Changes');
-                            }
-                        },
-                        error: function(xhr) {
-                            console.log('Real update error:', xhr);
-                            var response = xhr.responseJSON;
-                            var errorMsg = response ? response.message : 'Error updating profile';
-                            showToast(errorMsg, 'error');
-                            submitBtn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Save Changes');
-                        }
-                    });
+                    showToast('Profile updated successfully!', 'success');
+                    setTimeout(function() {
+                        window.location.href = '/profile';
+                    }, 1500);
                 } else {
-                    showToast(response.message || 'Test route failed', 'error');
+                    showToast(response.message || 'Error updating profile', 'error');
                     submitBtn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Save Changes');
                 }
             },
             error: function(xhr) {
-                console.log('Test route error:', xhr);
-                showToast('Test route failed. Check if server is running.', 'error');
+                var response = xhr.responseJSON;
+                var errorMsg = response ? response.message : 'Error updating profile';
+                showToast(errorMsg, 'error');
                 submitBtn.prop('disabled', false).html('<i class="fas fa-save me-1"></i> Save Changes');
             }
         });
@@ -210,14 +176,15 @@ $(document).ready(function() {
     // ============================================================
     // CANCEL BUTTON
     // ============================================================
-    $('#cancelBtn').on('click', function() {
+    $('#cancelBtn').on('click', function(e) {
+        e.preventDefault();
         window.location.href = '/profile';
     });
 
     // ============================================================
     // REAL-TIME VALIDATION
     // ============================================================
-    $('#phone').on('blur', function() {
+    $('#contact_num').on('blur', function() {
         var phone = $(this).val().trim();
         var phoneRegex = /^\+?[0-9\s\-\(\)]{7,20}$/;
         if (phone && !phoneRegex.test(phone)) {
@@ -227,7 +194,7 @@ $(document).ready(function() {
         }
     });
 
-    $('#passportNumber').on('blur', function() {
+    $('#passport_num').on('blur', function() {
         var passport = $(this).val().trim().toUpperCase();
         if (passport && !/^[A-Z0-9]{6,10}$/.test(passport)) {
             $(this).addClass('is-invalid');
@@ -289,8 +256,8 @@ $(document).ready(function() {
                     }, 1500);
                 } else {
                     showToast(response.message || 'Error saving passenger', 'error');
+                    submitBtn.prop('disabled', false).html('<i class="fas fa-plus me-1"></i> Add Passenger');
                 }
-                submitBtn.prop('disabled', false).html('<i class="fas fa-plus me-1"></i> Add Passenger');
             },
             error: function(xhr) {
                 var response = xhr.responseJSON;
@@ -387,8 +354,8 @@ $(document).ready(function() {
                     }, 1500);
                 } else {
                     showToast(response.message || 'Error adding payment method', 'error');
+                    submitBtn.prop('disabled', false).html('<i class="fas fa-plus me-1"></i> Add Payment');
                 }
-                submitBtn.prop('disabled', false).html('<i class="fas fa-plus me-1"></i> Add Payment');
             },
             error: function(xhr) {
                 var response = xhr.responseJSON;

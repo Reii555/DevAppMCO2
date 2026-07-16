@@ -32,31 +32,39 @@
                 <div class="profile-info">
                     <div class="info-row">
                         <label>Full Name</label>
-                        <p>{{user.firstName}} {{user.lastName}}</p>
+                        <p>{{user.full_name}}</p>
                     </div>
                     <div class="info-row">
                         <label>Email</label>
                         <p>{{user.email}}</p>
                     </div>
                     <div class="info-row">
-                        <label>Phone</label>
-                        <p>{{user.phone}}</p>
-                    </div>
-                    <div class="info-row">
-                        <label>Date of Birth</label>
-                        <p>{{formatDate user.dateOfBirth}}</p>
+                        <label>Contact Number</label>
+                        <p>{{user.contact_num}}</p>
                     </div>
                     <div class="info-row">
                         <label>Passport Number</label>
-                        <p>{{user.passportNumber}}</p>
+                        <p>{{user.passport_num}}</p>
                     </div>
                     <div class="info-row">
                         <label>Nationality</label>
                         <p>{{user.nationality}}</p>
                     </div>
                     <div class="info-row">
+                        <label>Date of Birth</label>
+                        <p>{{formatDate user.birth_date}}</p>
+                    </div>
+                    <div class="info-row">
                         <label>Gender</label>
                         <p>{{user.gender}}</p>
+                    </div>
+                    <div class="info-row">
+                        <label>Passenger Type</label>
+                        <p>{{user.type}}</p>
+                    </div>
+                    <div class="info-row">
+                        <label>Emergency Contact</label>
+                        <p>{{user.emergency_contact}}</p>
                     </div>
                     <div class="info-row">
                         <label>Member Since</label>
@@ -70,7 +78,12 @@
                     </a>
                 </div>
             </div>
+        </div>
+    </div>
 
+    <!-- Right Column -->
+    <div class="col-lg-7">
+        <div class="profile-card p-4">
             <!-- Saved Passengers -->
             <div class="mb-4">
                 <div class="section-title">Saved Passengers</div>
@@ -168,12 +181,9 @@
                 {{/if}}
             </div>
         </div>
-    </div>
 
-    <!-- Right Column -->
-    <div class="col-lg-7">
-        <div class="profile-card p-4">
-            <!-- Payment Methods -->
+        <!-- Payment Methods -->
+        <div class="profile-card p-4 mt-4">
             <div class="mb-4">
                 <div class="section-title">Payment Methods</div>
                 
@@ -186,8 +196,8 @@
                                 <option value="">Card Type</option>
                                 <option value="VISA">VISA</option>
                                 <option value="Mastercard">Mastercard</option>
-                                <option value="Amex">Amex</option>
-                                <option value="Discover">Discover</option>
+                                <option value="Maya">Maya</option>
+                                <option value="GoTyme">GoTyme</option>
                             </select>
                         </div>
                         <div class="col-6">
