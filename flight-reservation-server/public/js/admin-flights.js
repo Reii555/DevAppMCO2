@@ -78,9 +78,7 @@ function renderFlights(data) {
                 <td>${flight.airline}</td>
                 <td>${flight.cabinClass}</td>
                 <td>${flight.origin}</td>
-                <td>${flight.departureDate}</td>
                 <td>${flight.departureTime}</td>
-                <td>${flight.arrivalDate}</td>
                 <td>${flight.arrivalTime}</td>
                 <td>${flight.availableSeats}</td>
                 <td>₱${flight.basePrice}</td>
@@ -88,6 +86,7 @@ function renderFlights(data) {
 
             </tr>
         `;
+        
     });
 
     $("#flightsTableBody").html(html);
@@ -115,6 +114,8 @@ function applyFilters() {
         },
 
         success: function (flights) {
+
+            console.log("Flights:", flights); // ADDED FOR DEBUG !!
 
             filteredFlights = flights;
 
@@ -378,6 +379,14 @@ $(document).ready(function () {
 
         if (!validateFlightForm()) { return; }
 
+        const departureDate = $("#departureDate").val();
+        const departureTime = $("#departureTime").val();
+        const departureDateTime = new Date(`${departureDate}T${departureTime}`);
+
+        const arrivalDate = $("#arrivalDate").val();
+        const arrivalTime = $("#arrivalTime").val();
+        const arrivalDateTime = new Date(`${arrivalDate}T${arrivalTime}`);
+
 
         const flightData = {
 
@@ -386,13 +395,19 @@ $(document).ready(function () {
             cabinClass: $("#cabinClass").val(),
             origin: $("#origin").val().trim(),
             destination: $("#destination").val().trim(),
-            departureDate: $("#departureDate").val(),
-            departureTime: $("#departureTime").val(),
-            arrivalDate: $("#arrivalDate").val(),
-            arrivalTime: $("#arrivalTime").val(),
+
+            departureTime: departureDateTime,
+            arrivalTime: arrivalDateTime,
+
             availableSeats: Number($("#availableSeats").val()),
             basePrice: Number($("#basePrice").val()),
-            status: $("#status").val()
+            status: $("#status").val(),
+
+            duration: $("#duration").val(),
+            tripType: $("#tripType").val(),
+            checkedIn: Number($("#checkedIn").val()),
+            carryOn: Number($("#carryOn").val())
+
         };
 
         console.log("Saving flight:", flightData);

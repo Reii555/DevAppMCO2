@@ -9,19 +9,19 @@ router.get("/", async (req, res) => {
 
     try {
 
-        const flights = await Flight.find();
+        const flights = await Flight.find().lean();
 
-        const airlines = [
+        /*const airlines = [
             ...new Set(
                 flights.map(flight => flight.airline)
             )
-        ];
+        ];*/
 
         res.render("admin-flights", {
             title: "Flights",
             layout: "main-admin",
-            flights: flights,
-            airlines: airlines
+            flights/*,
+            airlines: airlines*/
         });
 
     } catch (error) {
