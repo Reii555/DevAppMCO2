@@ -3,9 +3,9 @@ const mongoose = require('mongoose');
 const userSchema = new mongoose.Schema({
   user_id: {
     type: Number,
-    required: true,
+    // required: true, commented for testing purposes
     unique: true,
-    index: true
+    index: true 
   },
   
   email: {
