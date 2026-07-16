@@ -3,6 +3,40 @@ const Passenger = require('../models/Passenger');
 const Reservation = require('../models/Reservation');
 
 // ============================================================
+// HELPER FUNCTION - Check duplicate passport
+// ============================================================
+
+async function isPassportDuplicate(passportNumber, excludeUserId) {
+    const passport = passportNumber.toUpperCase().trim();
+    
+    const existingPassenger = await Passenger.findOne({
+        passport_num: passport,
+        user_id: { $ne: excludeUserId }
+    });
+    
+    if (existingPassenger) {
+        return true;
+    }
+    
+    const allPassengers = await Passenger.find({
+        user_id: { $ne: excludeUserId }
+    });
+    
+    for (let p of allPassengers) {
+        if (p.savedPassengers && p.savedPassengers.length > 0) {
+            const found = p.savedPassengers.some(function(sp) {
+                return sp.passportNumber && sp.passportNumber.toUpperCase() === passport;
+            });
+            if (found) {
+                return true;
+            }
+        }
+    }
+    
+    return false;
+}
+
+// ============================================================
 // PAGE ROUTES
 // ============================================================
 
@@ -12,17 +46,20 @@ exports.showProfilePage = async (req, res) => {
             return res.redirect('/login');
         }
 
+        // Get the passenger data for the logged-in user
         let passenger = await Passenger.findOne({ user_id: req.session.user._id });
         
         if (!passenger) {
-            const newPassenger = new Passenger({
+            // Create passenger if doesn't exist
+            passenger = new Passenger({
                 user_id: req.session.user._id,
-                full_name: req.session.user.full_name || 'User',
+                full_name: 'User',
                 contact_num: req.session.user.phone || 'N/A',
-                passport_num: 'PENDING' + Math.random().toString(36).substring(2, 7).toUpperCase(),
+                passport_num: 'PENDING',
                 nationality: 'Filipino',
                 birth_date: new Date('2000-01-01'),
                 gender: 'Prefer not to say',
+                type: 'Adult',
                 emergency_contact: 'N/A',
                 savedPassengers: [],
                 paymentMethods: [],
@@ -33,10 +70,10 @@ exports.showProfilePage = async (req, res) => {
                     smsAlerts: true
                 }
             });
-            await newPassenger.save();
-            passenger = newPassenger;
+            await passenger.save();
         }
 
+        // Ensure arrays exist
         if (!passenger.savedPassengers) {
             passenger.savedPassengers = [];
         }
@@ -52,21 +89,25 @@ exports.showProfilePage = async (req, res) => {
             };
         }
 
+        // Get user's reservations with passenger data
         let reservations = [];
         try {
             reservations = await Reservation.find({ userId: req.session.user._id })
                 .populate('flightId')
+                .populate('passengerId')
                 .sort({ createdAt: -1 })
                 .limit(5);
         } catch (err) {
             console.log('No reservations found');
         }
 
+        // Combine user and passenger data for the view
         const userData = {
             _id: req.session.user._id,
             email: req.session.user.email,
             phone: req.session.user.phone,
             role: req.session.user.role,
+            // Passenger data
             full_name: passenger.full_name || '',
             contact_num: passenger.contact_num || '',
             passport_num: passenger.passport_num || '',
@@ -76,6 +117,7 @@ exports.showProfilePage = async (req, res) => {
             type: passenger.type || 'Adult',
             emergency_contact: passenger.emergency_contact || '',
             profilePicture: passenger.profilePicture || null,
+            // Arrays from Passenger
             savedPassengers: passenger.savedPassengers || [],
             paymentMethods: passenger.paymentMethods || [],
             notificationPreferences: passenger.notificationPreferences || {
@@ -113,18 +155,18 @@ exports.showEditProfilePage = async (req, res) => {
         let passenger = await Passenger.findOne({ user_id: req.session.user._id });
         
         if (!passenger) {
-            const newPassenger = new Passenger({
+            passenger = new Passenger({
                 user_id: req.session.user._id,
-                full_name: req.session.user.full_name || 'User',
+                full_name: 'User',
                 contact_num: req.session.user.phone || 'N/A',
-                passport_num: 'PENDING' + Math.random().toString(36).substring(2, 7).toUpperCase(),
+                passport_num: 'PENDING',
                 nationality: 'Filipino',
                 birth_date: new Date('2000-01-01'),
                 gender: 'Prefer not to say',
+                type: 'Adult',
                 emergency_contact: 'N/A'
             });
-            await newPassenger.save();
-            passenger = newPassenger;
+            await passenger.save();
         }
 
         const userData = {
@@ -157,42 +199,6 @@ exports.showEditProfilePage = async (req, res) => {
         });
     }
 };
-
-// ============================================================
-// HELPER FUNCTION - Check for duplicate passport
-// ============================================================
-
-async function isPassportDuplicate(passportNumber, excludeUserId) {
-    const passport = passportNumber.toUpperCase().trim();
-    
-    // Check if any passenger has this passport number (excluding the current user)
-    const existingPassenger = await Passenger.findOne({
-        passport_num: passport,
-        user_id: { $ne: excludeUserId }
-    });
-    
-    if (existingPassenger) {
-        return true;
-    }
-    
-    // Check if any saved passenger has this passport number
-    const allPassengers = await Passenger.find({
-        user_id: { $ne: excludeUserId }
-    });
-    
-    for (let p of allPassengers) {
-        if (p.savedPassengers && p.savedPassengers.length > 0) {
-            const found = p.savedPassengers.some(function(sp) {
-                return sp.passportNumber && sp.passportNumber.toUpperCase() === passport;
-            });
-            if (found) {
-                return true;
-            }
-        }
-    }
-    
-    return false;
-}
 
 // ============================================================
 // Profile using AJAX
@@ -280,7 +286,6 @@ exports.updateProfile = async (req, res) => {
         });
     } catch (error) {
         console.error('Update profile error:', error);
-        // Check if it's a duplicate key error
         if (error.code === 11000) {
             return res.status(400).json({
                 success: false,
@@ -317,12 +322,13 @@ exports.uploadProfilePicture = async (req, res) => {
         if (!passenger) {
             passenger = new Passenger({
                 user_id: req.session.user._id,
-                full_name: req.session.user.full_name || 'User',
+                full_name: 'User',
                 contact_num: req.session.user.phone || 'N/A',
-                passport_num: 'PENDING' + Math.random().toString(36).substring(2, 7).toUpperCase(),
+                passport_num: 'PENDING',
                 nationality: 'Filipino',
                 birth_date: new Date('2000-01-01'),
                 gender: 'Prefer not to say',
+                type: 'Adult',
                 emergency_contact: 'N/A',
                 profilePicture: profilePicture
             });
@@ -366,14 +372,23 @@ exports.getProfileData = async (req, res) => {
 
         const recentReservations = await Reservation.find({ userId: req.session.user._id })
             .populate('flightId')
+            .populate('passengerId')
             .sort({ createdAt: -1 })
             .limit(3);
+
+        // Get passenger name from reservation
+        var passengerName = 'Unknown Passenger';
+        if (recentReservations.length > 0 && recentReservations[0].passengerId) {
+            passengerName = recentReservations[0].passengerId.full_name || 'Unknown Passenger';
+        } else if (passenger) {
+            passengerName = passenger.full_name || 'Unknown Passenger';
+        }
 
         const userData = {
             _id: req.session.user._id,
             email: req.session.user.email,
             phone: req.session.user.phone,
-            full_name: passenger.full_name || '',
+            full_name: passengerName,
             contact_num: passenger.contact_num || '',
             passport_num: passenger.passport_num || '',
             nationality: passenger.nationality || 'Filipino',
@@ -463,7 +478,6 @@ exports.addSavedPassenger = async (req, res) => {
             });
         }
 
-        // Check for duplicate passport number
         const isDuplicate = await isPassportDuplicate(formattedPassport, req.session.user._id);
         if (isDuplicate) {
             return res.status(400).json({
@@ -477,12 +491,13 @@ exports.addSavedPassenger = async (req, res) => {
         if (!passenger) {
             passenger = new Passenger({
                 user_id: req.session.user._id,
-                full_name: req.session.user.full_name || 'User',
+                full_name: 'User',
                 contact_num: req.session.user.phone || 'N/A',
-                passport_num: 'PENDING' + Math.random().toString(36).substring(2, 7).toUpperCase(),
+                passport_num: 'PENDING',
                 nationality: 'Filipino',
                 birth_date: new Date('2000-01-01'),
                 gender: 'Prefer not to say',
+                type: 'Adult',
                 emergency_contact: 'N/A',
                 savedPassengers: []
             });
@@ -493,7 +508,6 @@ exports.addSavedPassenger = async (req, res) => {
             passenger.savedPassengers = [];
         }
 
-        // Also check within the user's own saved passengers
         const ownDuplicate = passenger.savedPassengers.some(function(sp) {
             return sp.passportNumber && sp.passportNumber.toUpperCase() === formattedPassport;
         });
@@ -633,12 +647,13 @@ exports.addPaymentMethod = async (req, res) => {
         if (!passenger) {
             passenger = new Passenger({
                 user_id: req.session.user._id,
-                full_name: req.session.user.full_name || 'User',
+                full_name: 'User',
                 contact_num: req.session.user.phone || 'N/A',
-                passport_num: 'PENDING' + Math.random().toString(36).substring(2, 7).toUpperCase(),
+                passport_num: 'PENDING',
                 nationality: 'Filipino',
                 birth_date: new Date('2000-01-01'),
                 gender: 'Prefer not to say',
+                type: 'Adult',
                 emergency_contact: 'N/A',
                 paymentMethods: []
             });
@@ -797,12 +812,13 @@ exports.updateNotificationPreferences = async (req, res) => {
         if (!passenger) {
             passenger = new Passenger({
                 user_id: req.session.user._id,
-                full_name: req.session.user.full_name || 'User',
+                full_name: 'User',
                 contact_num: req.session.user.phone || 'N/A',
-                passport_num: 'PENDING' + Math.random().toString(36).substring(2, 7).toUpperCase(),
+                passport_num: 'PENDING',
                 nationality: 'Filipino',
                 birth_date: new Date('2000-01-01'),
                 gender: 'Prefer not to say',
+                type: 'Adult',
                 emergency_contact: 'N/A'
             });
             await passenger.save();
