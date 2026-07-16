@@ -2,6 +2,7 @@ const Flight = require('../models/Flight');
 const Passenger = require('../models/Passenger');
 const Seat = require("../models/Seat");
 const Meal = require("../models/Meal");
+const Reservation = require("../models/Reservation");
 
 exports.showBookingPage = async (req, res) => {
     try {
@@ -21,21 +22,24 @@ exports.showBookingPage = async (req, res) => {
 exports.savePassenger = async (req, res) => {
     try {
 
-        const passenger = new Passenger(req.body);
+        const passenger = await Passenger.create({
 
-        await passenger.save();
-
-        res.json({
-            success: true
+            user_id: req.body.user_id,
+            full_name: req.body.full_name,
+            contact_num: req.body.contact_num,
+            passport_num: req.body.passport_num,
+            nationality: req.body.nationality,
+            birth_date: req.body.birth_date,
+            gender: req.body.gender,
+            emergency_contact: req.body.emergency_contact
         });
 
-    } catch(err){
+        res.json(passenger);
+
+    } catch(err) {
 
         console.log(err);
-
-        res.status(500).json({
-            success:false
-        });
+        res.status(500).json(err);
 
     }
 };
@@ -73,4 +77,45 @@ exports.getFlightPrice = async (req, res) => {
     res.json({
         basePrice: flight.basePrice
     });
+};
+
+exports.bookFlight = async (req, res) => {
+
+    try {
+
+        const reservation = await Reservation.create({
+
+            userId: req.body.userId,
+            passengerId: req.body.passengerId,
+            flightId: req.body.flightId,
+            seatNumber: req.body.seatNumber,
+            mealPreference: req.body.mealPreference,
+            mealPrice: req.body.mealPrice,
+            extraServices: req.body.extraServices,
+            extraServicesPrice: req.body.extraServicesPrice,
+            booking_ref: Math.random().toString(36).substring(2,10).toUpperCase(),
+            trip_type: req.body.trip_type,
+            status: "Pending",
+            basePrice: req.body.basePrice,
+            total_price: req.body.total_price
+
+        });
+
+        await Passenger.findByIdAndUpdate(
+
+            req.body.passengerId,{reservation_id: reservation._id}
+
+        );
+
+        res.json(reservation);
+
+    }
+
+    catch(err){
+
+        console.log(err);
+        res.status(500).json(err);
+
+    }
+
 };

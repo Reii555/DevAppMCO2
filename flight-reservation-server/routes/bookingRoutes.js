@@ -4,6 +4,7 @@ const router = express.Router();
 const bookingController = require('../controllers/bookingController');
 
 router.post("/save", bookingController.savePassenger);
+router.post("/reserve", bookingController.bookFlight);
 router.get("/meals", bookingController.getMeals);
 router.get("/:id/seats", bookingController.getSeats);
 router.get("/:id/price", bookingController.getFlightPrice);
