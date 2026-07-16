@@ -108,6 +108,7 @@
                         <div class="row g-3 mb-3">
 
                             <!-- Passenger -->
+                            <!--
                             <div class="col-md-6">
                                 <label class="form-label">Passenger</label>
                                 <select class="form-select" name="passenger">
@@ -117,6 +118,7 @@
                                     <option>Infants</option>
                                 </select>
                             </div>
+                            -->
 
                             <!-- Cabin Class -->
                             <div class="col-md-6">
@@ -161,6 +163,7 @@
                                     <input class="form-check-input" type="checkbox" name="directFlights" value="true">
                                     <label class="form-check-label ms-2">Direct Flights Only</label>
 
+                                    <!--
                                     <div class="form-check form-switch mt-3 mb-3">
                                         <input class="form-check-input" type="checkbox" role="switch" id="flexDates">
                                         <label class="form-check-label">Flexible Dates</label>
@@ -175,7 +178,7 @@
                                     <div class="d-flex justify-content-between small mt-2">
                                         <span>Php1,000</span>
                                         <span>Php100,000</span>
-                                    </div>
+                                    </div> -->
 
                                 </div>
 
@@ -202,6 +205,7 @@
                                 <h5 class="mb-3">Filters</h5>
 
                                 <!-- Airlines Filter -->
+                                <!--
                                 <label class="form-label">Airlines</label>
 
                                 <div class="form-check">
@@ -230,68 +234,75 @@
                                 </div>
 
                                 <br>
+                                -->
                                 
-                                <!-- Price Ranges Filter -->
-                                <label class="form-label">Price Range</label>
-                                <div class="mb-2">
-                                    <label class="form-label small">Minimum Price</label>
-                                    <input type="number" class="form-control" placeholder="₱1,000">
-                                </div>
+                                <form id="filterForm">
+                                    <!-- Price Ranges Filter -->
+                                    <label class="form-label">Price Range</label>
+                                    <div class="mb-2">
+                                        <label class="form-label small">Minimum Price</label>
+                                        <input type="number" class="form-control" placeholder="₱1,000" id="minPrice" name="minPrice">
+                                    </div>
 
-                                <div>
-                                    <label class="form-label small">Maximum Price</label>
-                                    <input type="number" class="form-control" placeholder="₱100,000">
-                                </div>
-                                <br>
+                                    <div>
+                                        <label class="form-label small">Maximum Price</label>
+                                        <input type="number" class="form-control" placeholder="₱100,000" id="maxPrice" name="maxPrice">
+                                    </div>
+                                    <br>
 
-                                <!-- Stops Filter -->
-                                <label class="form-label">Stops</label>
+                                    <!-- Stops Filter -->
+                                    <label class="form-label">Stops</label>
 
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox">
-                                    <label class="form-check-label">Direct</label>
-                                </div>
+                                    <div class="form-check">
+                                        <input type="radio" name="stops" value="0">
+                                        <label class="form-check-label">Direct</label>
+                                    </div>
 
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox">
-                                    <label class="form-check-label">1 Stop</label>
-                                </div>
+                                    <div class="form-check">
+                                        <input type="radio" name="stops" value="1">
+                                        <label class="form-check-label">1 Stop</label>
+                                    </div>
 
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox">
-                                    <label class="form-check-label">2 Stops</label>
-                                </div>
-                                <br>
+                                    <div class="form-check">
+                                        <input type="radio" name="stops" value="2">
+                                        <label class="form-check-label">2 Stops</label>
+                                    </div>
+                                    <br>
 
-                                <!-- Departure Schedules Filter -->
-                                <label class="form-label">Departure Schedules</label>
+                                    <!-- Departure Schedules Filter -->
+                                    <label class="form-label">Departure Schedules</label>
 
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox">
-                                    <label class="form-check-label">Morning</label>
-                                    <label class="form-check-label small text-secondary">(6:00AM - 12:00PM)</label>
-                                    
-                                </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox">
+                                        <label class="form-check-label">Morning</label>
+                                        <label class="form-check-label small text-secondary">(6:00AM - 12:00PM)</label>
+                                        
+                                    </div>
 
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox">
-                                    <label class="form-check-label">Afternoon</label>
-                                    <label class="form-check-label small text-secondary">(12:00PM - 6:00PM)</label>
-                                </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox">
+                                        <label class="form-check-label">Afternoon</label>
+                                        <label class="form-check-label small text-secondary">(12:00PM - 6:00PM)</label>
+                                    </div>
 
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox">
-                                    <label class="form-check-label">Night</label>
-                                    <label class="form-check-label small text-secondary">(6:00PM - 12:00AM)</label>
-                                </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox">
+                                        <label class="form-check-label">Night</label>
+                                        <label class="form-check-label small text-secondary">(6:00PM - 12:00AM)</label>
+                                    </div>
 
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox">
-                                    <label class="form-check-label">Early Morning</label>
-                                    <label class="form-check-label small text-secondary">(12:00PM - 6:00AM)</label>
-                                </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox">
+                                        <label class="form-check-label">Early Morning</label>
+                                        <label class="form-check-label small text-secondary">(12:00PM - 6:00AM)</label>
+                                    </div>
 
+                                    <button type="submit" id="filtersBtn" class="btn btn-success w-100 mt-4">
+                                        Apply Filters
+                                    </button>
+                                </form>
                             </div>
+                            
                         </div>
 
                         <!-- Results Panel (RIGHT COLUMN) -->

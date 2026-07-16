@@ -95,15 +95,11 @@ exports.bookFlight = async (req, res) => {
             mealPrice: req.body.mealPrice,
             extraServices: req.body.extraServices,
             extraServicesPrice: req.body.extraServicesPrice,
-            booking_ref: Math.random().toString(36).substring(2,10).toUpperCase(),
+            booking_ref: req.body.booking_ref,
             status: "Confirmed",
             total_price: req.body.total_price
 
         });
-
-        console.log("Flight:", req.body.flightId);
-        console.log("Seat:", req.body.seatNumber);
-        console.log("Reservation ID:", reservation._id);
 
         const updatedSeat = await Seat.findOneAndUpdate(
             {
@@ -119,7 +115,6 @@ exports.bookFlight = async (req, res) => {
             }
         );
 
-        console.log(updatedSeat);
 
         await Passenger.findByIdAndUpdate(
             req.body.passengerId,{reservation_id: reservation._id}

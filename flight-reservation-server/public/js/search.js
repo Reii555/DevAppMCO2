@@ -1,6 +1,5 @@
 $("#searchBtn").click(function (e) {
 
-
     e.preventDefault();
 
     $.ajax({

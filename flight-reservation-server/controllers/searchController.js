@@ -66,7 +66,19 @@ exports.showFlights = async (req, res) => {
     try {
 
         // search filter
-        const { origin, destination, departureDate, returnDate, tripType, cabinClass, airline, directFlights, sort} = req.body;
+        const {
+            origin,
+            destination,
+            departureDate,
+            returnDate,
+            tripType,
+            cabinClass,
+            airline,
+            directFlights,
+            minPrice,
+            maxPrice,
+            stops
+        } = req.body;
 
         const query = {};
 
@@ -124,9 +136,22 @@ exports.showFlights = async (req, res) => {
             query.layoversCount = 0;
         }
 
-        // flexible dates
+        // price filter
+        if (minPrice || maxPrice) {
+            query.basePrice = {};
 
-        // price range
+            if (minPrice)
+                query.basePrice.$gte = Number(minPrice);
+
+            if (maxPrice)
+                query.basePrice.$lte = Number(maxPrice);
+
+        }
+
+        // stops filter
+        if (stops) {
+            query.layoversCount = Number(stops);
+        }
 
         const flights = await Flight.find(query).lean();
 

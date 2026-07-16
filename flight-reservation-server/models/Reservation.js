@@ -72,7 +72,6 @@ const reservationSchema = new mongoose.Schema({
   booking_ref: {
     type: String,
     required: [true, 'Booking reference is required'],
-    unique: true,
     uppercase: true,
     maxlength: [10, 'Booking reference must be up to 10 chars only']
   },

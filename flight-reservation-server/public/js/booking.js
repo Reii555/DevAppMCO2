@@ -1,6 +1,6 @@
 let passengerCount = 1;
 let baseFlightPrice = 0;
-let passengerId = "";
+let passengerIds = [];
 
 // FUNCTIONS
 // Passenger Validation
@@ -271,31 +271,31 @@ $(document).ready(function(){
 
                     <div class="col-md-6">
                         <label class="form-label">Full Name</label>
-                        <input type="text" class="form-control" id="fullName" name="fullName">
+                        <input type="text" class="form-control fullName" name="fullName">
                         <div class="text-danger small" id="nameError"></div>
                     </div>
 
                     <div class="col-md-6">
                         <label class="form-label">Email Address</label>
-                        <input type="email" class="form-control" id="email" name="email">
+                        <input type="email" class="form-control email" name="email">
                         <div class="text-danger small" id="emailError"></div>
                     </div>
 
                     <div class="col-md-6">
                         <label class="form-label">Contact Number</label>
-                        <input type="tel" class="form-control" id="contactNum" name="contactNum">
+                        <input type="tel" class="form-control contactNum" name="contactNum">
                         <div class="text-danger small" id="contactError"></div>
                     </div>
 
                     <div class="col-md-6">
                         <label class="form-label">Passport Number</label>
-                        <input type="text" class="form-control" id="passportNum" name="passportNum">
+                        <input type="text" class="form-control passportNum" name="passportNum">
                         <div class="text-danger small" id="passportError"></div>
                     </div>
 
                     <div class="col-md-4">
                         <label class="form-label">Nationality</label>
-                        <select class="form-select" id="nationality" name="nationality">
+                        <select class="form-select nationality" name="nationality">
                             <option value="">Select Nationality</option>
                             <option>Filipino</option>
                         </select>
@@ -304,13 +304,13 @@ $(document).ready(function(){
 
                     <div class="col-md-4">
                         <label class="form-label">Date of Birth</label>
-                        <input type="date" class="form-control" id="birthDate" name="birthDate">
+                        <input type="date" class="form-control birthDate" name="birthDate">
                         <div class="text-danger small" id="birthDateError"></div>
                     </div>
 
                     <div class="col-md-4">
                         <label class="form-label">Gender</label>
-                        <select class="form-select" id="gender" name="gender">
+                        <select class="form-select gender" name="gender">
                             <option value="">Select Gender</option>
                             <option>Male</option>
                             <option>Female</option>
@@ -329,25 +329,25 @@ $(document).ready(function(){
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label">Full Name</label>
-                            <input type="text" class="form-control" id="name_emergency">
+                            <input type="text" class="form-control name_emergency">
                             <div class="text-danger small" id="name_emError"></div>
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label">Relationship</label>
-                            <input type="text" class="form-control" id="rel_emergency">
+                            <input type="text" class="form-control rel_emergency">
                             <div class="text-danger small" id="rel_emError"></div>
                         </div>
 
                          <div class="col-md-6">
                             <label class="form-label">Email Address</label>
-                            <input type="email" class="form-control" id="email_emergency">
+                            <input type="email" class="form-control email_emergency">
                             <div class="text-danger small" id="email_emError"></div>
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label">Contact Number</label>
-                            <input type="tel" class="form-control" id="contact_emergency">
+                            <input type="tel" class="form-control contact_emergency">
                             <div class="text-danger small" id="contact_emError"></div>
                         </div>
 
@@ -355,27 +355,25 @@ $(document).ready(function(){
 
                 </div>
 
-                <button type="button" class="btn btn-primary" id="savePassenger">Save Passenger</button>
+                <button type="button" class="btn btn-primary savePassenger">Save Passenger</button>
 
         `);
 
     });
 
     // if save passenger button is pressed but data is invalid/data is valid
-    $("#savePassenger").click(function (){
+    $(document).on("click", ".savePassenger", function () {
 
-        let fullName = $("#fullName").val().trim();
-        let contactNum = $("#contactNum").val().trim();
-        let passportNum = $("#passportNum").val().trim();
-        let nationality = $("#nationality").val();
-        let birthDate = $("#birthDate").val();
-        let gender = $("#gender").val();
-        let emergencyContact = $("#name_emergency").val().trim() + " | " + $("#rel_emergency").val() + " | " + $("#contact_emergency").val().trim();
+        let emergencyCard = $(this).prev(".passenger-card");
+        let passengerCard = emergencyCard.prev(".passenger-card");
 
-        if(!validatePassenger()){
-            alert("Invalid Passenger Information");
-            return;
-        }
+        let fullName = passengerCard.find(".fullName").val().trim();
+        let contactNum = passengerCard.find(".contactNum").val().trim();
+        let passportNum = passengerCard.find(".passportNum").val().trim();
+        let nationality = passengerCard.find(".nationality").val();
+        let birthDate = passengerCard.find(".birthDate").val();
+        let gender = passengerCard.find(".gender").val();
+        let emergencyContact = emergencyCard.find(".name_emergency").val().trim() + " | " + emergencyCard.find(".rel_emergency").val() + " | " + emergencyCard.find(".contact_emergency").val().trim();
 
         $.ajax({
 
@@ -383,31 +381,35 @@ $(document).ready(function(){
             method: "POST",
 
             data: {
+
                 user_id: "6884b6f3b0f0d6b1d6c8e123",
-                full_name: fullName,  
-                contact_num: contactNum, 
+                full_name: fullName,
+                contact_num: contactNum,
                 passport_num: passportNum,
                 nationality: nationality,
                 birth_date: birthDate,
                 gender: gender,
                 emergency_contact: emergencyContact
+
             },
 
             success: function(passenger){
 
-                passengerId = passenger._id;
-
-                console.log("Saved passengerId:", passengerId);
+                passengerIds.push(passenger._id);
 
                 alert("Passenger saved!");
 
             },
 
-            error: function(xhr){
+            error:function(xhr){
+
                 console.log(xhr);
-                alert("Error in Saving Passenger");
+                alert("Save failed.");
+
             }
+
         });
+
     });
 
     // if save passenger button is pressed but data is invalid/data is valid
@@ -485,7 +487,6 @@ $(document).ready(function(){
         method: "GET",
 
         success: function(occupiedSeats){
-            console.log("Occupied seats:", occupiedSeats);
 
             disableOccupiedSeats(occupiedSeats);
         },
@@ -540,7 +541,6 @@ $(document).ready(function(){
         method: "GET",
 
         success: function(meals){
-            console.log(meals);
 
             meals.forEach(meal => {
 
@@ -587,8 +587,7 @@ $(document).ready(function(){
 
     $("#bookFlight").click(function(){
         const flightId = window.location.pathname.split("/").pop();
-
-        console.log("Passenger ID:", passengerId);
+        const bookingRef = Math.random().toString(36).substring(2,10).toUpperCase();
 
         let seatNumber = $(".seat.selected").first().text().trim();
         let mealPreference = $(".meal-card.selected h5").text() || "Standard";
@@ -601,38 +600,53 @@ $(document).ready(function(){
         let extraServicesPrice = updateExtraServices();
         let totalPrice = Number($("#totalPrice").text().replace("₱", ""));
         
+        passengerIds.forEach(function(passengerId) {
 
-        $.ajax({
+            $.ajax({
 
-            url: "/booking/reserve",
-            method: "POST",
+                url: "/booking/reserve",
+                method: "POST",
 
-            data: {
+                data: {
 
-                userId: "6a58cf65318570c1f7029c75",
-                passengerId: passengerId,
-                flightId: flightId,
-                seatNumber: seatNumber,
-                mealPreference: mealPreference,
-                mealPrice: mealPrice,
-                extraServices: {
-                    checkedBaggage: checkedBaggage,
-                    carryOn: carryOn,
-                    priorityBoarding: priorityBoarding,
-                    travelInsurance: travelInsurance,
-                    loungeAccess: loungeAccess
+                    userId: "6a58cf65318570c1f7029c75",
+                    passengerId: passengerId,
+                    flightId: flightId,
+                    seatNumber: seatNumber,
+                    mealPreference: mealPreference,
+                    mealPrice: mealPrice,
+
+                    extraServices: {
+                        checkedBaggage: checkedBaggage,
+                        carryOn: carryOn,
+                        priorityBoarding: priorityBoarding,
+                        travelInsurance: travelInsurance,
+                        loungeAccess: loungeAccess
+                    },
+
+                    extraServicesPrice: extraServicesPrice,
+                    total_price: totalPrice,
+                    specialRequests: "N/A",
+                    booking_ref: bookingRef
+
                 },
 
-                extraServicesPrice: extraServicesPrice,
-                total_price: totalPrice,
-                specialRequests: "N/A"
+                success: function(reservation) {
+                    console.log("Reservation saved:", reservation);
+                },
 
-            },
-            success:function(){
-                alert("Reservation Successful!");
-                window.location.href = "/search";
-            }
+                error: function(xhr) {
+                    console.log(xhr);
+                }
+
+            });
+
         });
+
+        setTimeout(function() {
+            alert("Reservation Successful!");
+            window.location.href = "/search";
+        }, 1000);
     });
 
 });
