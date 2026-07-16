@@ -125,12 +125,24 @@ const bookingRoutes = require('./routes/bookingRoutes');
 const adminFlightRoutes = require('./routes/admin-flights-routes');
 const adminDashboardRoutes = require('./routes/admin-dashboard-routes');
 const profileRoutes = require('./routes/profileRoutes');
+const loginRoutes = require('./routes/login-routes');
+const registerRoutes = require('./routes/register-routes');
 const reservationRoutes = require('./routes/reservationRoutes');
+const adminUsersRoutes = require('./routes/admin-users-routes');
+const adminReservationsRoutes = require('./routes/admin-reservations-routes');
 
+app.use('/', loginRoutes);
+app.use('/', registerRoutes);
 app.use('/search', searchRoutes);
 app.use('/booking', bookingRoutes);
 app.use('/profile', profileRoutes);
 app.use('/reservations', reservationRoutes);
+app.use('/admin-dashboard', adminDashboardRoutes);
+app.use('/admin-flights', adminFlightRoutes);
+app.use('/admin-users', adminUsersRoutes);
+app.use('/admin-reservations', adminReservationsRoutes);
+
+
 
 // Home Page
 app.get('/', (req, res) => {
@@ -172,57 +184,6 @@ app.post('/register', async (req, res) => {
     }
 });
 
-// LOGIN ROUTES
-app.get('/login', (req, res) => {
-    if (req.session.user) {
-        if (req.session.user.role === 'admin') {
-            return res.redirect('/admin');
-        }
-        return res.redirect('/');
-    }
-    res.render('login', { 
-        title: 'Login',
-        layout: false,
-        error: null 
-    });
-});
-
-app.post('/login', async (req, res) => {
-    try {
-        const user = await User.findOne({
-            email: req.body.email,
-            password: req.body.password
-        });
-
-        if (!user) {
-            return res.render('login', {
-                title: 'Login',
-                error: 'Invalid email or password.'
-            });
-        }
-
-        user.last_login = new Date();
-        await user.save();
-
-        req.session.user = user;
-        console.log(' User logged in:', user.email);
-        console.log('   Role:', user.role);
-
-        if (user.role === 'admin') {
-            return res.redirect('/admin-dashboard');
-        } else {
-            return res.redirect('/');  
-        }
-
-    } catch (error) {
-        console.error('Login error:', error);
-        res.render('login', {
-            title: 'Login',
-            error: 'Error logging in. Please try again.'
-        });
-    }
-});
-
 // DASHBOARD ROUTE
 app.get('/dashboard', (req, res) => {
     if (!req.session.user) {
@@ -232,42 +193,6 @@ app.get('/dashboard', (req, res) => {
     res.render('dashboard', {
         title: 'Dashboard',
         user: req.session.user
-    });
-});
-
-// ADMIN ROUTES
-app.get('/admin', (req, res) => {
-    if (!req.session.user) {
-        return res.redirect('/login');
-    }
-
-    if (req.session.user.role !== 'admin') {
-        return res.send('Access Denied. Admin only.');
-    }
-
-    res.redirect('/admin-dashboard'); 
-});
-
-app.use('/admin-dashboard', adminDashboardRoutes);
-app.use('/admin-flights', adminFlightRoutes);
-
-app.get('/admin-users', async (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'admin') {
-        return res.redirect('/login');
-    }
-    res.render('admin-users', {
-        title: 'Users',
-        layout: 'main-admin'
-    });
-});
-
-app.get('/admin-reservations', async (req, res) => {
-    if (!req.session.user || req.session.user.role !== 'admin') {
-        return res.redirect('/login');
-    }
-    res.render('admin-reservations', {
-        title: 'Reservations',
-        layout: 'main-admin'
     });
 });
 
@@ -286,16 +211,6 @@ app.get('/customer', (req, res) => {
     });
 });
 
-// LOGOUT ROUTE
-app.get('/logout', (req, res) => {
-    req.session.destroy((err) => {
-        if (err) {
-            console.error('Logout error:', err);
-        }
-        res.redirect('/');
-    });
-});
-
 // START SERVER
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
@@ -310,7 +225,7 @@ app.listen(PORT, () => {
         console.log('=== STARTING SAMPLE DATA CREATION ===');
 
         await Reservation.deleteMany({});
-        console.log('✅ Deleted existing reservations');
+        console.log('Deleted existing reservations');
 
         // Create or get User
         let testUser = await User.findOne({ email: 'reina.lagos@hotmail.com' });
@@ -325,9 +240,9 @@ app.listen(PORT, () => {
                 last_login: new Date('2026-07-12')
             });
             await testUser.save();
-            console.log('✅ User created:', testUser.email);
+            console.log('User created:', testUser.email);
         } else {
-            console.log('✅ User already exists:', testUser.email);
+            console.log('User already exists:', testUser.email);
         }
 
         let adminUser = await User.findOne({ email: 'admin@animoskies.com' });
@@ -342,11 +257,11 @@ app.listen(PORT, () => {
                 created_at: new Date()
             });
             await adminUser.save();
-            console.log('✅ Admin user created:', adminUser.email);
+            console.log('Admin user created:', adminUser.email);
             console.log('   Email: test@admin.com');
             console.log('   Password: admin123');
         } else {
-            console.log('✅ Admin user already exists:', adminUser.email);
+            console.log('Admin user already exists:', adminUser.email);
         }
 
         //  Create or get Passenger
@@ -365,9 +280,9 @@ app.listen(PORT, () => {
                 emergency_contact: 'Mama Lagos'
             });
             await passenger.save();
-            console.log('✅ Passenger created with ID:', passenger._id);
+            console.log('Passenger created with ID:', passenger._id);
         } else {
-            console.log('✅ Passenger already exists with ID:', passenger._id);
+            console.log('Passenger already exists with ID:', passenger._id);
         }
 
         // Create Meals
@@ -384,9 +299,9 @@ app.listen(PORT, () => {
             for (let mealData of meals) {
                 await new Meal(mealData).save();
             }
-            console.log('✅ Meals created');
+            console.log('Meals created');
         } else {
-            console.log('✅ Meals already exist');
+            console.log('Meals already exist');
         }
 
         // Create Extra Services
@@ -402,9 +317,9 @@ app.listen(PORT, () => {
             for (let serviceData of services) {
                 await new ExtraService(serviceData).save();
             }
-            console.log('✅ Extra Services created');
+            console.log('Extra Services created');
         } else {
-            console.log('✅ Extra Services already exist');
+            console.log('Extra Services already exist');
         }
 
         // Create Flights
@@ -476,13 +391,13 @@ app.listen(PORT, () => {
             await flight1.save();
             await flight2.save();
             await flight3.save();
-            console.log('✅ Flights created');
+            console.log('Flights created');
         } else {
             const flights = await Flight.find({});
             flight1 = flights[0];
             flight2 = flights[1] || flights[0];
             flight3 = flights[2] || flights[0];
-            console.log('✅ Flights already exist');
+            console.log('Flights already exist');
         }
 
         // Create Seats
@@ -508,9 +423,9 @@ app.listen(PORT, () => {
                 }
                 await Seat.insertMany(seats);
             }
-            console.log('✅ Seats created');
+            console.log('Seats created');
         } else {
-            console.log('✅ Seats already exist');
+            console.log('Seats already exist');
         }
 
         // Create Reservations
@@ -521,7 +436,7 @@ app.listen(PORT, () => {
         }
 
         const passengerId = passenger._id;
-        console.log('✅ Using passengerId:', passengerId);
+        console.log('Using passengerId:', passengerId);
 
         const reservationData = [
             {
@@ -643,20 +558,20 @@ app.listen(PORT, () => {
 
         // Delete existing reservations first
         await Reservation.deleteMany({});
-        console.log('✅ Deleted old reservations');
+        console.log('Deleted old reservations');
 
         for (let data of reservationData) {
             const reservation = new Reservation(data);
             await reservation.save();
         }
         
-        console.log('✅ Reservations created with passengerId:', passengerId);
+        console.log('Reservations created with passengerId:', passengerId);
 
         // Update available seats
         await Flight.findByIdAndUpdate(flight1._id, { $inc: { availableSeats: -3 } });
         await Flight.findByIdAndUpdate(flight2._id, { $inc: { availableSeats: -2 } });
         await Flight.findByIdAndUpdate(flight3._id, { $inc: { availableSeats: -1 } });
-        console.log('✅ Updated available seats');
+        console.log('Updated available seats');
 
         const verifyReservations = await Reservation.find({}).populate('passengerId');
         console.log('=== VERIFICATION ===');

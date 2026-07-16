@@ -9,6 +9,13 @@ $(document).ready(function () {
         $("#adminMain").toggleClass("sidebar-open");
     });
 
+    //for access alert in route
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get("error");
+    if(error){
+        alert(error);
+    }
+
     // revenue chart
     const revenueCanvas = document.getElementById("revenueChart");
     if (revenueCanvas) {

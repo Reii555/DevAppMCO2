@@ -7,6 +7,13 @@ let filteredFlights = [];
 let editMode = false;
 let selectedFlightId = null;
 
+ //for access alert in route
+const params = new URLSearchParams(window.location.search);
+const error = params.get("error");
+
+if(error){
+    alert(error);
+}
 
 //statistics
 function updateStatistics() {

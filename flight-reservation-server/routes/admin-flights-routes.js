@@ -1,27 +1,29 @@
 const express = require("express");
 const router = express.Router();
 
-const adminFlightsController = require ("../controllers/flightsController");
+const adminFlightsController = require("../controllers/flightsController");
 
-//render
-router.get("/", adminFlightsController.renderFlights);
+router.get("/", async (req, res) => {
+    try {
+        if (!req.session.user) {
+            return res.redirect("/login");
+        }
+        if (req.session.user.role !== "admin") {
+            return res.redirect("/?error=Access Denied: Admin access only.");
+        }
+        adminFlightsController.renderFlights(req, res);
 
-//statistics
+    } catch (error) {
+        console.error("Error loading admin-flights:", error);
+        res.status(500).send("Error loading flights: " + error.message);
+    }
+});
+
 router.get("/data", adminFlightsController.getFlightData);
-
-//search and filter
 router.get("/search", adminFlightsController.searchFlights);
-
-//check flight ID dupes
 router.get("/check-flight-number", adminFlightsController.checkFlightNumber);
-
-//add flight
 router.post("/", adminFlightsController.addFlight);
-
-//edit flight
 router.put("/:id", adminFlightsController.updateFlight);
-
-//delete flight
 router.delete("/:id", adminFlightsController.deleteFlight);
 
 module.exports = router;

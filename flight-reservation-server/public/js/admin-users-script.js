@@ -2,7 +2,7 @@ $(document).ready(function() {
 
     // variablez
     let currentPage = 1;
-    const rowsperPage = 5;
+    const rowsPerPage = 5;
     let filteredUsers = [];
     let totalUsers = 0;
     let currentFilter = 'all';
@@ -26,7 +26,7 @@ $(document).ready(function() {
 
         // Make AJAX request
         $.ajax({
-            url: '/api/admin/users',
+            url: '/admin-users/api',
             method: 'GET',
             data: {
                 page: currentPage,
