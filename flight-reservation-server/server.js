@@ -3,6 +3,8 @@ const session = require('express-session');
 const exphbs = require('express-handlebars');
 const path = require('path');
 const connectDB = require('./config/database');
+//for admin auth
+const adminOnly = require("./middleware/auth")
 
 // MODELS
 const User = require('./models/User');
@@ -298,7 +300,11 @@ app.get('/admin', (req, res) => {
 });
 
 // ADMIN DASHBOARD ROUTE
-app.use('/admin-dashboard', adminDashboardRoutes);
+// app.use('/admin-dashboard', adminOnly, adminDashboardRoutes);
+app.use('/admin-dashboard', adminDashboardRoutes); //removed auth so i can test it out
+
+// ADMIN FLIGHTS ROUTE
+// app.use('/admin-flights', adminOnly, adminFlightRoutes);
 app.use('/admin-flights', adminFlightRoutes);
 
 app.get('/admin-users', async (req, res) => {
