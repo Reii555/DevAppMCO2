@@ -1,135 +1,217 @@
-        <!--Main Content-->
-        <div class="Admin-panel-main" id="adminMain">
-            <h1>Dashboard</h1>
+<!--Main Content-->
+<div class="Admin-panel-main" id="adminMain">
+    <h1>Dashboard</h1>
 
-                    <!--Statistics Cards-->
-                    <div class="row g-4">
+    <!-- Statistics Cards -->
+    <div class="row g-4">
 
-                        <div class="col-md-4">
-                            <div class="stat-card">
-                                <h4>Active Flights</h4>
-                                <h2 id="activeFlights">15</h2>
-                            </div>
-                        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <h4>Ongoing Flights</h4>
+                <h2 id="ongoingFlights">{{ongoingFlights}}</h2>
+            </div>
+        </div>
 
-                        <div class="col-md-4">
-                            <div class="stat-card">
-                                <h4>Total Flights</h4>
-                                <h2 id="totalFlights">25</h2>
-                            </div>
-                        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <h4>Total Flights</h4>
+                <h2 id="totalFlights">{{totalFlights}}</h2>
+            </div>
+        </div>
 
-                        <div class="col-md-4">
-                            <div class="stat-card">
-                                <h4>Total Bookings</h4>
-                                <h2 id="totalBookings">348</h2>
-                            </div>
-                        </div>
+        <div class="col-md-4">
+            <div class="stat-card">
+                <h4>Total Reservations</h4>
+                <h2 id="totalReservations">{{totalReservations}}</h2>
+            </div>
+        </div>
 
-                    </div>
+    </div>
 
-                    <!--Revenue Chart-->
-                    <div class="row mt-5">
-                        <div class="col-lg-6">
-                            <div class="content-panel">
-                                <div class="panel-header">Revenue Chart</div>
-                                <div class="panel-body chart-placeholder"><canvas id="revenueChart"></canvas></div>
-                            </div>
-                        </div>
 
-                        <div class="col-lg-6">
-                            <div class="content-panel">
-                                <div class="panel-header">Popular Destinations</div>
-                                <div class="panel-body">
-                                    <ul class="list-group">
-                                        <li class="list-group-item">Tokyo</li>
-                                        <li class="list-group-item">New York</li>
-                                        <li class="list-group-item">Hong Kong</li>
-                                        <li class="list-group-item">Dubai</li>
-                                        <li class="list-group-item">Singapore</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+    <!-- Revenue Chart -->
+    <div class="row mt-5">
 
-                    <!--Recent Bookings Table-->
-                    <div class="content-panel mt-5">
-                        <div class="panel-header">Recent Bookings</div>
-                        <div class="panel-body">
-                            <table class="table table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>Booking ID</th>
-                                        <th>Passenger</th>
-                                        <th>Route</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>BK001</td>
-                                        <td>Linda Walker</td>
-                                        <td>MNL -> JFK</td>
-                                        <td><span class="badge bg-success">Confirmed</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>BK002</td>
-                                        <td>JP Suarez</td>
-                                        <td>MNL -> LAX</td>
-                                        <td><span class="badge bg-warning text-dark">Pending</span></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+        <div class="col-lg-6">
+            <div class="content-panel">
+                <div class="panel-header">
+                    Revenue Chart
+                </div>
 
-                    <!--Flight Activity Table-->
-                    <div class="content-panel mt-4">
-                        <div class="panel-header">Recent Flight Activity</div>
-
-                        <div class="panel-body">
-                            <ul class="list-group">
-                                <li class="list-group-item">
-                                    Flight PR123 was added.
-                                </li>
-
-                                <li class="list-group-item">
-                                    Flight BR276 delayed.
-                                </li>
-
-                                <li class="list-group-item">
-                                    Flight Br789 cancelled.
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!--Recent Logins-->
-                    <div class="content-panel mt-4">
-                        <div class="panel-header">Recent Admin Logins</div>
-
-                        <div class="panel-body">
-                            <ul class="list-group">
-                                <li class="list-group-item">
-                                    Admin - 10:25 AM
-                                </li>
-                                
-                                <li class="list-group-item">
-                                    Staff User - 9:15 AM
-                                </li>
-
-                                <li class="list-group-item">
-                                    Admin - Yesterday
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
+                <div class="panel-body chart-placeholder">
+                    <canvas id="revenueChart"></canvas>
                 </div>
             </div>
         </div>
 
-        <!--Custom JS-->
-        <script src="admin-dashboard.js"></script>
-    </body>
-</html>
+
+        <!-- Popular Destinations -->
+        <div class="col-lg-6">
+            <div class="content-panel">
+                <div class="panel-header">
+                    Popular Destinations
+                </div>
+                <div class="panel-body">
+                    <ul class="list-group">
+                        {{#each popularDestinations}}
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span>{{this._id}}</span>
+                                <span>{{this.count}} flights</span>
+                            </li>
+                        {{else}}
+                            <li class="list-group-item">
+                                No destination data available.
+                            </li>
+                        {{/each}}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <!-- Recent Bookings -->
+    <div class="content-panel mt-5">
+
+        <div class="panel-header">
+            Recent Reservations
+        </div>
+
+        <div class="panel-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Reservation ID</th>
+                        <th>Booking Reference</th>
+                        <th>Passenger</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {{#each recentBookings}}
+                        <tr>
+                            <td>{{reservation_id}}</td>
+                            <td>{{booking_ref}}</td>
+                            <td>{{passengerDetails.fullName}}</td>
+                            <td>
+                                {{#if (eq status "Confirmed")}}
+                                    <span class="badge bg-success">
+                                        {{status}}
+                                    </span>
+                                {{else if (eq status "Pending")}}
+                                    <span class="badge bg-warning text-dark">
+                                        {{status}}
+                                    </span>
+                                {{else if (eq status "Cancelled")}}
+                                    <span class="badge bg-danger">
+                                        {{status}}
+                                    </span>
+                                {{else}}
+                                    <span class="badge bg-secondary">
+                                        {{status}}
+                                    </span>
+                                {{/if}}
+                            </td>
+                        </tr>
+                    {{else}}
+                        <tr>
+                            <td colspan="4" class="text-center">
+                                No recent reservations.
+                            </td>
+                        </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+
+    <!-- Recent Flight Activity -->
+    <div class="content-panel mt-4">
+
+        <div class="panel-header">
+            Recent Flight Activity
+        </div>
+
+        <div class="panel-body">
+
+            <ul class="list-group">
+
+                {{#each recentFlights}}
+
+                    <li class="list-group-item d-flex justify-content-between">
+
+                        <span>
+                            <strong>{{flight_number}}</strong>
+                            {{origin}} → {{destination}}
+                        </span>
+
+                        {{#if (eq status "Ongoing")}}
+                            <span class="badge bg-success">
+                                {{status}}
+                            </span>
+
+                        {{else if (eq status "Cancelled")}}
+                            <span class="badge bg-danger">
+                                {{status}}
+                            </span>
+
+                        {{else if (eq status "Completed")}}
+                            <span class="badge bg-secondary">
+                                {{status}}
+                            </span>
+
+                        {{else}}
+                            <span class="badge bg-warning text-dark">
+                                {{status}}
+                            </span>
+                        {{/if}}
+
+                    </li>
+
+                {{else}}
+
+                    <li class="list-group-item">
+                        No recent flight activity.
+                    </li>
+
+                {{/each}}
+
+            </ul>
+
+        </div>
+
+    </div>
+
+
+    <!-- Recent Admin Logins -->
+    <div class="content-panel mt-4">
+
+        <div class="panel-header">
+            Recent Admin Logins
+        </div>
+
+        <div class="panel-body">
+
+            <p class="text-muted">
+                Admin login activity is not yet available.
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Custom JS -->
+<script src="/js/admin-dashboard.js"></script>

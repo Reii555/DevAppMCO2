@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const adminFlightsController = require ("../controllers/flightRoutes");
+const adminFlightsController = require ("../controllers/flightsController");
 
 //render
 router.get("/", adminFlightsController.renderFlights);
