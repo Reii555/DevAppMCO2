@@ -291,7 +291,7 @@ app.get('/logout', (req, res) => {
         if (err) {
             console.error('Logout error:', err);
         }
-        res.redirect('/');
+        res.redirect('/login');
     });
 });
 
