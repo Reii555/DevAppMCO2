@@ -3,8 +3,6 @@ const session = require('express-session');
 const exphbs = require('express-handlebars');
 const path = require('path');
 const connectDB = require('./config/database');
-//for admin auth
-const adminOnly = require("./middleware/auth")
 
 // MODELS
 const User = require('./models/User');
@@ -27,13 +25,8 @@ const PORT = process.env.PORT || 3000;
 connectDB();
 
 // MIDDLEWARE
-// Parse form data (for POST requests from forms)
 app.use(express.urlencoded({ extended: true }));
-
-// Parse JSON data
 app.use(express.json());
-
-// Serve static files (CSS, JS, images)
 app.use(express.static(path.join(__dirname, 'public')));
 
 // EXPRESS SESSION - COMMENTED OUT FOR TESTING
@@ -53,58 +46,17 @@ app.use(async (req, res, next) => {
         try {
             const user = await User.findOne({ email: 'reina.lagos@hotmail.com' });
             if (user) {
-                if (!user.profilePicture) {
-                    user.profilePicture = null;
-                }
                 req.session.user = user;
                 console.log('Using user from database:', user.email);
             } else {
-                // Try to find any user
                 const anyUser = await User.findOne({});
                 if (anyUser) {
-                    if (!anyUser.profilePicture) {
-                        anyUser.profilePicture = null;
-                    }
                     req.session.user = anyUser;
                     console.log('Using any user from database:', anyUser.email);
-                } else {
-                    // Create a new user
-                    const newUser = new User({
-                        firstName: 'Reina',
-                        lastName: 'Lagos',
-                        email: 'reina.lagos@hotmail.com',
-                        password: 'password123',
-                        phone: '+639988776655',
-                        dateOfBirth: new Date('1992-03-15'),
-                        passportNumber: 'A12345678',
-                        nationality: 'Filipino',
-                        gender: 'Female',
-                        role: 'customer',
-                        status: 'active',
-                        profilePicture: null
-                    });
-                    await newUser.save();
-                    req.session.user = newUser;
-                    console.log('Created new user:', newUser.email);
                 }
             }
         } catch (error) {
-            console.error('Error finding/creating user:', error);
-        }
-    } else {
-        // Refresh user data from database on each request
-        try {
-            if (req.session.user._id) {
-                const freshUser = await User.findById(req.session.user._id);
-                if (freshUser) {
-                    if (!freshUser.profilePicture) {
-                        freshUser.profilePicture = null;
-                    }
-                    req.session.user = freshUser;
-                }
-            }
-        } catch (error) {
-            console.error('Error refreshing user data:', error);
+            console.error('Error finding user:', error);
         }
     }
     res.locals.user = req.session.user || null;
@@ -227,11 +179,11 @@ app.post('/signup', async (req, res) => {
         }
 
         const user = new User({
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
             email: req.body.email,
+            phone: req.body.phone,
             password: req.body.password,
-            role: 'customer'
+            role: 'customer',
+            status: 'active'
         });
 
         await user.save();
@@ -244,6 +196,13 @@ app.post('/signup', async (req, res) => {
 });
 
 // LOGIN ROUTES
+app.get('/login', (req, res) => {
+    if (req.session.user) {
+        return res.redirect('/dashboard');
+    }
+    res.render('login', { title: 'Login' });
+});
+
 app.post('/login', async (req, res) => {
     try {
         const user = await User.findOne({
@@ -255,7 +214,6 @@ app.post('/login', async (req, res) => {
             return res.send('Invalid email or password.');
         }
 
-        // Update last_login
         user.last_login = new Date();
         await user.save();
 
@@ -280,7 +238,7 @@ app.get('/dashboard', (req, res) => {
     });
 });
 
-// ADMIN ROUTE
+// ADMIN ROUTES
 app.get('/admin', (req, res) => {
     if (!req.session.user) {
         return res.redirect('/login');
@@ -296,15 +254,13 @@ app.get('/admin', (req, res) => {
     });
 });
 
-// ADMIN DASHBOARD ROUTE
-// app.use('/admin-dashboard', adminOnly, adminDashboardRoutes);
-app.use('/admin-dashboard', adminDashboardRoutes); //removed auth so i can test it out
-
-// ADMIN FLIGHTS ROUTE
-// app.use('/admin-flights', adminOnly, adminFlightRoutes);
+app.use('/admin-dashboard', adminDashboardRoutes);
 app.use('/admin-flights', adminFlightRoutes);
 
 app.get('/admin-users', async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.redirect('/login');
+    }
     res.render('admin-users', {
         title: 'Users',
         layout: 'main-admin'
@@ -312,6 +268,9 @@ app.get('/admin-users', async (req, res) => {
 });
 
 app.get('/admin-reservations', async (req, res) => {
+    if (!req.session.user || req.session.user.role !== 'admin') {
+        return res.redirect('/login');
+    }
     res.render('admin-reservations', {
         title: 'Reservations',
         layout: 'main-admin'
@@ -333,6 +292,7 @@ app.get('/customer', (req, res) => {
     });
 });
 
+// LOGOUT ROUTE
 app.get('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
@@ -348,56 +308,61 @@ app.listen(PORT, () => {
     console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
-// SAMPLE DATA 
+// SAMPLE DATA - FOR TESTING ONLY
 (async () => {
     try {
+        // Check if users already exist
+        const existingUsers = await User.find({});
+        let testUser = null;
+        
+        if (existingUsers.length === 0) {
+            // Create sample users (user_id will be auto-generated)
+            testUser = new User({
+                email: "reina.lagos@hotmail.com",
+                phone: "+639988776655",
+                password: "password123",
+                role: "customer",
+                status: "active",
+                last_login: new Date("2026-07-12")
+            });
+
+            await testUser.save();
+
+            const adminUser = new User({
+                email: "test@admin.com",
+                phone: "+639987654321",
+                password: "admin123",
+                role: "admin",
+                status: "active",
+                last_login: new Date("2026-07-14")
+            });
+
+            await adminUser.save();
+            console.log("Sample Users Created");
+        } else {
+            testUser = await User.findOne({ email: 'reina.lagos@hotmail.com' });
+            if (!testUser) {
+                testUser = existingUsers[0];
+            }
+            console.log("Users already exist, using existing user");
+        }
+
         // Check if meals already exist
         const existingMeals = await Meal.find({});
-        
         if (existingMeals.length === 0) {
-            // Create default meals
-            standard = new Meal({
-                meal_name: "Standard",
-                description: "Classic in-flight meal: Chicken or Pasta with Salad.",
-                additional_price: "0"                
-            });
-
-            vegetarian = new Meal({
-                meal_name: "Standard",
-                description: "Fresh stir-fry vegetables with quinoa & green salad.",
-                additional_price: "500"                
-            });
-
-            vegan = new Meal({
-                meal_name: "Vegan",
-                description: "Plant-based protein bowl, roasted veggies, dairy-free.",
-                additional_price: "700"                
-            });
-
-            halal = new Meal({
-                meal_name: "Halal",
-                description: "Certified Halal chicken with saffron rice.",
-                additional_price: "1000"                
-            });
-
-            kosher = new Meal({
-                meal_name: "Kosher",
-                description: "Glatt Kosher meal, pre-packaged under supervision.",
-                additional_price: "1200"                
-            });
-
-            glutenFree = new Meal({
-                meal_name: "Gluten Free",
-                description: "Gluten-free pasta, fresh vegetables, GF dessert.",
-                additional_price: "1500"                
-            });
-
-            await standard.save();
-            await vegetarian.save();
-            await vegan.save();
-            await halal.save();
-            await kosher.save();
-            await glutenFree.save();
+            const meals = [
+                { meal_name: "Standard", description: "Classic in-flight meal: Chicken or Pasta with Salad.", additional_price: 0 },
+                { meal_name: "Vegetarian", description: "Fresh stir-fry vegetables with quinoa & green salad.", additional_price: 500 },
+                { meal_name: "Vegan", description: "Plant-based protein bowl, roasted veggies, dairy-free.", additional_price: 700 },
+                { meal_name: "Halal", description: "Certified Halal chicken with saffron rice.", additional_price: 1000 },
+                { meal_name: "Kosher", description: "Glatt Kosher meal, pre-packaged under supervision.", additional_price: 1200 },
+                { meal_name: "Gluten Free", description: "Gluten-free pasta, fresh vegetables, GF dessert.", additional_price: 1500 }
+            ];
+            
+            for (let mealData of meals) {
+                const meal = new Meal(mealData);
+                await meal.save();
+            }
             console.log("Sample Meals Created");
         } else {
             console.log("Meals already exist");
@@ -405,153 +370,23 @@ app.listen(PORT, () => {
 
         // Check if extra services already exist
         const existingServices = await ExtraService.find({});
-
         if (existingServices.length === 0) {
-            // Create default extra services
-            const premiumSeat = new ExtraService({
-                service_name: "Premium Seat",
-                description: "Select a premium seat with extra comfort and preferred location.",
-                price: 500
-            });
-
-            const checkedIn = new ExtraService({
-                service_name: "Checked-in Baggage",
-                description: "Add one checked-in baggage to your reservation.",
-                price: 600
-            });
-
-            const carryOn = new ExtraService({
-                service_name: "Carry-on Baggage",
-                description: "Additional carry-on baggage allowance.",
-                price: 300
-            });
-
-            const priorityBoarding = new ExtraService({
-                service_name: "Priority Boarding",
-                description: "Board the aircraft earlier for a more convenient experience.",
-                price: 500
-            });
-
-            const travelInsurance = new ExtraService({
-                service_name: "Travel Insurance",
-                description: "Provides coverage for unexpected travel-related emergencies.",
-                price: 700
-            });
-
-            const loungeAccess = new ExtraService({
-                service_name: "Lounge Access",
-                description: "Enjoy airport lounge facilities before your flight.",
-                price: 1000
-            });
-
-            await premiumSeat.save();
-            await checkedIn.save();
-            await carryOn.save();
-            await priorityBoarding.save();
-            await travelInsurance.save();
-            await loungeAccess.save();
-
+            const services = [
+                { service_name: "Premium Seat", description: "Select a premium seat with extra comfort and preferred location.", price: 500 },
+                { service_name: "Checked-in Baggage", description: "Add one checked-in baggage to your reservation.", price: 600 },
+                { service_name: "Carry-on Baggage", description: "Additional carry-on baggage allowance.", price: 300 },
+                { service_name: "Priority Boarding", description: "Board the aircraft earlier for a more convenient experience.", price: 500 },
+                { service_name: "Travel Insurance", description: "Provides coverage for unexpected travel-related emergencies.", price: 700 },
+                { service_name: "Lounge Access", description: "Enjoy airport lounge facilities before your flight.", price: 1000 }
+            ];
+            
+            for (let serviceData of services) {
+                const service = new ExtraService(serviceData);
+                await service.save();
+            }
             console.log("Sample Extra Services Created");
         } else {
             console.log("Extra Services already exist");
-        }
-
-        // Check if users already exist
-        const existingUsers = await User.find({});
-        let testUser = null;
-        
-        if (existingUsers.length === 0) {
-            // Create sample users
-            testUser = new User({
-                firstName: "Reina",
-                lastName: "Lagos",
-                email: "reina.lagos@hotmail.com",
-                password: "password123",
-                phone: "+639988776655",
-                dateOfBirth: new Date("1992-03-15"),
-                passportNumber: "A12345678",
-                nationality: "Filipino",
-                gender: "Female",
-                role: "customer",
-                status: "active",
-                lastLogin: new Date("2026-07-12"),
-                profilePicture: null,
-                emergencyContact: {
-                    name: "ParentTest",
-                    relationship: "Father",
-                    phone: "+639987654321",
-                    email: "parent@test.com"
-                },
-                savedPassengers: [
-                    {
-                        firstName: "Isabel",
-                        lastName: "Cubangbang",
-                        passportNumber: "B98765432",
-                        dateOfBirth: new Date("1995-08-20"),
-                        nationality: "Filipino",
-                        gender: "Female",
-                        type: "Adult"
-                    }
-                ],
-                paymentMethods: [
-                    {
-                        cardType: "VISA",
-                        cardNumber: "**** **** **** 5555",
-                        cardholderName: "Reina Lagos",
-                        expiryMonth: "08",
-                        expiryYear: "27",
-                        isDefault: true
-                    },
-                    {
-                        cardType: "VISA",
-                        cardNumber: "**** **** **** 6666",
-                        cardholderName: "Reina Lagos",
-                        expiryMonth: "11",
-                        expiryYear: "27",
-                        isDefault: false
-                    }
-                ],
-                notificationPreferences: {
-                    promotionalOffers: true,
-                    flightStatusAlerts: true,
-                    loyaltyUpdates: true,
-                    smsAlerts: true
-                }
-            });
-
-            await testUser.save();
-
-            const adminUser = new User({
-                firstName: "Admin",
-                lastName: "User",
-                email: "test@admin.com",
-                password: "admin123",
-                phone: "+639987654321",
-                dateOfBirth: new Date("2003-07-11"),
-                passportNumber: "A12345679",
-                nationality: "Filipino",
-                gender: "Female",
-                role: "admin",
-                status: "active",
-                lastLogin: new Date("2026-07-14"),
-                profilePicture: null,
-                emergencyContact: {
-                    name: "ParentTest",
-                    relationship: "Father",
-                    phone: "+639987654322",
-                    email: "parent@admin.com"
-                }
-            });
-
-            await adminUser.save();
-            console.log("Sample Users Created");
-        } else {
-            // Get the test user
-            testUser = await User.findOne({ email: 'reina.lagos@hotmail.com' });
-            if (!testUser) {
-                testUser = existingUsers[0];
-            }
-            console.log("Users already exist, using existing user:", testUser.email);
         }
 
         // Check if flights already exist
@@ -559,7 +394,6 @@ app.listen(PORT, () => {
         let flight1, flight2, flight3;
 
         if (existingFlights.length === 0) {
-
             flight1 = new Flight({
                 flight_number: "AS1001",
                 airline: "Philippine Airlines",
@@ -624,15 +458,11 @@ app.listen(PORT, () => {
             await flight1.save();
             await flight2.save();
             await flight3.save();
-
             console.log("Sample Flights Created");
-
         } else {
-
             flight1 = existingFlights[0];
             flight2 = existingFlights[1] || existingFlights[0];
             flight3 = existingFlights[2] || existingFlights[0];
-
             console.log("Flights already exist, using existing flights");
         }
 
@@ -652,7 +482,6 @@ app.listen(PORT, () => {
                         });
                     }
                 }
-                // Mark some seats as occupied
                 if (seats.length > 0) {
                     seats[1].status = "Occupied";
                     seats[5].status = "Occupied";
@@ -669,14 +498,12 @@ app.listen(PORT, () => {
         const existingReservations = await Reservation.find({});
         
         if (existingReservations.length === 0 && testUser) {
-            // Get the next reservation_id
             const lastReservation = await Reservation.findOne({}, {}, { sort: { 'reservation_id': -1 } });
             let nextId = 1000;
             if (lastReservation) {
                 nextId = lastReservation.reservation_id + 1;
             }
             
-            // Create sample reservations with manual reservation_id
             const reservationData = [
                 {
                     reservation_id: nextId,
@@ -703,7 +530,7 @@ app.listen(PORT, () => {
                     },
                     extraServicesPrice: 0,
                     booking_ref: "BK20260720",
-                    trip_type: "One-way",
+                    trip_type: "oneway",
                     status: "Confirmed",
                     basePrice: 3000,
                     total_price: 3150,
@@ -735,7 +562,7 @@ app.listen(PORT, () => {
                     },
                     extraServicesPrice: 500,
                     booking_ref: "BK20260721",
-                    trip_type: "One-way",
+                    trip_type: "oneway",
                     status: "Pending",
                     basePrice: 2800,
                     total_price: 3300,
@@ -767,7 +594,7 @@ app.listen(PORT, () => {
                     },
                     extraServicesPrice: 1200,
                     booking_ref: "BK20260722",
-                    trip_type: "Roundtrip",
+                    trip_type: "roundtrip",
                     status: "Confirmed",
                     basePrice: 3300,
                     total_price: 4800,
@@ -799,7 +626,7 @@ app.listen(PORT, () => {
                     },
                     extraServicesPrice: 0,
                     booking_ref: "BK20260715",
-                    trip_type: "One-way",
+                    trip_type: "oneway",
                     status: "Completed",
                     basePrice: 3000,
                     total_price: 3000,
@@ -831,7 +658,7 @@ app.listen(PORT, () => {
                     },
                     extraServicesPrice: 200,
                     booking_ref: "BK20260716",
-                    trip_type: "One-way",
+                    trip_type: "oneway",
                     status: "Cancelled",
                     basePrice: 2800,
                     total_price: 3200,
@@ -840,7 +667,6 @@ app.listen(PORT, () => {
                 }
             ];
 
-            // Save each reservation individually
             for (let data of reservationData) {
                 const reservation = new Reservation(data);
                 await reservation.save();
@@ -848,7 +674,6 @@ app.listen(PORT, () => {
             
             console.log("Sample Reservations Created");
 
-            // Update available seats for flights
             await Flight.findByIdAndUpdate(flight1._id, { $inc: { availableSeats: -3 } });
             await Flight.findByIdAndUpdate(flight2._id, { $inc: { availableSeats: -2 } });
             await Flight.findByIdAndUpdate(flight3._id, { $inc: { availableSeats: -1 } });
