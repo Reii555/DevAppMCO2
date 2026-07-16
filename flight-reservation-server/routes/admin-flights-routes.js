@@ -198,7 +198,7 @@ router.get("/check-flight-number", async(req,res) => {
         const editMode = req.query.editMode === "true";
 
         let query = {
-            flight_number: flight_number
+            flight_number: flightNumber
         };
 
         if(editMode && flightId){
@@ -207,7 +207,7 @@ router.get("/check-flight-number", async(req,res) => {
             };
         }
 
-        const existingFlight = await Flights.findOne(query);
+        const existingFlight = await Flight.findOne(query);
         res.json({
             exists: existingFlight !== null
         });
