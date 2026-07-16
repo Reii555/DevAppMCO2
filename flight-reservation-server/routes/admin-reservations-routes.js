@@ -3,8 +3,7 @@ const router = express.Router();
 
 const Reservation = require("../models/Reservation");
 
-// GET Admin reservations page
-router.get('/reservations', async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         res.render('admin-reservations', {
             title: 'Reservations',
