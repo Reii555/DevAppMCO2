@@ -609,7 +609,7 @@ $(document).ready(function(){
 
             data: {
 
-                userId: "6884b6f3b0f0d6b1d6c8e123",
+                userId: "6a58cf65318570c1f7029c75",
                 passengerId: passengerId,
                 flightId: flightId,
                 seatNumber: seatNumber,
