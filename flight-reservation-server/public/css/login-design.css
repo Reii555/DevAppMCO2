@@ -55,7 +55,7 @@ body {
 .login-divider {
     width: 60px;
     height: 3px;
-    background: #5686c9;  /* ← Primary blue from search_book.css */
+    background: #5686c9;  
     border-radius: 4px;
     margin-bottom: 28px;
 }
@@ -130,10 +130,10 @@ body {
 .btn-login {
     width: 100%;
     padding: 14px 24px;
-    background: #1e293b;  /* ← Same darker color bg as login-right */
+    background: #1e293b;  
     color: white;
     border: none;
-    border-radius: 14px;  /* ← From search_book.css */
+    border-radius: 14px;  
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;

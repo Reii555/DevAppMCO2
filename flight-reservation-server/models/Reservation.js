@@ -20,36 +20,10 @@ const reservationSchema = new mongoose.Schema({
     required: [true, 'Flight ID is required']
   },
 
-  passengerDetails: {
-    fullName: {
-      type: String,
-      required: true
-    },
-    email: {
-      type: String,
-      required: true
-    },
-    contactNumber: {
-      type: String,
-      required: true
-    },
-    passportNumber: {
-      type: String,
-      required: true
-    },
-    nationality: {
-      type: String,
-      required: true
-    },
-    dateOfBirth: {
-      type: Date,
-      required: true
-    },
-    gender: {
-      type: String,
-      enum: ['Male', 'Female', 'Other', 'Prefer not to say'],
-      required: true
-    }
+  passengerId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Passenger",
+    required: true
   },
 
   seatNumber: {
@@ -103,16 +77,6 @@ const reservationSchema = new mongoose.Schema({
     uppercase: true,
     maxlength: [10, 'Booking reference must be up to 10 chars only']
   },
-
-  trip_type: {
-    type: String,
-    required: [true, 'Trip type is required'],
-    enum: {
-      values: ['One-way', 'Roundtrip'],
-      message: 'Trip type must be either "One-way" or "Roundtrip"'
-    },
-    default: 'oneway'
-  },
   
   status: {
     type: String,
@@ -123,13 +87,7 @@ const reservationSchema = new mongoose.Schema({
     },
     default: 'Pending'
   },
-  
-  basePrice: {
-    type: Number,
-    required: true,
-    min: 0
-  },
-  
+    
   total_price: {
     type: Number,
     required: [true, 'Total price is required'],
