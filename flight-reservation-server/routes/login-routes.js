@@ -24,8 +24,7 @@ router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Use daw findByEmailWithPassword to include password field from User model btw
-        const user = await User.findByEmailWithPassword(email);
+        const user = await User.findOne({ email });
 
         // Check if user exists
         if (!user) {
@@ -83,7 +82,7 @@ router.get('/logout', (req, res) => {
         if (err) {
             console.error('Logout error:', err);
         }
-        res.redirect('/');
+        res.redirect('/login');
     });
 });
 
