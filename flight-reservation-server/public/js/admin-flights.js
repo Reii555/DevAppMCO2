@@ -44,8 +44,17 @@ function initializeFlight(flight) {
     $("#arrivalDate").val(flight.arrivalDate);
     $("#arrivalTime").val(flight.arrivalTime);
 
+    $("#duration").val(flight.duration);
+
+    $("#tripType").val(flight.tripType);
+
     $("#availableSeats").val(flight.availableSeats);
     $("#basePrice").val(flight.basePrice);
+    $("#checkedIn").val(flight.checkedIn);
+    $("#carryOn").val(flight.carryOn);
+
+    $("#layoversCount").val(flight.layoversCount);
+    $("#layoverDetails").val(flight.layoverDetails);
 
     $("#status").val(flight.status);
 }
@@ -77,11 +86,19 @@ function renderFlights(data) {
                 <td>${flight.flight_number}</td>
                 <td>${flight.airline}</td>
                 <td>${flight.cabinClass}</td>
-                <td>${flight.origin}</td>
+                <td>${flight.origin} - ${flight.destination}</td>
+                <td>${flight.departureDate}</td>
                 <td>${flight.departureTime}</td>
+                <td>${flight.arrivalDate}</td>
                 <td>${flight.arrivalTime}</td>
+                <td>${flight.duration}</td>
+                <td>${flight.tripType}</td>
                 <td>${flight.availableSeats}</td>
                 <td>₱${flight.basePrice}</td>
+                <td>${flight.checkedIn}</td>
+                <td>${flight.carryOn}</td>
+                <td>${flight.layoversCount}</td>
+                <td>${flight.layoverDetails}</td>
                 <td>${flight.status}</td>
 
             </tr>
@@ -200,8 +217,14 @@ function validateFlightForm() {
     let departureTime = $("#departureTime").val();
     let arrivalDate = $("#arrivalDate").val();
     let arrivalTime = $("#arrivalTime").val();
+    let duration = $("#duration").val();
+    let tripType = $("#tripType").val();
     let availableSeats = $("#availableSeats").val();
     let basePrice = $("#basePrice").val();
+    let checkedIn = $("#checkedIn").val();
+    let carryOn = $("#carryOn").val();
+    let layoversCount = $("#layoversCount").val();
+    let layoverDetails = $("#layoverDetails").val();
     let status = $("#status").val();
 
 
@@ -249,6 +272,16 @@ function validateFlightForm() {
         $("#arrivalTime").addClass("is-invalid");
         valid = false;
     }
+    if (duration === ""){
+        $("#durationError").text("Flight duration is required.");
+        $("#duration").addClass("is-invalid");
+        valid = false;
+    }
+    if (tripType === ""){
+        $("#tripTypeError").text("Trip type is required.");
+        $("#duration").addClass("is-invalid");
+        valid = false;
+    }
     if (availableSeats === "" || Number(availableSeats) <= 0) {
 
         $("#availableSeatsError").text("Available seats must be greater than 0.");
@@ -259,6 +292,26 @@ function validateFlightForm() {
 
         $("#basePriceError").text("Base price must be greater than 0.");
         $("#basePrice").addClass("is-invalid");
+        valid = false;
+    }
+    if (checkedIn === "" || Number(checkedIn) <= 0) {
+        $("#checkedInError").text("Checked In weight allowance must be greater than 0.");
+        $("#checkedIn").addClass("is-invalid");
+        valid = false;
+    }
+    if (carryOn === "" || Number(carryOn) <= 0) {
+        $("#carryOnError").text("Carry On weight allowance must be greater than 0.");
+        $("#carryOn").addClass("is-invalid");
+        valid = false;
+    }
+    if (layoversCount === "") {
+        $("#layoversCountError").text("Layover Count is required.");
+        $("#layoversCount").addClass("is-invalid");
+        valid = false;
+    }
+    if (layoverDetails === "") {
+        $("#layoverDetailsError").text("Layover Count is required.");
+        $("#layoverDetails").addClass("is-invalid");
         valid = false;
     }
     if (status === "") {
@@ -297,8 +350,14 @@ function clearFlightForm() {
     $("#departureTime").val("");
     $("#arrivalDate").val("");
     $("#arrivalTime").val("");
+    $("#duration").val("");
+    $("#tripType").val("");
     $("#availableSeats").val("");
     $("#basePrice").val("");
+    $("#checkedIn").val("");
+    $("#carryOn").val("");
+    $("#layoversCount").val("");
+    $("#layoverDetails").val("");
     $("#status").val("");
     $(".text-danger").text("");
 
@@ -381,33 +440,38 @@ $(document).ready(function () {
 
         const departureDate = $("#departureDate").val();
         const departureTime = $("#departureTime").val();
-        const departureDateTime = new Date(`${departureDate}T${departureTime}`);
 
         const arrivalDate = $("#arrivalDate").val();
         const arrivalTime = $("#arrivalTime").val();
-        const arrivalDateTime = new Date(`${arrivalDate}T${arrivalTime}`);
-
 
         const flightData = {
 
             flight_number: $("#flight_number").val().trim(),
-            airline: $("#airline").val().trim(),
+            airline: $("#airline").val(),
             cabinClass: $("#cabinClass").val(),
-            origin: $("#origin").val().trim(),
-            destination: $("#destination").val().trim(),
 
-            departureTime: departureDateTime,
-            arrivalTime: arrivalDateTime,
+            origin: $("#origin").val(),
+            destination: $("#destination").val(),
 
-            availableSeats: Number($("#availableSeats").val()),
-            basePrice: Number($("#basePrice").val()),
-            status: $("#status").val(),
+            departureDate: departureDate,
+            departureTime: departureTime,
+
+            arrivalDate: arrivalDate,
+            arrivalTime: arrivalTime,
 
             duration: $("#duration").val(),
             tripType: $("#tripType").val(),
-            checkedIn: Number($("#checkedIn").val()),
-            carryOn: Number($("#carryOn").val())
 
+            availableSeats: Number($("#availableSeats").val()),
+            basePrice: Number($("#basePrice").val()),
+
+            checkedIn: Number($("#checkedIn").val()),
+            carryOn: Number($("#carryOn").val()),
+
+            layoversCount: Number($("#layoversCount").val()),
+            layoverDetails: $("#layoverDetails").val(),
+
+            status: $("#status").val()
         };
 
         console.log("Saving flight:", flightData);

@@ -105,8 +105,14 @@
                                     <th>Departure Time</th>
                                     <th>Arrival Date</th>
                                     <th>Arrival Time</th>
+                                    <th>Duration</th>
+                                    <th>Trip Type</th>
                                     <th>Seats</th>
                                     <th>Base Price</th>
+                                    <th>Checked-In</th>
+                                    <th>Carry-On</th>
+                                    <th>Layover Count</th>
+                                    <th>Layover Details</th>
                                     <th>Status</th>
                                 </tr>
                             </thead>
@@ -159,7 +165,7 @@
 
                                     <div class="mb-3">
                                         <label class="form-label">Prefered Airlrine</label>
-                                        <select class="form-select" name="airline">
+                                        <select class="form-select" id="airline" name="airline" required>
                                             <option value="">Any Airline</option>
                                             <option value="Philippine Airlines">Philippine Airlines</option>
                                             <option value="Cebu Pacific">Cebu Pacific</option>
@@ -201,7 +207,7 @@
 
                                     <div class="mb-3">
                                         <label class="form-label">Destination Airport</label>
-                                        <select class="form-select" id="origin" name="origin">
+                                        <select class="form-select" id="destination" name="destination">
                                             <option value="">Select Destination</option>
                                             <option value="Manila (MNL)">Manila (MNL)</option>
                                             <option value="Cebu (CEB)">Cebu (CEB)</option>
@@ -284,13 +290,15 @@
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="form-label" for="layoverCount">Layover Count</label>
+                                        <label class="form-label" for="layoversCount">Layover Count</label>
                                         <input type="number" class="form-control" id="layoverCount">
+                                        <div class="text-danger small" id="layoversCountError"></div>
                                     </div>
 
                                     <div class="mb-3">
                                         <label class="form-label" for="layoverDetails">Layover Details</label>
                                         <input type="text" class="form-control" id="layoverDetails">
+                                        <div class="text-danger small" id="layoverDetailsError"></div>
                                     </div>
 
                                     <div class="mb-3">
