@@ -3,25 +3,19 @@ const router = express.Router();
 
 const Flight = require("../models/Flight");
 
-
 // render
 router.get("/", async (req, res) => {
 
     try {
 
         const flights = await Flight.find().lean();
-
-        /*const airlines = [
-            ...new Set(
-                flights.map(flight => flight.airline)
-            )
-        ];*/
+        const airlines = await Flight.distinct("airline");
 
         res.render("admin-flights", {
             title: "Flights",
             layout: "main-admin",
-            flights/*,
-            airlines: airlines*/
+            flights,
+            airlines: airlines
         });
 
     } catch (error) {
@@ -193,6 +187,35 @@ router.delete("/:id", async (req, res) => {
         res.status(500).json({
             error: "Error deleting flight"
         });
+    }
+});
+
+//flight ID dupes validation
+router.get("/check-flight-number", async(req,res) => {
+    try{
+        const flightNumber = req.query.flight_number;
+        const flightId = req.query.flight_id;
+        const editMode = req.query.editMode === "true";
+
+        let query = {
+            flight_number: flight_number
+        };
+
+        if(editMode && flightId){
+            query._id = {
+                $ne: flightId
+            };
+        }
+
+        const existingFlight = await Flights.findOne(query);
+        res.json({
+            exists: existingFlight !== null
+        });
+    } catch (error){
+        console.error("Error checking flight number:", error);
+        res.status(500).json({
+            error: "Error checking flight number."
+        })
     }
 });
 

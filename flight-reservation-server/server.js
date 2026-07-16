@@ -449,8 +449,9 @@ app.listen(PORT, () => {
         // Check if flights already exist
         const existingFlights = await Flight.find({});
         let flight1, flight2, flight3;
-        
+
         if (existingFlights.length === 0) {
+
             flight1 = new Flight({
                 flight_number: "AS1001",
                 airline: "Philippine Airlines",
@@ -474,6 +475,7 @@ app.listen(PORT, () => {
             flight2 = new Flight({
                 flight_number: "AS1002",
                 airline: "Cebu Pacific",
+                cabinClass: "Economy",
                 origin: "Cebu (CEB)",
                 destination: "Davao (DVO)",
                 departureTime: new Date("2026-07-21T13:15:00"),
@@ -486,7 +488,6 @@ app.listen(PORT, () => {
                 carryOn: 7,
                 basePrice: 2800,
                 availableSeats: 40,
-                cabinClass: "Economy",
                 status: "Upcoming",
                 airlineLogo: null
             });
@@ -494,6 +495,7 @@ app.listen(PORT, () => {
             flight3 = new Flight({
                 flight_number: "AS1003",
                 airline: "AirAsia",
+                cabinClass: "Premium Economy",
                 origin: "Manila (MNL)",
                 destination: "Puerto Princesa (PPS)",
                 departureTime: new Date("2026-07-22T06:45:00"),
@@ -501,11 +503,12 @@ app.listen(PORT, () => {
                 duration: "1h 25m",
                 tripType: "Round-trip",
                 returnDate: new Date("2026-07-26T18:30:00"),
+                layoversCount: 0,
+                layoverDetails: "Direct Flight",
                 checkedIn: 20,
                 carryOn: 7,
                 basePrice: 3300,
                 availableSeats: 40,
-                cabinClass: "Premium Economy",
                 status: "Upcoming",
                 airlineLogo: null
             });
@@ -513,11 +516,15 @@ app.listen(PORT, () => {
             await flight1.save();
             await flight2.save();
             await flight3.save();
+
             console.log("Sample Flights Created");
+
         } else {
+
             flight1 = existingFlights[0];
             flight2 = existingFlights[1] || existingFlights[0];
             flight3 = existingFlights[2] || existingFlights[0];
+
             console.log("Flights already exist, using existing flights");
         }
 

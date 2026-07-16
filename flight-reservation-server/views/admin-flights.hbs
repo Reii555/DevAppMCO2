@@ -52,7 +52,7 @@
                         </select>
                     </div>
 
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <select class="filter-dropdown" id="statusFilter">
                             <option value="ALL">All Status</option>
                             <option value="Completed">Completed</option>
@@ -63,7 +63,7 @@
                         </select>
                     </div>
 
-                    <div class="col-md-2">
+                    <div class="col-md-3">
                         <select class="sort-dropdown" id="sortFlight">
                             <option value="flight_number">Sort by Flight ID</option>
                             <option value="airline">Sort by Airline</option>
@@ -101,10 +101,8 @@
                                     <th>Airline</th>
                                     <th>Cabin Class</th>
                                     <th>Route</th>
-                                    <th>Departure Date</th>
-                                    <th>Departure Time</th>
-                                    <th>Arrival Date</th>
-                                    <th>Arrival Time</th>
+                                    <th>Departure</th>
+                                    <th>Arrival</th>
                                     <th>Duration</th>
                                     <th>Trip Type</th>
                                     <th>Seats</th>
@@ -173,6 +171,7 @@
                                             <option value="Sunlight Air">Sunlight Air</option>
                                             <option value="Royal Air Philippines">Royal Air Philippines</option>
                                         </select>
+                                        <div class="text-danger small" id="airlineError"></div>
                                     </div>
 
                                     <div class="mb-3">
@@ -203,6 +202,7 @@
                                             <option value="Bohol (TAG)">Bohol (TAG)</option>
                                             <option value="Zamboanga (ZAM)">Zamboanga (ZAM)</option>
                                         </select>
+                                        <div class="text-danger small" id="originError"></div>
                                     </div>
 
                                     <div class="mb-3">
@@ -220,26 +220,22 @@
                                             <option value="Bohol (TAG)">Bohol (TAG)</option>
                                             <option value="Zamboanga (ZAM)">Zamboanga (ZAM)</option>
                                         </select>
+                                        <div class="text-danger small" id="destinationError"></div>
                                     </div>
 
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="mb-3">
-                                                <label class="form-label" for="departureDate">Departure Date</label>
-                                                <input type="date" class="form-control" id="departureDate" required>
-                                                <label class="form-label" for="departureTime">Departure Time</label>
-                                                <input type="time" class="form-control" id="departureTime" required>
-                                                <div class="text-danger small" id="departureError"></div>
+                                                <label class="form-label" for="departureTime">Departure Date & Time</label>
+                                                <input type="datetime-local" class="form-control" id="departureTime" required>
+                                                <div class="text-danger small" id="departureTimeError"></div>
                                             </div>
                                         </div>
-
                                         <div class="col-md-6">
                                             <div class="mb-3">
-                                                <label class="form-label" for="arrivalDate">Arrival Date</label>
-                                                <input type="date" class="form-control" id="arrivalDate" required>
-                                                <label class="form-label" for="arrivalTime">Arrival Time</label>
-                                                <input type="time" class="form-control" id="arrivalTime" required>
-                                                <div class="text-danger small" id="arrivalError"></div>
+                                                <label class="form-label" for="arrivalTime">Arrival Date & Time</label>
+                                                <input type="datetime-local" class="form-control" id="arrivalTime" required>
+                                                <div class="text-danger small" id="arrivalTimeError"></div>
                                             </div>
                                         </div>
                                     </div>
