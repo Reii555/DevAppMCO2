@@ -44,26 +44,68 @@ app.use(session({
 // Make user data available to all
 app.use((req, res, next) => {
     res.locals.user = req.session.user || null;
+    res.locals.isAuthenticated = req.session.user ? true : false;
     next();
 });
 
-// HANDLEBARS VIEW ENGINE
-app.engine('hbs', exphbs.engine({
+// ============================================================
+// HANDLEBARS VIEW ENGINE WITH HELPERS
+// ============================================================
+const hbs = exphbs.create({
     extname: 'hbs',
     defaultLayout: 'main',
     layoutsDir: path.join(__dirname, 'views/layouts'),
-}));
+    helpers: {
+        formatDate: function(date) {
+            if (!date) return 'N/A';
+            const d = new Date(date);
+            return d.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        },
+        formatDateInput: function(date) {
+            if (!date) return '';
+            const d = new Date(date);
+            return d.toISOString().split('T')[0];
+        },
+        eq: function(a, b) {
+            return a === b;
+        },
+        or: function(a, b) {
+            return a || b;
+        },
+        formatPrice: function(price) {
+            if (!price) return '₱0.00';
+            return '₱' + parseFloat(price).toFixed(2);
+        }
+    }
+});
+
+app.engine('hbs', hbs.engine);
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
 
+// ============================================================
 // ROUTES
+// ============================================================
+
+// Import route files
 const searchRoutes = require('./routes/searchRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
+const profileRoutes = require('./routes/profileRoutes');
+const reservationRoutes = require('./routes/reservationRoutes');
 
+// Use route files
 app.use('/search', searchRoutes);
 app.use('/booking', bookingRoutes);
+app.use('/profile', profileRoutes);
+app.use('/reservations', reservationRoutes);
 
-// Home Page
+// ============================================================
+// HOME PAGE
+// ============================================================
 app.get('/', (req, res) => {
     res.render('index', { 
         title: 'Home',
@@ -71,8 +113,9 @@ app.get('/', (req, res) => {
     });
 });
 
+// ============================================================
 // SIGNUP ROUTES
-// Show Signup Form
+// ============================================================
 app.get('/signup', (req, res) => {
     if (req.session.user) {
         return res.redirect('/dashboard');
@@ -80,7 +123,6 @@ app.get('/signup', (req, res) => {
     res.render('signup', { title: 'Sign Up' });
 });
 
-// Process Signup Form
 app.post('/signup', async (req, res) => {
     try {
         // Check if email already exists
@@ -90,7 +132,7 @@ app.post('/signup', async (req, res) => {
         }
 
         // Create new user
-        const user = new ({
+        const user = new User({
             firstName: req.body.firstName,
             lastName: req.body.lastName,
             email: req.body.email,
@@ -107,8 +149,9 @@ app.post('/signup', async (req, res) => {
     }
 });
 
+// ============================================================
 // LOGIN ROUTES
-// Show Login Form
+// ============================================================
 app.get('/login', (req, res) => {
     if (req.session.user) {
         return res.redirect('/dashboard');
@@ -116,7 +159,6 @@ app.get('/login', (req, res) => {
     res.render('login', { title: 'Login' });
 });
 
-// Process Login Form
 app.post('/login', async (req, res) => {
     try {
         const user = await User.findOne({
@@ -137,17 +179,9 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// BOOKING ROUTES
-app.get('/booking', (req, res) => {
-    res.render('booking', { title: 'Book Flight' });
-});
-
-// MY RESERVATIONS ROUTES
-app.get('/my-reservations', (req, res) => {
-    res.render('my-reservations', { title: 'My Reservations' });
-});
-
+// ============================================================
 // DASHBOARD ROUTE
+// ============================================================
 app.get('/dashboard', (req, res) => {
     if (!req.session.user) {
         return res.redirect('/login');
@@ -159,7 +193,9 @@ app.get('/dashboard', (req, res) => {
     });
 });
 
-// ADMIN ROUTE
+// ============================================================
+// ADMIN ROUTES
+// ============================================================
 app.get('/admin', (req, res) => {
     if (!req.session.user) {
         return res.redirect('/login');
@@ -175,7 +211,6 @@ app.get('/admin', (req, res) => {
     });
 });
 
-// ADMIN-USERS ROUTE
 app.get('/admin-users', async (req, res) => {
     res.render('admin-users', {
         title: 'Users',
@@ -183,7 +218,6 @@ app.get('/admin-users', async (req, res) => {
     });
 });
 
-// ADMIN-RESERVATIONS ROUTE
 app.get('/admin-reservations', async (req, res) => {
     res.render('admin-reservations', {
         title: 'Reservations',
@@ -191,7 +225,9 @@ app.get('/admin-reservations', async (req, res) => {
     });
 });
 
+// ============================================================
 // CUSTOMER ROUTE
+// ============================================================
 app.get('/customer', (req, res) => {
     if (!req.session.user) {
         return res.redirect('/login');
@@ -207,7 +243,9 @@ app.get('/customer', (req, res) => {
     });
 });
 
+// ============================================================
 // LOGOUT ROUTE
+// ============================================================
 app.get('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
@@ -217,17 +255,27 @@ app.get('/logout', (req, res) => {
     });
 });
 
+// ============================================================
 // START SERVER
+// ============================================================
 app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`✅ Server running on http://localhost:${PORT}`);
+    console.log(`📁 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log('📄 Routes:');
+    console.log('   - /search          (Search Flights)');
+    console.log('   - /booking         (Book Flight)');
+    console.log('   - /profile         (My Profile)');
+    console.log('   - /profile/edit    (Edit Profile)');
+    console.log('   - /reservations    (My Reservations)');
+    console.log('   - /admin-users     (Admin Users)');
+    console.log('   - /admin-reservations (Admin Reservations)');
 });
 
-// SAMPLE DATA 
-
+// ============================================================
+// SAMPLE DATA
+// ============================================================
 (async () => {
     try {
-
         // Sample data for admin user (?) - replace values nalang
         const user = await User.create({
             firstName: "Test",
@@ -251,7 +299,7 @@ app.listen(PORT, () => {
             }
         });
 
-        console.log("Sample User Created");
+        console.log("✅ Sample User Created");
 
         // Sample data for flight collection
         const flight = await Flight.create({
@@ -267,7 +315,7 @@ app.listen(PORT, () => {
             status: "Upcoming"
         });
 
-        console.log("Sample Flight Created");
+        console.log("✅ Sample Flight Created");
 
         // Sample data for seats collection
         const seats = [];
@@ -279,7 +327,8 @@ app.listen(PORT, () => {
                 seats.push({
                     flight_id: flight._id,
                     seatNumber: `${row}${letter}`,
-                    status: "Unoccupied"
+                    status: "Unoccupied",
+                    cabinClass: "Economy"
                 });
             }
         }
@@ -288,7 +337,7 @@ app.listen(PORT, () => {
 
         await Seat.insertMany(seats);
 
-        console.log("Sample Seats created.");
+        console.log("✅ Sample Seats created.");
 
     } catch (err) {
         console.log(err);

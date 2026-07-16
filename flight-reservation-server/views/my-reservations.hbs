@@ -25,17 +25,17 @@
                             <div class="reservation-item" data-id="{{this._id}}">
                                 <div class="res-summary">
                                     <div>
-                                        <span class="res-ref">{{this.bookingRef}}</span>
+                                        <span class="res-ref">{{this.booking_ref}}</span>
                                         <span class="res-passenger">— {{this.passengerName}}</span>
                                     </div>
                                     <div class="res-route">
-                                        <i class="fas fa-plane"></i> {{this.flightId.route}} | Seat {{this.seatNumber}}
+                                        <i class="fas fa-plane"></i> {{this.flight_id.origin}} → {{this.flight_id.destination}} | Seat {{this.seatNumber}}
                                     </div>
                                     <div>
                                         <span class="res-status status-{{this.status}}">{{this.status}}</span>
                                     </div>
                                     <div class="res-price">
-                                        ₱{{this.totalPrice}} 
+                                        ₱{{this.total_price}} 
                                         <i class="fas fa-chevron-down res-expand-icon"></i>
                                     </div>
                                 </div>
@@ -44,37 +44,23 @@
                                     <div class="detail-row">
                                         <div>
                                             <span class="label">Flight Date:</span>
-                                            <span class="value">{{formatDate this.flightId.departureDate}}</span>
+                                            <span class="value">{{formatDate this.flight_id.departureTime}}</span>
                                         </div>
                                         <div>
                                             <span class="label">Flight Number:</span>
-                                            <span class="value">{{this.flightId.flightId}}</span>
+                                            <span class="value">{{this.flight_id.flight_number}}</span>
                                         </div>
                                     </div>
                                     <div class="detail-row">
                                         <div>
                                             <span class="label">Meal:</span>
-                                            <span class="value">{{this.mealPreference}}</span>
+                                            <span class="value">{{this.meal_id.meal_name}}</span>
                                         </div>
                                         <div>
-                                            <span class="label">Extra Package:</span>
-                                            <span class="value">{{this.extraPackage}}</span>
+                                            <span class="label">Trip Type:</span>
+                                            <span class="value">{{this.trip_type}}</span>
                                         </div>
                                     </div>
-
-                                    <!-- Emergency Contact Info -->
-                                    {{#if this.emergencyContact}}
-                                    <div class="detail-row">
-                                        <div>
-                                            <span class="label">Emergency Contact:</span>
-                                            <span class="value">{{this.emergencyContact.name}}</span>
-                                        </div>
-                                        <div>
-                                            <span class="label">Contact:</span>
-                                            <span class="value">{{this.emergencyContact.phone}}</span>
-                                        </div>
-                                    </div>
-                                    {{/if}}
 
                                     <!-- Action Buttons -->
                                     <div class="detail-actions">
@@ -83,10 +69,10 @@
                                         </button>
                                         
                                         {{#if (or (eq this.status 'Pending') (eq this.status 'Confirmed'))}}
-                                            <button class="btn-action btn-edit edit-seat" data-id="{{this._id}}" data-seat="{{this.seatNumber}}" data-meal="{{this.mealPreference}}">
-                                                <i class="fas fa-edit me-1"></i>Edit
+                                            <button class="btn-action btn-edit edit-seat" data-id="{{this._id}}" data-seat="{{this.seatNumber}}" data-meal="{{this.meal_id.meal_name}}">
+                                                <i class="fas fa-edit me-1"></i>Edit Seat
                                             </button>
-                                            <button class="btn-action btn-cancel cancel-reservation" data-id="{{this._id}}" data-ref="{{this.bookingRef}}" data-passenger="{{this.passengerName}}">
+                                            <button class="btn-action btn-cancel cancel-reservation" data-id="{{this._id}}" data-ref="{{this.booking_ref}}" data-passenger="{{this.passengerName}}">
                                                 <i class="fas fa-times-circle me-1"></i>Cancel
                                             </button>
                                         {{/if}}
