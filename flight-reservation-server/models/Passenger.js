@@ -2,13 +2,13 @@ const mongoose = require("mongoose");
 
 const passengerSchema = new mongoose.Schema({
     
-    user_id: { //foreign key
+    user_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
         required: true
     },
 
-    reservation_id: { //foreign key
+    reservation_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Reservation"
     },
@@ -17,7 +17,7 @@ const passengerSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
-        maxlength: [100]
+        maxlength: [100, 'Full name cannot exceed 100 characters']
     },
 
     contact_num: {
@@ -28,7 +28,10 @@ const passengerSchema = new mongoose.Schema({
     passport_num: {
         type: String,
         required: true,
-        unique: true
+        unique: true,  // This already creates the index
+        trim: true,
+        uppercase: true,
+        match: [/^[A-Z0-9]{6,10}$/, 'Passport number must be 6-10 alphanumeric characters']
     },
 
     nationality: {
@@ -76,6 +79,98 @@ const passengerSchema = new mongoose.Schema({
     emergency_contact: {
         type: String,
         required: true
+    },
+
+    profilePicture: {
+        type: String,
+        default: null
+    },
+
+    savedPassengers: [{
+        firstName: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        lastName: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        passportNumber: {
+            type: String,
+            required: true,
+            trim: true,
+            uppercase: true,
+            match: [/^[A-Z0-9]{6,10}$/, 'Passport number must be 6-10 alphanumeric characters']
+        },
+        dateOfBirth: {
+            type: Date,
+            required: true
+        },
+        nationality: {
+            type: String,
+            required: true
+        },
+        gender: {
+            type: String,
+            enum: ['Male', 'Female', 'Other', 'Prefer not to say'],
+            required: true
+        },
+        type: {
+            type: String,
+            enum: ['Adult', 'Child', 'Infant'],
+            default: 'Adult'
+        }
+    }],
+
+    paymentMethods: [{
+        cardType: {
+            type: String,
+            enum: ['VISA', 'Mastercard', 'Maya', 'GoTyme'],
+            required: true
+        },
+        cardNumber: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        cardholderName: {
+            type: String,
+            required: true,
+            trim: true
+        },
+        expiryMonth: {
+            type: String,
+            required: true
+        },
+        expiryYear: {
+            type: String,
+            required: true
+        },
+        isDefault: {
+            type: Boolean,
+            default: false
+        }
+    }],
+
+    notificationPreferences: {
+        promotionalOffers: {
+            type: Boolean,
+            default: true
+        },
+        flightStatusAlerts: {
+            type: Boolean,
+            default: true
+        },
+        loyaltyUpdates: {
+            type: Boolean,
+            default: true
+        },
+        smsAlerts: {
+            type: Boolean,
+            default: true
+        }
     }
 },
 {

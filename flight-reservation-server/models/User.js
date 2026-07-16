@@ -1,17 +1,11 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-  
-  firstName: {
-    type: String,
-    required: [true, 'First name is required'],
-    trim: true
-  },
-  
-  lastName: {
-    type: String,
-    required: [true, 'Last name is required'],
-    trim: true
+  user_id: {
+    type: Number,
+    // required: true, commented for testing purposes
+    unique: true,
+    index: true 
   },
   
   email: {
@@ -21,13 +15,6 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     trim: true,
     match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email']
-  },
-  
-  password: {
-    type: String,
-    required: [true, 'Password is required'],
-    minlength: [8, 'Password must be at least 8 characters'],
-    select: false
   },
   
   phone: {
@@ -47,176 +34,68 @@ const userSchema = new mongoose.Schema({
     }
   },
   
-  dateOfBirth: {
-    type: Date
+  password: {
+    type: String,
+    required: [true, 'Password is required'],
+    minlength: [8, 'Password must be at least 8 characters'],
+    select: false
   },
   
-  passportNumber: {
-    type: String,
-    trim: true,
-    uppercase: true
-  },
-  
-  nationality: {
-    type: String,
-    trim: true
-  },
-  
-  gender: {
-    type: String,
-    enum: ['Male', 'Female', 'Prefer not to say']
-  },
-
-  role: {
-    type: String,
-    enum: ['admin', 'customer'],
-    default: 'customer'
-  },
-
-  status: {
-    type: String,
-    enum: ['active', 'inactive', 'deleted'],
-    default: 'active'
-  },
-
-  lastLogin: {
-    type: Date,
-    default: null
-  },
-
   profilePicture: {
     type: String,
     default: null
   },
-
-  emergencyContact: {
-    name: {
-      type: String,
-      trim: true
-    },
-    relationship: {
-      type: String,
-      trim: true
-    },
-    phone: {
-      type: String,
-      trim: true
-    },
-    email: {
-      type: String,
-      lowercase: true,
-      trim: true,
-      match: [/^\S+@\S+\.\S+$/, 'Please enter a valid email']
-    }
-  },
-
-  savedPassengers: [{
-    firstName: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    lastName: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    passportNumber: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    dateOfBirth: {
-      type: Date,
-      required: true
-    },
-    nationality: {
-      type: String,
-      required: true
-    },
-    gender: {
-      type: String,
-      enum: ['Male', 'Female', 'Other', 'Prefer not to say'],
-      required: true
-    },
-    type: {
-      type: String,
-      enum: ['Adult', 'Child', 'Infant'],
-      default: 'Adult'
-    }
-  }],
-
-  paymentMethods: [{
-    cardType: {
-      type: String,
-      enum: ['VISA', 'Mastercard', 'Amex', 'Discover'],
-      required: true
-    },
-    cardNumber: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    cardholderName: {
-      type: String,
-      required: true,
-      trim: true
-    },
-    expiryMonth: {
-      type: String,
-      required: true
-    },
-    expiryYear: {
-      type: String,
-      required: true
-    },
-    isDefault: {
-      type: Boolean,
-      default: false
-    }
-  }],
-
-  notificationPreferences: {
-    promotionalOffers: {
-      type: Boolean,
-      default: true
-    },
-    flightStatusAlerts: {
-      type: Boolean,
-      default: true
-    },
-    loyaltyUpdates: {
-      type: Boolean,
-      default: true
-    },
-    smsAlerts: {
-      type: Boolean,
-      default: true
-    }
-  },
-
-  createdAt: {
+  
+  created_at: {
     type: Date,
     default: Date.now
   },
-  updatedAt: {
+  
+  last_login: {
     type: Date,
-    default: Date.now    
+    default: null
+  },
+  
+  role: {
+    type: String,
+    enum: ['customer', 'admin'],
+    default: 'customer'
+  },
+  
+  status: {
+    type: String,
+    enum: ['active', 'deleted'],
+    default: 'active'
   }
 }, {
-  timestamps: true,
+  timestamps: false,
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });
 
-userSchema.virtual('fullName').get(function() {
-  return this.firstName + ' ' + this.lastName;
+// Auto-increment user_id before saving
+userSchema.pre('save', async function(next) {
+  if (this.isNew) {
+    try {
+      const lastUser = await this.constructor.findOne({}, {}, { sort: { 'user_id': -1 } });
+      if (lastUser) {
+        this.user_id = lastUser.user_id + 1;
+      } else {
+        this.user_id = 1000;
+      }
+    } catch (error) {
+      return next(error);
+    }
+  }
+  next();
 });
 
+// Method to compare password
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return this.password === candidatePassword;
 };
 
+// Static method to find by email with password
 userSchema.statics.findByEmailWithPassword = function(email) {
   return this.findOne({ email }).select('+password');
 };
