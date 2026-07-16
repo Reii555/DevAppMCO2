@@ -228,7 +228,7 @@ function updateTotalPrice() {
 
 // EVENTS
 $(document).ready(function(){
-    updateTotalPrice(); 
+    // updateTotalPrice(); 
 
     // If [add passenger] is clicked, another passenger card is created
     $("#addPassenger").click(function(){
@@ -320,6 +320,7 @@ $(document).ready(function(){
         let emergencyContact = $("#name_emergency").val().trim();
 
         if(!validatePassenger()){
+            alert("Invalid Passenger Information");
             return;
         }
 
@@ -329,6 +330,7 @@ $(document).ready(function(){
             method: "POST",
 
             data: {
+                user_id: "6884b6f3b0f0d6b1d6c8e123",
                 full_name: fullName,  
                 contact_num: contactNum, 
                 passport_num: passportNum,
@@ -341,10 +343,14 @@ $(document).ready(function(){
             success: function(){
                 alert("Passenger saved!");
 
+            },
+
+            error: function(xhr){
+                console.log(xhr);
+                alert("Error in Saving Passenger");
             }
         });
     });
-
 
     // if save passenger button is pressed but data is invalid/data is valid
     $("#saveEmergency").click(function (){
@@ -355,7 +361,7 @@ $(document).ready(function(){
     });
 
     // create the seat map
-    const seats = ['A', 'B', 'C', 'D'];
+    const seats = ['A', 'B', 'C', 'D', 'E', 'F'];
 
     for(let row = 1; row <= 10; row++) {
 
@@ -366,11 +372,11 @@ $(document).ready(function(){
         `;
 
         // display seats for the left side of the aisle
-        for(let i = 0; i < 2; i++) {
+        for(let i = 0; i < 3; i++) {
             
             let seatClass;
 
-            if (row <= 2) {
+            if (row <= 3) {
                 seatClass = 'btn-outline-warning premium';
             } else {
                 seatClass = 'btn-outline-success';
@@ -390,11 +396,11 @@ $(document).ready(function(){
         seatRow += `<div class="col"></div>`; // spacer for the aisle
 
         // display seats for the right side of the aisle
-        for(let i = 2; i < 4; i++) {
+        for(let i = 3; i < 6; i++) {
 
             let seatClass;
 
-            if (row <= 2) {
+            if (row <= 3) {
                 seatClass = 'btn-outline-warning premium';
             } else {
                 seatClass = 'btn-outline-success';
