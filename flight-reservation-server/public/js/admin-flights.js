@@ -476,15 +476,14 @@ $(document).ready(function () {
 
         editMode = true;
 
-        let flight = filteredFlights[selectedFlightIndex];
+        let flight = filteredFlights.find(flight => flight._id === selectedFlightId);
+        if(!flight) { return; }
 
         $("#modalTitle").text("Edit Flight");
 
         initializeFlight(flight);
 
-        let modal = new bootstrap.Modal(
-            document.getElementById("flightModal")
-        );
+        let modal = new bootstrap.Modal(document.getElementById("flightModal"));
 
         modal.show();
     });
@@ -493,7 +492,9 @@ $(document).ready(function () {
     //save flight
     $("#saveFlight").click(async function () {
 
-        if (!await validateFlightForm()) { return; }
+        if (!await validateFlightForm()) {
+            return;
+        }
 
         const flightData = {
 
@@ -524,51 +525,84 @@ $(document).ready(function () {
 
         console.log("Saving flight:", flightData);
 
-        let url = "/admin-flights";
-        let method = "POST";
-
         if (editMode) {
+
             $.ajax({
+
                 url: `/admin-flights/${selectedFlightId}`,
                 type: "PUT",
                 contentType: "application/json",
                 data: JSON.stringify(flightData),
 
-                success: function(response){
+                success: function (response) {
+
                     console.log("Flight updated:", response);
-                    $("#flightModal").modal("hide");
+
+                    // Find the edited flight in the local array
+                    let index = filteredFlights.findIndex(
+                        flight => flight._id === selectedFlightId
+                    );
+
+                    if (index !== -1) {
+
+                        // Replace old flight data with updated data
+                        filteredFlights[index] = response.flight;
+                    }
+
+                    // Close modal
+                    bootstrap.Modal
+                        .getInstance(document.getElementById("flightModal"))
+                        .hide();
+
+                    // Re-render the table
+                    renderFlights(filteredFlights);
+
+                    // Update statistics
+                    updateStatistics();
+
                     alert("Flight updated successfully.");
-                    location.reload();
                 },
 
-                error: function(xhr){
+                error: function (xhr) {
+
                     console.error("Update error:", xhr.responseText);
+
                     alert("Error updating flight.");
                 }
             });
+
         } else {
+
             $.ajax({
+
                 url: "/admin-flights",
                 type: "POST",
                 contentType: "application/json",
                 data: JSON.stringify(flightData),
 
-                success: function(response){
+                success: function (response) {
+
                     console.log("Flight added:", response);
-                    $("#flightModal").modal("hide");
+
+                    bootstrap.Modal
+                        .getInstance(document.getElementById("flightModal"))
+                        .hide();
+
+                    applyFilters();
+                    updateStatistics();
+
                     alert("Flight added successfully.");
-                    location.reload();
                 },
 
-                error: function(xhr){
+                error: function (xhr) {
+
                     console.error("Create error:", xhr.responseText);
+
                     alert("Error adding flight.");
                 }
             });
         }
     });
-
-
     //delete
     $("#deleteBtn").click(function () {
 

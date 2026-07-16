@@ -201,7 +201,7 @@ router.get("/check-flight-number", async(req,res) => {
             flight_number: flightNumber
         };
 
-        if(editMode && flightId){
+        if(flightId){
             query._id = {
                 $ne: flightId
             };
