@@ -11,10 +11,10 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
 
     <!--CSS-->
-    <link rel="stylesheet" href="admin-dashboard.css">
-    <link rel="stylesheet" href="admin-flights.css">
-    <link rel="stylesheet" href="admin-reservations-designs.css">
-    <link rel="stylesheet" href="admin-users-design.css">
+    <link rel="stylesheet" href="/css/admin-dashboard.css">
+    <link rel="stylesheet" href="/css/admin-flights.css">
+    <link rel="stylesheet" href="/css/admin-reservations-designs.css">
+    <link rel="stylesheet" href="/cssadmin-users-design.css">
 </head>
 
 <body>
@@ -53,8 +53,7 @@
         <!--Dashboard Section-->
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a class="nav-link {{#if (eq activePage 'dashboard')}}active{{/if}}" 
-                href="/admin-dashboard">Dashboard</a>
+                <a class="nav-link-Dashboard" href="/admin-dashboard">Dashboard</a>
             </li>
         </ul>
 
@@ -62,18 +61,15 @@
         <div class="nav-section-title">Manage</div>
         <ul class="nav flex-column">
             <li class="nav-item">
-                <a class="nav-link {{#if (eq activePage 'flights')}}active{{/if}}"
-                href="/admin-flights">Flights</a>
+                <a class="nav-link-Flights" href="/admin-flights">Flights</a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link {{#if (eq activePage 'users')}}active{{/if}}" 
-                href="/admin-users">Users</a> //kaso liek.. ima check pa if this js acts like a refresh or somehow crashed the whole thang
+                <a class="nav-link-Users" href="/admin-users">Users</a>
             </li>
 
             <li class="nav-item">
-                <a class="nav-link {{#if (eq activePage 'payments')}}active{{/if}}" 
-                href="/admin-reservations">Reservations</a>
+                <a class="nav-link-Reservations" href="/admin-reservations">Reservations</a>
             </li>
         </ul>
     </nav>
@@ -81,6 +77,7 @@
 
 <!-- Main -->
 <div class="admin-main-content" id="adminMainContent">
+    <div style="padding-top: 25px;">
     {{{body}}}
 </div>
 
@@ -99,7 +96,7 @@
         $('#sidebar').toggleClass('hidden');
         
         // Toggles the 'sidebar-open' class on main content
-        $('#adminReservationsMain').toggleClass('sidebar-open');
+        $('#adminMainContent').toggleClass('sidebar-open');
         
     });
     </script>

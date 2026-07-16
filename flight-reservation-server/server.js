@@ -44,68 +44,29 @@ app.use(session({
 // Make user data available to all
 app.use((req, res, next) => {
     res.locals.user = req.session.user || null;
-    res.locals.isAuthenticated = req.session.user ? true : false;
     next();
 });
 
-// ============================================================
-// HANDLEBARS VIEW ENGINE WITH HELPERS
-// ============================================================
-const hbs = exphbs.create({
+// HANDLEBARS VIEW ENGINE
+app.engine('hbs', exphbs.engine({
     extname: 'hbs',
     defaultLayout: 'main',
     layoutsDir: path.join(__dirname, 'views/layouts'),
-    helpers: {
-        formatDate: function(date) {
-            if (!date) return 'N/A';
-            const d = new Date(date);
-            return d.toLocaleDateString('en-US', { 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            });
-        },
-        formatDateInput: function(date) {
-            if (!date) return '';
-            const d = new Date(date);
-            return d.toISOString().split('T')[0];
-        },
-        eq: function(a, b) {
-            return a === b;
-        },
-        or: function(a, b) {
-            return a || b;
-        },
-        formatPrice: function(price) {
-            if (!price) return '₱0.00';
-            return '₱' + parseFloat(price).toFixed(2);
-        }
-    }
-});
-
-app.engine('hbs', hbs.engine);
+    partialsDir: path.join(__dirname, 'views/partials')
+}));
 app.set('view engine', 'hbs');
 app.set('views', path.join(__dirname, 'views'));
 
-// ============================================================
 // ROUTES
-// ============================================================
-
-// Import route files
 const searchRoutes = require('./routes/searchRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
-const profileRoutes = require('./routes/profileRoutes');
-const reservationRoutes = require('./routes/reservationRoutes');
+const adminFlightRoutes = require('./routes/admin-flights-routes');
+const adminDashboardRoutes = require('./routes/admin-dashboard-routes');
 
-// Use route files
 app.use('/search', searchRoutes);
 app.use('/booking', bookingRoutes);
-app.use('/profile', profileRoutes);
-app.use('/reservations', reservationRoutes);
 
-// ============================================================
-// HOME PAGE
-// ============================================================
+// Home Page
 app.get('/', (req, res) => {
     res.render('index', { 
         title: 'Home',
@@ -113,9 +74,8 @@ app.get('/', (req, res) => {
     });
 });
 
-// ============================================================
 // SIGNUP ROUTES
-// ============================================================
+// Show Signup Form
 app.get('/signup', (req, res) => {
     if (req.session.user) {
         return res.redirect('/dashboard');
@@ -123,6 +83,7 @@ app.get('/signup', (req, res) => {
     res.render('signup', { title: 'Sign Up' });
 });
 
+// Process Signup Form
 app.post('/signup', async (req, res) => {
     try {
         // Check if email already exists
@@ -132,7 +93,7 @@ app.post('/signup', async (req, res) => {
         }
 
         // Create new user
-        const user = new User({
+        const user = new ({
             firstName: req.body.firstName,
             lastName: req.body.lastName,
             email: req.body.email,
@@ -149,9 +110,8 @@ app.post('/signup', async (req, res) => {
     }
 });
 
-// ============================================================
 // LOGIN ROUTES
-// ============================================================
+// Show Login Form
 app.get('/login', (req, res) => {
     if (req.session.user) {
         return res.redirect('/dashboard');
@@ -159,6 +119,7 @@ app.get('/login', (req, res) => {
     res.render('login', { title: 'Login' });
 });
 
+// Process Login Form
 app.post('/login', async (req, res) => {
     try {
         const user = await User.findOne({
@@ -179,9 +140,17 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// ============================================================
+// BOOKING ROUTES
+app.get('/booking', (req, res) => {
+    res.render('booking', { title: 'Book Flight' });
+});
+
+// MY RESERVATIONS ROUTES
+app.get('/my-reservations', (req, res) => {
+    res.render('my-reservations', { title: 'My Reservations' });
+});
+
 // DASHBOARD ROUTE
-// ============================================================
 app.get('/dashboard', (req, res) => {
     if (!req.session.user) {
         return res.redirect('/login');
@@ -193,9 +162,7 @@ app.get('/dashboard', (req, res) => {
     });
 });
 
-// ============================================================
-// ADMIN ROUTES
-// ============================================================
+// ADMIN ROUTE
 app.get('/admin', (req, res) => {
     if (!req.session.user) {
         return res.redirect('/login');
@@ -211,6 +178,12 @@ app.get('/admin', (req, res) => {
     });
 });
 
+// ADMIN DASHBOARD ROUTE
+app.use('/admin-dashboard', adminDashboardRoutes);
+// ADMIN FLIGHT ROUTE
+app.use('/admin-flights', adminFlightRoutes);
+
+// ADMIN-USERS ROUTE
 app.get('/admin-users', async (req, res) => {
     res.render('admin-users', {
         title: 'Users',
@@ -218,6 +191,7 @@ app.get('/admin-users', async (req, res) => {
     });
 });
 
+// ADMIN-RESERVATIONS ROUTE
 app.get('/admin-reservations', async (req, res) => {
     res.render('admin-reservations', {
         title: 'Reservations',
@@ -225,9 +199,7 @@ app.get('/admin-reservations', async (req, res) => {
     });
 });
 
-// ============================================================
 // CUSTOMER ROUTE
-// ============================================================
 app.get('/customer', (req, res) => {
     if (!req.session.user) {
         return res.redirect('/login');
@@ -243,9 +215,7 @@ app.get('/customer', (req, res) => {
     });
 });
 
-// ============================================================
 // LOGOUT ROUTE
-// ============================================================
 app.get('/logout', (req, res) => {
     req.session.destroy((err) => {
         if (err) {
@@ -255,29 +225,19 @@ app.get('/logout', (req, res) => {
     });
 });
 
-// ============================================================
 // START SERVER
-// ============================================================
 app.listen(PORT, () => {
-    console.log(`✅ Server running on http://localhost:${PORT}`);
-    console.log(`📁 Environment: ${process.env.NODE_ENV || 'development'}`);
-    console.log('📄 Routes:');
-    console.log('   - /search          (Search Flights)');
-    console.log('   - /booking         (Book Flight)');
-    console.log('   - /profile         (My Profile)');
-    console.log('   - /profile/edit    (Edit Profile)');
-    console.log('   - /reservations    (My Reservations)');
-    console.log('   - /admin-users     (Admin Users)');
-    console.log('   - /admin-reservations (Admin Reservations)');
+    console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
 });
 
-// ============================================================
-// SAMPLE DATA
-// ============================================================
+// SAMPLE DATA 
+
 (async () => {
     try {
-        // Sample data for admin user (?) - replace values nalang
-        const user = await User.create({
+
+        // Sample data for admin user
+        const customerUser = await User.create({
             firstName: "Test",
             lastName: "User",
             email: "test@test.com",
@@ -299,23 +259,90 @@ app.listen(PORT, () => {
             }
         });
 
-        console.log("✅ Sample User Created");
+        const adminUser = await User.create({
+            firstName: "Admin",
+            lastName: "User",
+            email: "test@admin.com",
+            password: "admin123",
+            phone: "+639987654321",
+            dateOfBirth: new Date("2003-07-11"),
+            passportNumber: "A12345679",
+            nationality: "Filipino",
+            gender: "Female",
+            role: "admin",
+            status: "active",
+            lastLogin: new Date("2026-07-14"),
+            profilePicture: "placeholder",
+            emergencyContact: {
+                name: "ParentTest",
+                relationship: "Father",
+                phone: "+639987654322",
+                email: "parent@admin.com"
+            }
+        });
+
+        console.log("Sample Users 1-2 Created");
 
         // Sample data for flight collection
         const flight = await Flight.create({
-            flight_number: "PR1001",
+            flight_number: "AS1001",
             airline: "Philippine Airlines",
+            cabinClass: "Economy",
             origin: "Manila (MNL)",
             destination: "Cebu (CEB)",
             departureTime: new Date("2026-07-14T08:00:00"),
             arrivalTime: new Date("2026-07-14T09:30:00"),
-            basePrice: 4000,
+            duration: "1h 30m",
+            tripType: "One-way",
+            layoversCount: 1,
+            layoverDetails: "Layover at Iloilo (ILO) - 30 minutes",
+            checkedIn: 15,
+            carryOn: 6,
+            basePrice: 3000,
             cabinClass: "Economy",
-            availableSeats: 40,
-            status: "Upcoming"
+            status: "Upcoming",
+            airlineLogo: "placeholder"
         });
 
-        console.log("✅ Sample Flight Created");
+        const flight2 = await Flight.create({
+            flight_number: "AS1002",
+            airline: "Cebu Pacific",
+            origin: "Cebu (CEB)",
+            destination: "Davao (DVO)",
+            departureTime: new Date("2026-07-15T13:15:00"),
+            arrivalTime: new Date("2026-07-15T14:40:00"),
+            duration: "1h 25m",
+            tripType: "One-way",
+            layoversCount: 1,
+            layoverDetails: "Layover at Iloilo (ILO) - 45 minutes",
+            checkedIn: 20,
+            carryOn: 7,
+            basePrice: 2800,
+            cabinClass: "Economy",
+            status: "Upcoming",
+            airlineLogo: "placeholder"
+
+        });
+
+        const flight3 = await Flight.create({
+            flight_number: "AS1003",
+            airline: "AirAsia",
+            origin: "Manila (MNL)",
+            destination: "Puerto Princesa (PPS)",
+            departureTime: new Date("2026-07-16T06:45:00"),
+            arrivalTime: new Date("2026-07-16T08:10:00"),
+            duration: "1h 25m",
+            tripType: "Round-trip",
+            returnDate: new Date("2026-07-20T18:30:00"),
+            checkedIn: 20,
+            carryOn: 7,
+            basePrice: 3300,
+            cabinClass: "Premium Economy",
+            status: "Upcoming",
+            airlineLogo: "placeholder"
+        });
+
+        console.log("Sample Flights 1-3 Created");
 
         // Sample data for seats collection
         const seats = [];
@@ -327,8 +354,7 @@ app.listen(PORT, () => {
                 seats.push({
                     flight_id: flight._id,
                     seatNumber: `${row}${letter}`,
-                    status: "Unoccupied",
-                    cabinClass: "Economy"
+                    status: "Unoccupied"
                 });
             }
         }
@@ -337,9 +363,46 @@ app.listen(PORT, () => {
 
         await Seat.insertMany(seats);
 
-        console.log("✅ Sample Seats created.");
+        // Sample data for seats collection (flight2)
+        const seats2 = [];
+
+        for (let row = 1; row <= 10; row++) {
+            const letters = ["A", "B", "C", "D"];
+
+            for (const letter of letters) {
+                seats2.push({
+                    flight_id: flight2._id,
+                    seatNumber: `${row}${letter}`,
+                    status: "Unoccupied"
+                });
+            }
+        }
+
+        seats2[3].status = "Occupied";   // occupied = 1C (for testing purposes)
+        seats2[4].status = "Occupied";   // occupied = 1D (for testing purposes)
+
+        await Seat.insertMany(seats2);
+
+        // Sample data for seats collection (flight3)
+        const seats3 = [];
+
+        for (let row = 1; row <= 10; row++) {
+            const letters = ["A", "B", "C", "D"];
+
+            for (const letter of letters) {
+                seats3.push({
+                    flight_id: flight3._id,
+                    seatNumber: `${row}${letter}`,
+                    status: "Unoccupied"
+                });
+            }
+        }
+
+        await Seat.insertMany(seats3);
+
+        console.log("Sample Seats created.");
 
     } catch (err) {
-        console.log(err);
+        console.log("Error: Sample Data Exists");
     }
 })();
