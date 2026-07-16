@@ -30,7 +30,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // EXPRESS SESSION - ENABLED
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'helloworld',
+    secret: process.env.SESSION_SECRET || 'mysecretkey',
     resave: false,
     saveUninitialized: false
 }));
@@ -309,7 +309,6 @@ app.listen(PORT, () => {
     try {
         console.log('=== STARTING SAMPLE DATA CREATION ===');
 
-        // DELETE ALL EXISTING RESERVATIONS 
         await Reservation.deleteMany({});
         console.log('✅ Deleted existing reservations');
 
@@ -331,7 +330,7 @@ app.listen(PORT, () => {
             console.log('✅ User already exists:', testUser.email);
         }
 
-        // Create or get Passenger
+        //  Create or get Passenger
         let passenger = await Passenger.findOne({ user_id: testUser._id });
         
         if (!passenger) {
@@ -523,7 +522,7 @@ app.listen(PORT, () => {
                 },
                 extraServicesPrice: 0,
                 booking_ref: 'BK20260720',
-                trip_type: 'One-way',
+                trip_type: 'oneway',
                 status: 'Confirmed',
                 total_price: 3150,
                 booking_date: new Date('2026-07-10T10:30:00'),
@@ -546,7 +545,7 @@ app.listen(PORT, () => {
                 },
                 extraServicesPrice: 500,
                 booking_ref: 'BK20260721',
-                trip_type: 'One-way',
+                trip_type: 'oneway',
                 status: 'Pending',
                 total_price: 3300,
                 booking_date: new Date('2026-07-11T14:20:00'),
@@ -569,7 +568,7 @@ app.listen(PORT, () => {
                 },
                 extraServicesPrice: 1200,
                 booking_ref: 'BK20260722',
-                trip_type: 'Round-trip',
+                trip_type: 'roundtrip',
                 status: 'Confirmed',
                 total_price: 4800,
                 booking_date: new Date('2026-07-12T09:15:00'),
@@ -592,7 +591,7 @@ app.listen(PORT, () => {
                 },
                 extraServicesPrice: 0,
                 booking_ref: 'BK20260715',
-                trip_type: 'One-way',
+                trip_type: 'oneway',
                 status: 'Completed',
                 total_price: 3000,
                 booking_date: new Date('2026-07-01T16:45:00'),
@@ -615,7 +614,7 @@ app.listen(PORT, () => {
                 },
                 extraServicesPrice: 200,
                 booking_ref: 'BK20260716',
-                trip_type: 'One-way',
+                trip_type: 'oneway',
                 status: 'Cancelled',
                 total_price: 3200,
                 booking_date: new Date('2026-07-02T11:00:00'),

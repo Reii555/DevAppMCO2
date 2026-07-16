@@ -81,6 +81,8 @@ exports.getFlightPrice = async (req, res) => {
 
 exports.bookFlight = async (req, res) => {
 
+    console.log(req.body);
+
     try {
 
         const reservation = await Reservation.create({
@@ -94,15 +96,22 @@ exports.bookFlight = async (req, res) => {
             extraServices: req.body.extraServices,
             extraServicesPrice: req.body.extraServicesPrice,
             booking_ref: Math.random().toString(36).substring(2,10).toUpperCase(),
-            trip_type: req.body.trip_type,
-            status: "Pending",
-            basePrice: req.body.basePrice,
+            status: "Confirmed",
             total_price: req.body.total_price
 
         });
 
-        await Passenger.findByIdAndUpdate(
+        await Seat.findOneAndUpdate(
+            {
+                flight_id: req.body.flightId,
+                seatNumber: req.body.seatNumber
+            },
+            {
+                status: "Occupied"
+            }
+        );
 
+        await Passenger.findByIdAndUpdate(
             req.body.passengerId,{reservation_id: reservation._id}
 
         );

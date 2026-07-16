@@ -3,13 +3,12 @@ const router = express.Router();
 
 const User = require("../models/User");
 
-// GET Admin users page
-router.get('/users', async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         res.render('admin-users', {
             title: 'Users',
             layout: 'main-admin',
-            user: req.session.user || { firstName: 'Test', lastName: 'Admin' },
+            user: req.session.user /*|| { firstName: 'Test', lastName: 'Admin' },*/,
             activePage: 'users'
         });
     } catch (error) {

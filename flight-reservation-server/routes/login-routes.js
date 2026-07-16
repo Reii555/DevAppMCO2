@@ -25,44 +25,48 @@ router.post('/login', async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // 1. Find user by email and password
         const user = await User.findOne({ email, password });
 
-        // 2. If no user found, show error
         if (!user) {
             return res.render('login', {
                 title: 'Login',
-                layout: 'main',
+                layout: false,
                 error: 'Invalid email or password.',
                 success: null,
                 formData: req.body
             });
         }
 
-        // 3. Save user to session (loggin them in)
         req.session.user = user;
         console.log('User logged in:', user.email);
         console.log('   Role:', user.role);
 
-        // 4. Redirect based on role
         if (user.role === 'admin') {
-            // Admin goes to admin panel
-            return res.redirect('/admin-dashboard');
+            return res.redirect('/admin');
         } else {
-            // Customer goes to ??
-            return res.redirect('/index');
+            return res.redirect('/');
         }
 
     } catch (error) {
         console.error('Login error:', error);
         res.render('login', {
             title: 'Login',
-            layout: 'main',
+            layout: false,
             error: 'Error logging in. Please try again.',
             success: null,
             formData: req.body
         });
     }
+});
+
+// LOGOUT ROUTE
+router.get('/logout', (req, res) => {
+    req.session.destroy((err) => {
+        if (err) {
+            console.error('Logout error:', err);
+        }
+        res.redirect('/');
+    });
 });
 
 module.exports = router;

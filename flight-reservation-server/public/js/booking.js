@@ -263,61 +263,100 @@ $(document).ready(function(){
         updatePassengerCount();
 
         $("#passengerContainer").append(`
-        <div class="card border p-3 mb-3 passenger-card">
-            <h5>Passenger ${passengerCount}</h5>
+            <div class="card border p-3 mt-4 mb-3 passenger-card">
 
-            <div class="row g-3">
+                <h5>Passenger</h5>
 
-                <div class="col-md-6">
-                    <label class="form-label">Full Name</label> 
-                    <input type="text" class="form-control" id="fullName">
-                    <div class="text-danger small" id="nameError"></div>
-                </div>
+                <div class="row g-3">
 
-                <div class="col-md-6">
-                    <label class="form-label">Email Address</label>
-                    <input type="email" class="form-control" id="email">
-                    <div class="text-danger small" id="emailError"></div>
-                </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="fullName" name="fullName">
+                        <div class="text-danger small" id="nameError"></div>
+                    </div>
 
-                <div class="col-md-6">
-                    <label class="form-label">Contact Number</label>
-                    <input type="tel" class="form-control" id="contactNum">
-                    <div class="text-danger small" id="contactError"></div>
-                </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" class="form-control" id="email" name="email">
+                        <div class="text-danger small" id="emailError"></div>
+                    </div>
 
-                <div class="col-md-6">
-                    <label class="form-label">Passport Number</label>
-                    <input type="text" class="form-control" id="passportNum">
-                    <div class="text-danger small" id="passportError"></div>
-                </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Contact Number</label>
+                        <input type="tel" class="form-control" id="contactNum" name="contactNum">
+                        <div class="text-danger small" id="contactError"></div>
+                    </div>
 
-                <div class="col-md-4">
-                    <label class="form-label">Nationality</label>
-                    <select class="form-select" id="nationality">
-                        <option>Filipino</option>
-                    </select>
-                    <div class="text-danger small" id="nationalityError"></div>
-                </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Passport Number</label>
+                        <input type="text" class="form-control" id="passportNum" name="passportNum">
+                        <div class="text-danger small" id="passportError"></div>
+                    </div>
 
-                <div class="col-md-4">
-                    <label class="form-label">Date of Birth</label>
-                        <input type="date" class="form-control" id="birthDate">
+                    <div class="col-md-4">
+                        <label class="form-label">Nationality</label>
+                        <select class="form-select" id="nationality" name="nationality">
+                            <option value="">Select Nationality</option>
+                            <option>Filipino</option>
+                        </select>
+                        <div class="text-danger small" id="nationalityError"></div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Date of Birth</label>
+                        <input type="date" class="form-control" id="birthDate" name="birthDate">
                         <div class="text-danger small" id="birthDateError"></div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label">Gender</label>
+                        <select class="form-select" id="gender" name="gender">
+                            <option value="">Select Gender</option>
+                            <option>Male</option>
+                            <option>Female</option>
+                        </select>
+                        <div class="text-danger small" id="genderError"></div>
+                    </div>
+
                 </div>
 
-                <div class="col-md-4">
-                    <label class="form-label">Gender</label>
-                    <select class="form-select" id="gender">
-                        <option>Male</option>
-                        <option>Female</option>
-                    </select>
-                    <div class="text-danger small" id="genderError"></div>
+                </div>
+
+                <div class="card border p-3 mb-3 passenger-card">
+
+                    <h5>Emergency Contact</h5>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-control" id="name_emergency">
+                            <div class="text-danger small" id="name_emError"></div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Relationship</label>
+                            <input type="text" class="form-control" id="rel_emergency">
+                            <div class="text-danger small" id="rel_emError"></div>
+                        </div>
+
+                         <div class="col-md-6">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="form-control" id="email_emergency">
+                            <div class="text-danger small" id="email_emError"></div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Contact Number</label>
+                            <input type="tel" class="form-control" id="contact_emergency">
+                            <div class="text-danger small" id="contact_emError"></div>
+                        </div>
+
+                    </div>
+
                 </div>
 
                 <button type="button" class="btn btn-primary" id="savePassenger">Save Passenger</button>
-            </div>
-        </div>
+
         `);
 
     });
@@ -357,6 +396,9 @@ $(document).ready(function(){
             success: function(passenger){
 
                 passengerId = passenger._id;
+
+                console.log("Saved passengerId:", passengerId);
+
                 alert("Passenger saved!");
 
             },
@@ -546,6 +588,8 @@ $(document).ready(function(){
     $("#bookFlight").click(function(){
         const flightId = window.location.pathname.split("/").pop();
 
+        console.log("Passenger ID:", passengerId);
+
         let seatNumber = $(".seat.selected").first().text().trim();
         let mealPreference = $(".meal-card.selected h5").text() || "Standard";
         let mealPrice = getMealPrice();
@@ -586,6 +630,7 @@ $(document).ready(function(){
             },
             success:function(){
                 alert("Reservation Successful!");
+                window.location.href = "/search";
             }
         });
     });

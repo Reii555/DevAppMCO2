@@ -3,7 +3,6 @@ const mongoose = require('mongoose');
 const reservationSchema = new mongoose.Schema({
   reservation_id: {
     type: Number,
-    required: true,
     unique: true,
     index: true
   },
