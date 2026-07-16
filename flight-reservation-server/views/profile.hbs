@@ -1,95 +1,95 @@
-<div class="row g-4">
-    <!-- Left Column -->
-    <div class="col-lg-5">
-        <div class="profile-card p-4">
-            <!-- Personal Information -->
-            <div class="mb-4">
-                <div class="section-title">Personal Information</div>
+<div class="container my-4">
+    <div class="row g-4">
+        <!-- Left Column -->
+        <div class="col-lg-5">
+            <div class="profile-card p-4">
+                <!-- Personal Information -->
+                <div class="mb-4">
+                    <div class="section-title">Personal Information</div>
 
-                <!-- Avatar -->
-                <div class="d-flex align-items-center gap-4 mb-4 pb-2 border-bottom">
-                    <div class="avatar-wrapper" id="avatarPreview">
-                        {{#if user.profilePicture}}
-                            {{#if (eq user.profilePicture "placeholder")}}
-                                <i class="fas fa-user avatar-placeholder"></i>
+                    <!-- Avatar -->
+                    <div class="d-flex align-items-center gap-4 mb-4 pb-3 border-bottom">
+                        <div class="avatar-wrapper" id="avatarPreview">
+                            {{#if user.profilePicture}}
+                                {{#if (eq user.profilePicture "placeholder")}}
+                                    <i class="fas fa-user avatar-placeholder"></i>
+                                {{else}}
+                                    <img src="{{user.profilePicture}}" alt="Profile Picture">
+                                {{/if}}
                             {{else}}
-                                <img src="{{user.profilePicture}}" alt="Profile Picture">
+                                <i class="fas fa-user avatar-placeholder"></i>
                             {{/if}}
-                        {{else}}
-                            <i class="fas fa-user avatar-placeholder"></i>
-                        {{/if}}
+                        </div>
+                        <div>
+                            <button class="btn-upload" id="uploadBtn">
+                                <i class="fas fa-camera me-1"></i> Upload photo
+                            </button>
+                            <input type="file" id="avatarUpload" accept="image/jpeg,image/png,image/jpg" style="display: none;">
+                            <div class="text-muted small mt-1">PNG, JPG up to 2MB</div>
+                        </div>
                     </div>
-                    <div>
-                        <button class="btn-upload" id="uploadBtn">
-                            <i class="fas fa-camera me-1"></i> Upload photo
-                        </button>
-                        <input type="file" id="avatarUpload" accept="image/jpeg,image/png,image/jpg" style="display: none;">
-                        <div class="text-muted small mt-1">PNG, JPG up to 2MB</div>
-                    </div>
-                </div>
 
-                <!-- Profile Info Display -->
-                <div class="profile-info">
-                    <div class="info-row">
-                        <label>Full Name</label>
-                        <p>{{user.full_name}}</p>
+                    <!-- Profile Info Display -->
+                    <div class="profile-info">
+                        <div class="info-row">
+                            <label>Full Name</label>
+                            <p>{{user.full_name}}</p>
+                        </div>
+                        <div class="info-row">
+                            <label>Email</label>
+                            <p>{{user.email}}</p>
+                        </div>
+                        <div class="info-row">
+                            <label>Contact Number</label>
+                            <p>{{user.contact_num}}</p>
+                        </div>
+                        <div class="info-row">
+                            <label>Passport Number</label>
+                            <p>{{user.passport_num}}</p>
+                        </div>
+                        <div class="info-row">
+                            <label>Nationality</label>
+                            <p>{{user.nationality}}</p>
+                        </div>
+                        <div class="info-row">
+                            <label>Date of Birth</label>
+                            <p>{{formatDate user.birth_date}}</p>
+                        </div>
+                        <div class="info-row">
+                            <label>Gender</label>
+                            <p>{{user.gender}}</p>
+                        </div>
+                        <div class="info-row">
+                            <label>Passenger Type</label>
+                            <p>{{user.type}}</p>
+                        </div>
+                        <div class="info-row">
+                            <label>Emergency Contact</label>
+                            <p>{{user.emergency_contact}}</p>
+                        </div>
+                        <div class="info-row">
+                            <label>Member Since</label>
+                            <p>{{formatDate user.createdAt}}</p>
+                        </div>
                     </div>
-                    <div class="info-row">
-                        <label>Email</label>
-                        <p>{{user.email}}</p>
-                    </div>
-                    <div class="info-row">
-                        <label>Contact Number</label>
-                        <p>{{user.contact_num}}</p>
-                    </div>
-                    <div class="info-row">
-                        <label>Passport Number</label>
-                        <p>{{user.passport_num}}</p>
-                    </div>
-                    <div class="info-row">
-                        <label>Nationality</label>
-                        <p>{{user.nationality}}</p>
-                    </div>
-                    <div class="info-row">
-                        <label>Date of Birth</label>
-                        <p>{{formatDate user.birth_date}}</p>
-                    </div>
-                    <div class="info-row">
-                        <label>Gender</label>
-                        <p>{{user.gender}}</p>
-                    </div>
-                    <div class="info-row">
-                        <label>Passenger Type</label>
-                        <p>{{user.type}}</p>
-                    </div>
-                    <div class="info-row">
-                        <label>Emergency Contact</label>
-                        <p>{{user.emergency_contact}}</p>
-                    </div>
-                    <div class="info-row">
-                        <label>Member Since</label>
-                        <p>{{formatDate user.createdAt}}</p>
-                    </div>
-                </div>
 
-                <div class="mt-3 d-flex justify-content-end">
-                    <a href="/profile/edit" class="btn-save">
-                        <i class="fas fa-edit me-1"></i> Edit Profile
-                    </a>
+                    <div class="mt-3 d-flex justify-content-end">
+                        <a href="/profile/edit" class="btn-save">
+                            <i class="fas fa-edit me-1"></i> Edit Profile
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Right Column -->
-    <div class="col-lg-7">
-        <div class="profile-card p-4">
+        <!-- Right Column -->
+        <div class="col-lg-7">
             <!-- Saved Passengers -->
-            <div class="mb-4">
+            <div class="profile-card p-4 mb-4">
                 <div class="section-title">Saved Passengers</div>
                 
                 <!-- Add Passenger Form -->
-                <div class="passenger-form mb-3 p-3" style="background: #f8fafc; border-radius: 14px;">
+                <div class="passenger-form mb-3 p-3">
                     <h6 class="mb-2">Add New Passenger</h6>
                     <div class="row g-2">
                         <div class="col-6">
@@ -145,13 +145,13 @@
                             </div>
                         {{/each}}
                     {{else}}
-                        <p class="text-muted text-center">No saved passengers yet.</p>
+                        <p class="text-muted text-center py-2">No saved passengers yet.</p>
                     {{/if}}
                 </div>
             </div>
 
             <!-- Travel History -->
-            <div class="mb-4">
+            <div class="profile-card p-4 mb-4">
                 <div class="section-title">Travel History</div>
                 {{#if reservations.length}}
                     {{#each reservations}}
@@ -177,18 +177,16 @@
                         </a>
                     </div>
                 {{else}}
-                    <p class="text-muted text-center">No reservations yet. <a href="/search">Book a flight now!</a></p>
+                    <p class="text-muted text-center py-2">No reservations yet. <a href="/search">Book a flight now!</a></p>
                 {{/if}}
             </div>
-        </div>
 
-        <!-- Payment Methods -->
-        <div class="profile-card p-4 mt-4">
-            <div class="mb-4">
+            <!-- Payment Methods -->
+            <div class="profile-card p-4 mb-4">
                 <div class="section-title">Payment Methods</div>
                 
                 <!-- Add Payment Form -->
-                <div class="payment-form mb-3 p-3" style="background: #f8fafc; border-radius: 14px;">
+                <div class="payment-form mb-3 p-3">
                     <h6 class="mb-2">Add Payment Method</h6>
                     <div class="row g-2">
                         <div class="col-6">
@@ -255,13 +253,13 @@
                             </div>
                         {{/each}}
                     {{else}}
-                        <p class="text-muted text-center">No payment methods saved.</p>
+                        <p class="text-muted text-center py-2">No payment methods saved.</p>
                     {{/if}}
                 </div>
             </div>
 
             <!-- Notification Preferences -->
-            <div>
+            <div class="profile-card p-4 mb-4">
                 <div class="section-title">Notification Preferences</div>
                 <div class="notifications-box p-3">
                     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -300,7 +298,7 @@
             </div>
 
             <!-- Quick Actions -->
-            <div class="mt-4">
+            <div class="profile-card p-4">
                 <div class="section-title">Quick Actions</div>
                 <div class="row g-3">
                     <div class="col-6">
