@@ -61,4 +61,49 @@ router.get('/api', async (req, res) => {
     }
 });
 
+router.put('/:id/status', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        // Validate status
+        const validStatuses = ['Pending', 'Confirmed', 'Cancelled', 'Completed'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: 'Invalid status' 
+            });
+        }
+
+        // Find and update reservation
+        const reservation = await Reservation.findById(id);
+        if (!reservation) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'Reservation not found' 
+            });
+        }
+
+        // Update status
+        reservation.status = status;
+        await reservation.save();
+
+        res.json({
+            success: true,
+            message: 'Status updated successfully',
+            reservation: {
+                id: reservation._id,
+                status: reservation.status
+            }
+        });
+
+    } catch (error) {
+        console.error('Error updating reservation status:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error updating status: ' + error.message 
+        });
+    }
+});
+
 module.exports = router;
