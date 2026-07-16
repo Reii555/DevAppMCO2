@@ -1,13 +1,6 @@
 const mongoose = require("mongoose");
 
 const passengerSchema = new mongoose.Schema({
-
-    passenger_id: { //primary key
-        type: String,
-        required: true,
-        unique: true,
-        trim: true
-    },
     
     user_id: { //foreign key
         type: mongoose.Schema.Types.ObjectId,
@@ -20,24 +13,11 @@ const passengerSchema = new mongoose.Schema({
         ref: "Reservation"
     },
 
-    first_name: {
+    full_name: {
         type: String,
         required: true,
         trim: true,
-        maxlength: [45, 'First name cannot exceed 45 characters']
-    },
-
-    last_name: {
-        type: String,
-        required: true,
-        trim: true,
-        maxlength: [45, 'Last name cannot exceed 45 characters']
-    },
-
-    middle_name: {
-        type: String,
-        default: "",
-        maxlength: [45, 'Middle name cannot exceed 45 characters']
+        maxlength: [100]
     },
 
     contact_num: {
