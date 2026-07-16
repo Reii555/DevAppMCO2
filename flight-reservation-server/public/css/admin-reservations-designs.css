@@ -170,6 +170,16 @@ body {
 }
 
 /* main */
+
+.page-heading {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 28px;
+    border-left: 4px solid #5686c9;
+    padding-left: 16px;
+}
+
 .Admin-panel-reservations-main {
     margin-left: 260px;
     padding: 30px 40px 40px;
