@@ -16,7 +16,7 @@
         <!-- jQuery -->
         <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         
-        <link rel="stylesheet" href="search_book.css">
+        <link rel="stylesheet" href="/css/search_book.css">
 
     </head>
     
@@ -215,130 +215,7 @@
                         <div class="row g-3">
 
                             <!-- Meal Card -->
-                            <div class="col-md-4">
-
-                                <div class="card meal-card h-100">
-
-                                    <div class="card-body">
-
-                                        <h5>Standard</h5>
-
-                                        <p class="text-muted">
-                                            Classic in-flight meal: Chicken or Pasta with Salad.
-                                        </p>
-
-                                        <p class="meal_price">Included</p>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <!-- Meal Card -->
-                            <div class="col-md-4">
-
-                                <div class="card meal-card h-100">
-
-                                    <div class="card-body">
-
-                                        <h5>Vegetarian</h5>
-
-                                        <p class="text-muted">
-                                            Fresh stir-fry vegetables with quinoa & green salad.
-                                        </p>
-
-                                        <p class="meal_price">+ ₱500</p>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <!-- Meal Card -->
-                            <div class="col-md-4">
-
-                                <div class="card meal-card h-100">
-
-                                    <div class="card-body">
-
-                                        <h5>Vegan</h5>
-
-                                        <p class="text-muted">
-                                            Plant-based protein bowl, roasted veggies, dairy-free.
-                                        </p>
-
-                                        <p class="meal_price">+ ₱700</p>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <!-- Meal Card -->
-                            <div class="col-md-4">
-
-                                <div class="card meal-card h-100">
-
-                                    <div class="card-body">
-
-                                        <h5>Halal</h5>
-
-                                        <p class="text-muted">
-                                            Certified Halal chicken with saffron rice
-                                        </p>
-
-                                        <p class="meal_price">+ ₱1000</p>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <!-- Meal Card -->
-                            <div class="col-md-4">
-
-                                <div class="card meal-card h-100">
-
-                                    <div class="card-body">
-
-                                        <h5>Kosher</h5>
-
-                                        <p class="text-muted">
-                                            Glatt Kosher meal, pre-packaged under supervision.
-                                        </p>
-
-                                        <p class="meal_price">+ ₱1200</p>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                            <!-- Meal Card -->
-                            <div class="col-md-4">
-
-                                <div class="card meal-card h-100">
-
-                                    <div class="card-body">
-
-                                        <h5>Gluten Free</h5>
-
-                                        <p class="text-muted">
-                                            Gluten-free pasta, fresh vegetables, GF dessert.
-                                        </p>
-
-                                        <p class="meal_price">+ ₱1500</p>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
+                            <div class="row gy-2" id="mealContainer"></div>
 
                         </div>
 
@@ -399,11 +276,11 @@
                         <h6>Flight Details</h6>
 
                         <p class="mb-1">
-                            MNL → CEB
+                            {{flight.origin}} → {{flight.destination}}
                         </p>
 
                         <p class="text-muted">
-                            PR123 • Economy
+                            {{flight.flight_number}} • {{flight.cabinClass}}
                         </p>
 
                         <hr>
@@ -420,7 +297,7 @@
 
                         <div class="d-flex justify-content-between">
                             <span>Meal</span>
-                            <span id="selectedMeal">Standard</span>
+                            <span id="selectedMeal">Standard - Included</span>
                         </div>
 
                         <hr>
@@ -473,12 +350,7 @@
                         <!-- Breakdown -->
                         <div class="d-flex justify-content-between">
                             <span>Base Fare</span>
-                            <span>₱3,500</span>
-                        </div>
-
-                        <div class="d-flex justify-content-between">
-                            <span>Taxes & Fees</span>
-                            <span>₱700</span>
+                            <span>{{flight.basePrice}}</span>
                         </div>
 
                         <hr>

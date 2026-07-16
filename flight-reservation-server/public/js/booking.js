@@ -1,4 +1,5 @@
 let passengerCount = 1;
+let baseFlightPrice = 0;
 
 // FUNCTIONS
 // Passenger Validation
@@ -122,21 +123,38 @@ function updateSelectedSeats() {
     }
 }
 
+// get and update occupied seats
+function disableOccupiedSeats(seats){
+
+    $('.seat').each(function(){
+
+        const seatNumber = $(this).text().trim();
+        const seat = seats.find(s => s.seatNumber === seatNumber);
+
+        if (seat && seat.status === "Occupied"){
+
+            $(this)
+                .removeClass('btn-outline-success btn-outline-warning')
+                .addClass('btn-secondary')
+                .prop('disabled', true);
+        }
+
+    });
+
+}
+
 // Get and Update Selected Meal 
 function updateSelectedMeal() {
 
-    let selected = [];
+    let mealName = $('.meal-card.selected h5').text();
+    let mealPrice = $('.meal-card.selected .meal_price').text();
 
-    $('.meal-card.selected h5').each(function () {
-        selected.push($(this).text());
-    });
-
-    // update sidebar
-    if (selected.length == 0) {
-        $('#selectedMeal').text('Standard');
+    if (mealName === "") {
+        $('#selectedMeal').text("Standard - Included");
     } else {
-        $('#selectedMeal').text(selected);
+        $('#selectedMeal').text("[" + mealName + "]" + mealPrice);
     }
+
 }
 
 // Get and Update Passenger Count 
@@ -144,25 +162,26 @@ function updatePassengerCount() {
     $('#passengerCount').text(passengerCount);
 }
 
+// update extra services
 function updateExtraServices() {
 
-    let baggageTotal = $('#checkedBag').val() * checkedBaggage;
-    let carryTotal = $('#carryBag').val() * carryBaggage;
+    let baggageTotal = $('#checkedBag').val() * 600;
+    let carryTotal = $('#carryBag').val() * 300;
 
     let priorityTotal = 0;
     let insuranceTotal = 0;
     let loungeTotal = 0;
 
     if ($('#priorityBoard').prop('checked')) {
-        priorityTotal = priority;
+        priorityTotal = 500;
     }
 
     if ($('#travelIns').prop('checked')) {
-        insuranceTotal = insurance;
+        insuranceTotal = 700;
     }
 
     if ($('#loungeAccess').prop('checked')) {
-        loungeTotal = loungeAccess;
+        loungeTotal = 1000;
     }
 
     $('#baggageCost').text('₱' + baggageTotal);
@@ -184,7 +203,6 @@ function updateExtraServices() {
 }
 
 // get meal price
-
 function getMealPrice() {
 
     let price = $('.meal-card.selected .meal_price').text();
@@ -204,7 +222,7 @@ function updateTotalPrice() {
     // get number of seats
     let count = $('.seat.selected').length;
 
-    let total = baseFlightPrice;
+    let total = baseFlightPrice * count;
 
     $('.seat.selected').each(function () {
 
@@ -214,10 +232,8 @@ function updateTotalPrice() {
         let row = parseInt(seat);
 
         if (row <= 3) {
-            total += baseSeatPrice + premiumFee;
-        } else {
-            total += baseSeatPrice;
-        }
+            total += 500; // premium seat price
+        } 
 
     });
 
@@ -228,7 +244,15 @@ function updateTotalPrice() {
 
 // EVENTS
 $(document).ready(function(){
-    // updateTotalPrice(); 
+    $.ajax({
+        url: window.location.pathname + "/price",
+        method: "GET",
+
+        success: function(flight){
+            baseFlightPrice = flight.basePrice;
+            updateTotalPrice();
+        }
+    });
 
     // If [add passenger] is clicked, another passenger card is created
     $("#addPassenger").click(function(){
@@ -293,18 +317,6 @@ $(document).ready(function(){
             </div>
         </div>
         `);
-
-    });
-
-    // If a meal card is clicked, it's either selected or removed
-    $(".meal-card").click(function(){
-
-        $(".meal-card").removeClass("selected");
-
-        $(this).addClass("selected");
-
-        updateSelectedMeal();
-        updateTotalPrice(); 
 
     });
 
@@ -420,42 +432,105 @@ $(document).ready(function(){
         $('#seatRows').append(seatRow);
     }
 
-    // change occupied seats in the seat map
-    $('.seat').each(function (){
+    // occupied seats
+    $.ajax({
 
-        let seat = $(this).text().trim();
+        url: window.location.pathname + "/seats",
+        method: "GET",
 
-        if (occupiedSeats.includes(seat)) {
+        success: function(occupiedSeats){
+            console.log("Occupied seats:", occupiedSeats);
 
-            $(this)
-                .removeClass('btn-outline-success btn-outline-warning selected')
-                .addClass('btn-secondary')
-                .prop('disabled', true);
+            disableOccupiedSeats(occupiedSeats);
+        },
+
+        error: function(xhr){
+            console.log(xhr);
         }
+
     });
 
     // when a seat is chosen
-    $(".seat").click(function (){
+    $(".seat").click(function () {
 
-        let seat = $(this).text();
-
-        // if occupied, nothing happens
-        if (occupiedSeats.includes(seat)) {
-            return; 
+        if ($(this).prop("disabled")) {
+            return;
         }
 
-        // if not occupied and is already selected
-        if ($(this).hasClass('selected')) {
-            $(this).removeClass('selected btn-success text-white');
+        // PREMIUM SEAT
+        if ($(this).hasClass("premium")) {
 
-        // if not occupied and is not yet selected
-        } else {
+            if ($(this).hasClass("selected")) {
 
-            $(this).addClass('selected btn-success text-white');
+                $(this).removeClass("selected btn-warning text-dark").addClass("btn-outline-warning");
+
+            } else {
+
+                $(this).removeClass("btn-outline-warning").addClass("selected btn-warning text-dark");
+            }
+        }
+
+        // NON PREMIUM SEAT
+        else {
+            if ($(this).hasClass("selected")) {
+
+                $(this).removeClass("selected btn-success text-white").addClass("btn-outline-success");
+
+            } else {
+
+                $(this).removeClass("btn-outline-success").addClass("selected btn-success text-white");
+            }
+
         }
 
         updateSelectedSeats();
-        updateTotalPrice(); 
+        updateTotalPrice();
+
+    });
+
+    // display meal cards
+    $.ajax({
+        url: "/booking/meals",
+        method: "GET",
+
+        success: function(meals){
+            console.log(meals);
+
+            meals.forEach(meal => {
+
+                let priceText;
+
+                if (meal.additional_price == 0) {
+                    priceText = "Included";
+                } else {
+                    priceText = "+ ₱" + meal.additional_price;
+                }
+
+                $("#mealContainer").append(`
+                    <div class="col-md-4">
+                        <div class="card meal-card h-100">
+                            <div class="card-body">
+                                <h5>${meal.meal_name}</h5>
+                                <p class="text-muted">${meal.description}</p>
+                                <p class="meal_price">${priceText}</p>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            });
+        }
+    });
+
+    // when a meal is chosen
+    $("#mealContainer").on("click", ".meal-card", function () {
+
+        $(".meal-card").removeClass("selected");
+
+        $(this).addClass("selected");
+
+        updateSelectedMeal();
+        updateTotalPrice();
+
     });
 
     // when an extra service is updated

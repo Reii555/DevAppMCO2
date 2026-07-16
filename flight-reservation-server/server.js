@@ -360,7 +360,7 @@ app.listen(PORT, () => {
             });
 
             vegetarian = new Meal({
-                meal_name: "Standard",
+                meal_name: "Vegetarian",
                 description: "Fresh stir-fry vegetables with quinoa & green salad.",
                 additional_price: "500"                
             });
