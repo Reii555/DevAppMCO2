@@ -30,14 +30,19 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // EXPRESS SESSION - COMMENTED OUT FOR TESTING
-// app.use(session({
-//     secret: process.env.SESSION_SECRET || 'mysecretkey',
-//     resave: false,
-//     saveUninitialized: false
-// }));
+ app.use(session({
+     secret: process.env.SESSION_SECRET || 'mysecretkey',
+     resave: false,
+     saveUninitialized: false
+ }));
+
+ app.use((req, res, next) => {
+    res.locals.user = req.session?.user || null;
+    next();
+});
 
 // Make user data available to all - FIXED FOR TESTING
-app.use(async (req, res, next) => {
+/*app.use(async (req, res, next) => {
     if (!req.session) {
         req.session = {};
     }
@@ -55,7 +60,9 @@ app.use(async (req, res, next) => {
     }
     res.locals.user = req.session.user || null;
     next();
-});
+});*/
+
+
 
 // HANDLEBARS VIEW ENGINE WITH HELPERS
 const hbs = exphbs.create({
@@ -161,15 +168,15 @@ app.get('/', (req, res) => {
     });
 });
 
-// SIGNUP ROUTES
-app.get('/signup', (req, res) => {
+// REGISTER ROUTES
+app.get('/register', (req, res) => {
     if (req.session.user) {
-        return res.redirect('/dashboard');
+        return res.redirect('/');
     }
-    res.render('signup', { title: 'Sign Up' });
+    res.render('register', { title: 'Sign Up' });
 });
 
-app.post('/signup', async (req, res) => {
+app.post('/register', async (req, res) => {
     try {
         const existingUser = await User.findOne({ email: req.body.email });
         if (existingUser) {
@@ -188,7 +195,7 @@ app.post('/signup', async (req, res) => {
         console.log('User created:', user.email);
         res.redirect('/login');
     } catch (error) {
-        console.error('Signup error:', error);
+        console.error('Register error:', error);
         res.send('Error creating account. Please try again.');
     }
 });

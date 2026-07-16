@@ -106,7 +106,7 @@ $(document).ready(function() {
     });
 
     // ============================================================
-    // EDIT PROFILE FORM SUBMISSION
+    // EDIT PROFILE 
     // ============================================================
     $('#editProfileForm').on('submit', function(e) {
         e.preventDefault();
@@ -182,7 +182,7 @@ $(document).ready(function() {
     });
 
     // ============================================================
-    // REAL-TIME VALIDATION
+    // VALIDATION FOR PHONE NUMBER
     // ============================================================
     $('#contact_num').on('blur', function() {
         var phone = $(this).val().trim();
@@ -204,7 +204,7 @@ $(document).ready(function() {
     });
 
     // ============================================================
-    // SAVED PASSENGERS - ADD
+    // ADD SAVED PASSENGERS
     // ============================================================
     $('#addPassengerBtn').on('click', function() {
         var firstName = $('#passengerFirstName').val().trim();
@@ -269,7 +269,7 @@ $(document).ready(function() {
     });
 
     // ============================================================
-    // SAVED PASSENGERS - REMOVE
+    // REMOVE SAVED PASSENGERS
     // ============================================================
     $(document).on('click', '.remove-passenger', function() {
         var index = $(this).data('index');
@@ -295,7 +295,7 @@ $(document).ready(function() {
     });
 
     // ============================================================
-    // PAYMENT METHODS - ADD
+    // ADD PAYMENT METHODS
     // ============================================================
     $('#addPaymentBtn').on('click', function() {
         var cardType = $('#paymentCardType').val();
@@ -367,7 +367,7 @@ $(document).ready(function() {
     });
 
     // ============================================================
-    // PAYMENT METHODS - REMOVE
+    // REMOVE PAYMENT METHODS
     // ============================================================
     $(document).on('click', '.remove-payment', function() {
         var index = $(this).data('index');
@@ -393,7 +393,7 @@ $(document).ready(function() {
     });
 
     // ============================================================
-    // PAYMENT METHODS - SET DEFAULT
+    // SET DEFAULT PAYMENT 
     // ============================================================
     $(document).on('click', '.set-default-payment', function() {
         var index = $(this).data('index');
