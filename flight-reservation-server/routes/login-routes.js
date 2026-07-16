@@ -14,7 +14,7 @@ router.get('/login', (req, res) => {
     
     res.render('login', {
         title: 'Login',
-        layout: 'main',
+        layout: false,
         error: null,
         success: null
     });

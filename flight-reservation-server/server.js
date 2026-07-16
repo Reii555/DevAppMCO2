@@ -192,9 +192,16 @@ app.post('/signup', async (req, res) => {
 // LOGIN ROUTES
 app.get('/login', (req, res) => {
     if (req.session.user) {
-        return res.redirect('/dashboard');
+        if (req.session.user.role === 'admin') {
+            return res.redirect('/admin');
+        }
+        return res.redirect('/');
     }
-    res.render('login', { title: 'Login' });
+    res.render('login', { 
+        title: 'Login',
+        layout: false,
+        error: null 
+    });
 });
 
 app.post('/login', async (req, res) => {
@@ -205,18 +212,32 @@ app.post('/login', async (req, res) => {
         });
 
         if (!user) {
-            return res.send('Invalid email or password.');
+            return res.render('login', {
+                title: 'Login',
+                error: 'Invalid email or password.'
+            });
         }
 
         user.last_login = new Date();
         await user.save();
 
         req.session.user = user;
-        console.log('User logged in:', user.email);
-        res.redirect('/dashboard');
+        console.log(' User logged in:', user.email);
+        console.log('   Role:', user.role);
+
+        // Redirect based on role
+        if (user.role === 'admin') {
+            return res.redirect('/admin');
+        } else {
+            return res.redirect('/');  // ← Go to home page
+        }
+
     } catch (error) {
         console.error('Login error:', error);
-        res.send('Error logging in. Please try again.');
+        res.render('login', {
+            title: 'Login',
+            error: 'Error logging in. Please try again.'
+        });
     }
 });
 
