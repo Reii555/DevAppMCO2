@@ -216,9 +216,9 @@ $(document).ready(function() {
                 
                 let message = '';
                 if (errors === 0) {
-                    message = `✅ Successfully updated ${successCount} reservation(s)!`;
+                    message = `Successfully updated ${successCount} reservation(s)!`;
                 } else {
-                    message = `⚠️ Updated ${successCount} reservation(s), but ${errors} failed.`;
+                    message = `Updated ${successCount} reservation(s), but ${errors} failed.`;
                 }
                 
                 $('body').append(`
